@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#121018" />
+    <title>Waiting · Resonance</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("resonance-theme") || "auto";
+          var d =
+            t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+              ? "dark"
+              : "light";
+          document.documentElement.setAttribute("data-theme", d);
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      :root,
+      [data-theme="light"] {
+        --rs-background: oklch(0.98 0.005 280);
+        --rs-text: oklch(0.08 0.01 280);
+        --rs-text-secondary: oklch(0.4 0.02 280);
+        --rs-primary: oklch(0.55 0.25 280);
+        --rs-on-primary: oklch(0.98 0.01 280);
+        --rs-primary-hover: oklch(0.5 0.25 280);
+        --rs-border-strong: oklch(0.78 0.02 280);
+      }
+
+      [data-theme="dark"] {
+        --rs-background: oklch(0.08 0.01 280);
+        --rs-text: oklch(0.95 0.01 280);
+        --rs-text-secondary: oklch(0.78 0.02 280);
+        --rs-primary: oklch(0.72 0.18 280);
+        --rs-on-primary: oklch(0.16 0.04 280);
+        --rs-primary-hover: oklch(0.76 0.16 280);
+        --rs-border-strong: oklch(0.36 0.03 280);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+        margin: 0;
+        background: var(--rs-background);
+        color: var(--rs-text);
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+
+      main {
+        display: flex;
+        min-height: 100dvh;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      img {
+        width: 4.5rem;
+        height: auto;
+      }
+
+      p.mark {
+        margin: 1rem 0 0;
+        font-size: 0.875rem;
+        font-weight: 500;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--rs-primary);
+      }
+
+      h1 {
+        margin: 1rem 0 0;
+        max-width: 20rem;
+        font-size: 1.875rem;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+      }
+
+      p.story {
+        margin: 1rem 0 0;
+        max-width: 22rem;
+        font-size: 1rem;
+        line-height: 1.75;
+        color: var(--rs-text-secondary);
+      }
+
+      button {
+        display: inline-flex;
+        min-height: 3rem;
+        margin-top: 2rem;
+        align-items: center;
+        justify-content: center;
+        padding: 0 1.5rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--rs-primary);
+        color: var(--rs-on-primary);
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: var(--rs-primary-hover);
+      }
+
+      button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--rs-background), 0 0 0 4px var(--rs-border-strong);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/logo-resonance.svg" alt="" width="72" height="70" />
+      <p class="mark">Resonance</p>
+      <h1>The signal faded.</h1>
+      <p class="story">Your shelf is still here. It will wait until the air clears.</p>
+      <button type="button" id="retry">Try again</button>
+    </main>
+    <script>
+      var retry = document.getElementById("retry");
+      if (retry) {
+        retry.addEventListener("click", function () {
+          location.reload();
+        });
+      }
+    </script>
+  </body>
+</html>

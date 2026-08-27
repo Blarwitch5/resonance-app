@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Resonance
 
-## Getting Started
+Where your music resonates.
 
-First, run the development server:
+PWA journal sonore — vinyl, cassettes, CDs. Stack : Next.js 16, React 19, Drizzle, Neon, better-auth, Vercel.
+
+Le produit et l’univers visuel sont décrits dans [`Read.me`](./Read.me). Les conventions agent sont **uniquement** dans [`.cursor/rules/`](./.cursor/rules/). Preview des tokens : `/dev/tokens` (dev only).
+
+## Prérequis
+
+- Node.js 22.12+
+- pnpm 10.11+
+- Compte [Neon](https://neon.tech) (free) et clés [Discogs](https://www.discogs.com/settings/developers)
+
+## Démarrage
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Renseigne `DATABASE_URL`, `BETTER_AUTH_SECRET` (32+ caractères), `BETTER_AUTH_URL`, et les clés Discogs.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm db:push
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ouvre [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Commande | Rôle |
+| --- | --- |
+| `pnpm dev` | Serveur de développement |
+| `pnpm build` | Build production |
+| `pnpm lint` | ESLint |
+| `pnpm db:generate` | Générer une migration Drizzle |
+| `pnpm db:migrate` | Appliquer les migrations |
+| `pnpm db:push` | Pousser le schéma (local) |
+| `pnpm db:studio` | Drizzle Studio |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Déploiement
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel Hobby. Root Directory = racine du repo. Variables : les mêmes que `.env.local` (sans `NODE_ENV`).

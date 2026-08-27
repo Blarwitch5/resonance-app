@@ -113,7 +113,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
     purchaseLocation: item.purchaseLocation,
     purchaseDate: item.purchaseDate,
     country: pressing.country,
-    catalogNumber: pressing.catalogNumber,
+    catalogNumber: item.catalogNumber ?? pressing.catalogNumber,
     formatNames: pressing.formatNames,
     creditLine: pressing.creditLine,
   });

@@ -8,6 +8,7 @@ export interface DiscogsSearchHit {
   label?: string[];
   genre?: string[];
   barcode?: string[];
+  catno?: string;
 }
 
 export interface DiscogsRelease {
@@ -41,7 +42,7 @@ export interface DiscogsBasicInformation {
   thumb?: string;
   cover_image?: string;
   formats?: Array<{ name?: string }>;
-  labels?: Array<{ name?: string }>;
+  labels?: Array<{ name?: string; catno?: string }>;
   artists?: Array<{ name?: string }>;
   genres?: string[];
   styles?: string[];

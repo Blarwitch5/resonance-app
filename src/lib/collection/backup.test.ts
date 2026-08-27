@@ -22,6 +22,7 @@ const item: ResonanceBackupItem = {
   genres: ["Jazz"],
   coverUrl: "https://i.discogs.com/kind.jpg",
   barcode: "123",
+  catalogNumber: "CL 1355",
   condition: "near_mint",
   purchaseLocation: "Reckless Records",
   purchaseDate: new Date("2024-06-01T12:00:00.000Z"),
@@ -57,6 +58,7 @@ describe("toResonanceBackup", () => {
         genres: ["Jazz"],
         coverUrl: "https://i.discogs.com/kind.jpg",
         barcode: "123",
+        catalogNumber: "CL 1355",
         condition: "near_mint",
         purchaseLocation: "Reckless Records",
         purchaseDate: "2024-06-01T12:00:00.000Z",
@@ -95,6 +97,19 @@ describe("parseResonanceBackup", () => {
     });
 
     expect(parseResonanceBackup(JSON.parse(JSON.stringify(backup)))).toEqual(backup);
+  });
+
+  it("still hears an older copy without a catalog number", () => {
+    const backup = toResonanceBackup({
+      exportedAt: new Date("2026-08-24T11:00:00.000Z"),
+      settings: DEFAULT_USER_SETTINGS,
+      items: [{ ...item, catalogNumber: null }],
+    });
+    const { catalogNumber: _catalogNumber, ...record } = backup.records[0] ?? {};
+
+    expect(
+      parseResonanceBackup({ ...backup, records: [record] }).records[0]?.catalogNumber,
+    ).toBeNull();
   });
 
   it("still hears an older copy without a leading format", () => {

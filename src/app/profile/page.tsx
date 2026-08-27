@@ -64,6 +64,7 @@ type ProfileShelfItem = {
   format: MediaFormat;
   discogsId: number | null;
   barcode: string | null;
+  catalogNumber: string | null;
   condition: MediaCondition | null;
   purchaseLocation: string | null;
   purchaseDate: Date | null;
@@ -399,6 +400,7 @@ function ItemRow({
               elsewhereHref={recordMenuElsewhereHref(item.artist, item.title, item.format)}
               shareHref={item.discogsId ? discogsReleaseHref(item.discogsId) : null}
               barcode={item.barcode}
+              catalogNumber={item.catalogNumber}
               canKeepClose={canKeepClose}
               canRelease={true}
               isFavorite={item.isFavorite}

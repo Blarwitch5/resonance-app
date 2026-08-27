@@ -64,6 +64,10 @@ describe("toReleaseDraftFromSearch", () => {
     });
   });
 
+  it("keeps a catalog number from a search hit", () => {
+    expect(toReleaseDraftFromSearch({ ...hit, catno: " GEF 24536 " }).catalogNumber).toBe("GEF 24536");
+  });
+
   it("maps cassette and cd, and drops a spacer cover", () => {
     expect(toReleaseDraftFromSearch({ ...hit, format: ["Cassette"] }).format).toBe("cassette");
     expect(toReleaseDraftFromSearch({ ...hit, format: ["CD"] }).format).toBe("cd");
@@ -86,6 +90,7 @@ describe("toReleaseDraft and toReleasePreview", () => {
     expect(draft.barcode).toBe("07464405791");
     expect(draft.genres).toEqual(["Jazz", "Modal"]);
     expect(draft.coverUrl).toBe("https://img.discogs.com/cover.jpg");
+    expect(draft.catalogNumber).toBe("CL 1355");
   });
 
   it("adds country, catalog, and format names to a preview", () => {

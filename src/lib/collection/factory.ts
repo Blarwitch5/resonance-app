@@ -11,6 +11,7 @@ interface NormalizedItem {
   genres: string[];
   coverUrl: string | null;
   barcode: string | null;
+  catalogNumber: string | null;
   isFavorite: boolean;
   isWishlist: boolean;
   notes: string | null;
@@ -33,6 +34,7 @@ export function createCollectionItem(input: {
     title,
     artist,
     label: input.draft.label?.trim() || null,
+    catalogNumber: input.draft.catalogNumber?.trim() || null,
     notes: input.notes?.trim() || null,
     isFavorite: input.kind === "favorite",
     isWishlist: input.kind === "wishlist",

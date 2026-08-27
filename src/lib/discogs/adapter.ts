@@ -71,6 +71,7 @@ export function toReleaseDraftFromSearch(hit: DiscogsSearchHit): ReleaseDraft {
     genres: hit.genre ?? [],
     coverUrl: cover,
     barcode: hit.barcode?.[0] ?? null,
+    catalogNumber: clipCatalogNumber(hit.catno),
   };
 }
 
@@ -97,6 +98,7 @@ export function toReleaseDraft(release: DiscogsRelease): ReleaseDraft {
     genres: [...(release.genres ?? []), ...(release.styles ?? [])],
     coverUrl: usableCoverUrl(primaryCover?.uri),
     barcode: barcode?.value ?? null,
+    catalogNumber: catalogNumberFromRelease(release),
   };
 }
 
@@ -167,6 +169,7 @@ function draftFromBasicInformation(info: DiscogsBasicInformation): ReleaseDraft 
     genres: [...(info.genres ?? []), ...(info.styles ?? [])],
     coverUrl: usableCoverUrl(info.cover_image) ?? usableCoverUrl(info.thumb),
     barcode: null,
+    catalogNumber: clipCatalogNumber(info.labels?.[0]?.catno),
   };
 }
 

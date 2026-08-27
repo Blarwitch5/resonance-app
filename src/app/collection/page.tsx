@@ -390,6 +390,7 @@ interface ShelfRecord {
   label: string | null;
   genres: string[];
   barcode: string | null;
+  catalogNumber: string | null;
   format: MediaFormat;
   coverUrl: string | null;
   notes: string | null;
@@ -498,6 +499,7 @@ function ShelfRecordList({
               elsewhereHref={recordMenuElsewhereHref(item.artist, item.title, item.format)}
               shareHref={item.discogsId ? discogsReleaseHref(item.discogsId) : null}
               barcode={item.barcode}
+              catalogNumber={item.catalogNumber}
               canKeepClose
               canRelease={true}
               isFavorite={item.isFavorite}

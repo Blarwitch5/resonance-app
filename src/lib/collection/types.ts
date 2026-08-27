@@ -242,6 +242,7 @@ export interface ReleaseDraft {
   genres: string[];
   coverUrl: string | null;
   barcode: string | null;
+  catalogNumber: string | null;
 }
 
 export interface RecordTrack {

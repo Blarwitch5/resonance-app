@@ -77,6 +77,7 @@ export function ExplorerReleaseCard({
       canHold={canWishlist}
       shareHref={draft.discogsId ? discogsReleaseHref(draft.discogsId) : null}
       barcode={draft.barcode}
+      catalogNumber={draft.catalogNumber}
       elsewhereHref={elsewhereHref}
     >
       <article className="flex h-full flex-col gap-3" aria-labelledby={headingId}>

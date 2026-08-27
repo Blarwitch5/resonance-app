@@ -34,6 +34,7 @@ function draft(partial: Partial<ReleaseDraft> = {}): ReleaseDraft {
     genres: ["Rock", "Grunge"],
     coverUrl: null,
     barcode: null,
+    catalogNumber: null,
     ...partial,
   };
 }

@@ -528,6 +528,7 @@ export async function restoreCollectionItems(
       genres: record.genres,
       coverUrl: record.coverUrl,
       barcode: record.barcode,
+      catalogNumber: record.catalogNumber,
       condition: record.condition,
       purchaseLocation: record.purchaseLocation,
       purchaseDate: record.purchaseDate ? new Date(record.purchaseDate) : null,

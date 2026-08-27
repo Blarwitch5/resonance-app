@@ -14,6 +14,7 @@ const draft: ReleaseDraft = {
   genres: ["Jazz"],
   coverUrl: null,
   barcode: null,
+  catalogNumber: null,
 };
 
 describe("createCollectionItem", () => {
@@ -25,6 +26,13 @@ describe("createCollectionItem", () => {
     expect(item.label).toBe("Columbia");
     expect(item.isFavorite).toBe(false);
     expect(item.isWishlist).toBe(false);
+  });
+
+  it("keeps a catalog number the pressing still carries", () => {
+    expect(
+      createCollectionItem({ draft: { ...draft, catalogNumber: " GEF 24536 " }, kind: "owned" })
+        .catalogNumber,
+    ).toBe("GEF 24536");
   });
 
   it("marks a favorite and a wishlist", () => {

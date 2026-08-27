@@ -99,6 +99,7 @@ export const collectionItem = pgTable(
     genres: text("genres").array().notNull().default([]),
     coverUrl: text("cover_url"),
     barcode: text("barcode"),
+    catalogNumber: text("catalog_number"),
     condition: mediaCondition("condition"),
     purchaseLocation: text("purchase_location"),
     purchaseDate: timestamp("purchase_date"),

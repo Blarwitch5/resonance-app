@@ -1,0 +1,18 @@
+---
+description: Accessibilité WCAG 2.1 AA
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Accessibilité — WCAG 2.1 AA
+
+Non négociable, au même titre que la sécu.
+
+- Contraste : paires token uniquement (`text` sur `background`, `on-primary` sur `primary`). Jamais `text-primary` small sur `background`.
+- Cibles ≥ 44×44. Espacement pouce sur la bottom bar.
+- Clavier : Tab, Enter, Esc, flèches listes desktop. Focus visible `ring-2 ring-border-strong`.
+- `aria-current="page"` onglet actif. `aria-label` sur `<nav>`.
+- Formulaires : `<label>` visible. Erreurs `role="alert"`. `autocomplete` correct.
+- Images : `alt` qui décrit la pochette. Décoratif : `alt=""` + `aria-hidden`.
+- `prefers-reduced-motion` : pas d’animation essentielle à l’info.
+- Langue : `lang` sur `<html>`. Icon-only : `aria-label` textuel.

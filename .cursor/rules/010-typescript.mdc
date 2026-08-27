@@ -1,0 +1,25 @@
+---
+description: TypeScript strict, async/await, erreurs typées
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript
+
+`strict` + `noUncheckedIndexedAccess` + `noImplicitOverride`. Jamais `any`, `as any`, ni `@ts-ignore`.
+
+- `async/await` partout. Pas de `.then()` chaîné ni callbacks.
+- Accès tableau : `items[0]` est `T | undefined` — garder.
+- Erreurs métier : classes de `src/lib/errors.ts`. Message utilisateur calme, détail dans `cause`.
+
+```ts
+try {
+  await addCollectionItem(userId, draft);
+} catch (error) {
+  throw new DatabaseError("The record could not be added to your collection.", {
+    cause: error,
+  });
+}
+```
+
+Env : `getEnv()`, jamais `process.env.X!`. Validation Zod des inputs avant la DB.

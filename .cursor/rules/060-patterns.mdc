@@ -1,0 +1,19 @@
+---
+description: Factory, Repository, Adapter — limites de l’Observer
+globs: "src/lib/**/*.ts"
+alwaysApply: false
+---
+
+# Patterns
+
+- **Adapter** : `toReleaseDraft` — unique pont Discogs → domaine.
+- **Factory** : `createCollectionItem` — owned / wishlist / favorite, trim + validation.
+- **Repository** : seul fichier qui touche `collectionItem`. Pages / actions appellent le repository.
+- **Observer** : pub/sub réel (sync, toasts) seulement. Pas de EventEmitter pour du state React.
+
+```ts
+const draft = toReleaseDraft(release);
+await addCollectionItem(userId, draft, "owned");
+```
+
+Pas de Drizzle dans un composant. Pas de `fetch("https://api.discogs.com")` hors `client.ts`.

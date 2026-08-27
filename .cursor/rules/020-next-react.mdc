@@ -1,0 +1,18 @@
+---
+description: Next.js App Router, Server Components, React
+globs: "src/{app,components}/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Next.js + React
+
+- Server Components par défaut. Client = nav, forms, swipe, scanner, theme.
+- Mutations : Server Actions (`"use server"`) ou Route Handlers. Pas de `fetch` client vers nos propres APIs si une action suffit.
+- Session dans la page serveur via `requireSession()` / `getSession()`. Le proxy ne suffit pas.
+- Images Discogs : `next/image`. `alt` concret.
+- `src/proxy.ts` (Next 16). Matcher : ne pas bloquer `/_next`, assets, `/api/auth`.
+- Pas de `process.env` dans un Client Component.
+- Listes : `key` stable (id), pas l’index.
+- Effets : `useEffect` seulement pour le browser (media, camera). Data fetching = serveur.
+
+Docs versionnées : `node_modules/next/dist/docs/`.

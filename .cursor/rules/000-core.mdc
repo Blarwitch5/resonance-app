@@ -1,0 +1,30 @@
+---
+description: Identité Resonance, stack figée, carte des règles
+alwaysApply: true
+---
+
+# Resonance
+
+Journal sonore PWA, vinyl-first. Pas un catalogue Discogs : un espace sensoriel.
+
+## Stack figée — ne pas dévier
+
+Next.js 16 App Router · React 19 · TypeScript strict · Tailwind 4 (OKLCH) · Drizzle · Neon Postgres · better-auth · Discogs **serveur only** · Lucide React · pnpm · Node ≥ 22.12 · Vercel Hobby
+
+Interdit : Astro, Prisma, SQLite, NextAuth, `any`, secrets en `NEXT_PUBLIC_*`, hex hors `globals.css`.
+
+APIs Next 16 : lire `node_modules/next/dist/docs/` avant d’utiliser une API incertaine. Fichier : `src/proxy.ts`, pas `middleware.ts`.
+
+## Dossiers
+
+- `src/app` routes
+- `src/components/ui` primitifs · `layouts` coques
+- `src/db` schéma + client
+- `src/lib/collection` factory + repository
+- `src/lib/discogs` adapter + client
+- `src/lib/auth.ts` serveur · `auth-client.ts` client
+- `.cursor/rules` seule source de conventions agent. Pas de `CLAUDE.md` ni `AGENTS.md` — Cursor only.
+
+## Navigation produit
+
+Mobile : 3 onglets Collection / Explorer / Profile. Desktop ≥ 1024px : sidebar. Format chips seulement dans Collection.

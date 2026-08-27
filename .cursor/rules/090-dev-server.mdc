@@ -1,0 +1,24 @@
+---
+description: Un seul serveur de dev — ne pas empiler Next ni Chromium
+alwaysApply: true
+---
+
+# Un seul serveur
+
+Le CPU brûle quand plusieurs `pnpm dev` / Turbopack / Chromium s’empilent. **Un processus d’écoute, pas une flotte.**
+
+## Next.js (`pnpm dev`, port 3000)
+
+- Avant d’en lancer un : `lsof -nP -iTCP:3000 -sTCP:LISTEN` et le dossier `terminals`. S’il écoute déjà, **réutiliser**. Ne pas relancer « au cas où ».
+- Interdit : second Next sur 3001+, un serveur par agent, un par worktree, un laissé en fond après la vérif.
+- Vitest / `tsc` n’ont **pas** besoin de Next. Ne pas démarrer le serveur pour des tests unitaires.
+- Deux serveurs seulement si deux **apps distinctes** doivent tourner en même temps (pas Resonance ×2).
+
+## Navigateur de QA
+
+- Un Chromium headless, pas un par tour.
+- Quand la vérif est finie : le fermer. Ne pas le laisser dormir.
+
+## Fin de session
+
+Si l’humain demande de tout fermer, ou si plus aucun flux UI n’a besoin du serveur : arrêter Next **et** le navigateur de QA. Vérifier que 3000 ne listen plus.

@@ -1,0 +1,30 @@
+---
+description: UI/UX mobile-first, navigation, états, motion
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# UI / UX
+
+Mobile-first. Thumb reach. Desktop = browsing + gestion, pas une copie étirée du mobile.
+
+## Layout
+
+- < 768 : bottom bar 3 onglets, FAB « Add record », liste par défaut.
+- 768–1024 : même chrome, grille possible.
+- ≥ 1024 : sidebar, grille par défaut, filtres persistants, raccourcis.
+
+## États à spécifier à chaque écran
+
+Loading, empty, error, success, disabled, partiel (offline). Empty Collection : CTA « Add your first record », ton sensoriel.
+
+## Interaction
+
+- Cibles ≥ 44px (`min-h-11` / `min-h-12` / bottom bar `min-h-14`).
+- Swipe / long-press : plus tard, avec alternative bouton visible.
+- Overlay : `bg-overlay`, Esc ferme, focus trap.
+- Motion : ripple / vague légère. `prefers-reduced-motion` déjà global — ne pas le contourner.
+
+## Hiérarchie
+
+H1 unique par page. Meta en `text-secondary`. Format pill : couleur vinyl/cassette/cd, pas un rainbow.

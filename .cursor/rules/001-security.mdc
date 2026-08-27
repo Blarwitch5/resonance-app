@@ -1,0 +1,36 @@
+---
+description: Sécurité — auth, secrets, isolation données, Discogs
+alwaysApply: true
+---
+
+# Sécurité
+
+Défense en profondeur. Un oubli ici est un bug bloquant.
+
+## Secrets
+
+- `DATABASE_URL`, `BETTER_AUTH_SECRET` (≥ 32), clés Discogs : serveur only via `src/lib/env.ts` (`server-only` + Zod). Fail fast.
+- Jamais `NEXT_PUBLIC_*` pour un secret. Commiter `env.example`, jamais `.env.local`.
+- Logs : pas de mot de passe, token, cookie, secret.
+
+## Auth
+
+- Identité = `auth.api.getSession({ headers })` dans page, action ou route. Point.
+- `getSessionCookie` dans `proxy.ts` = redirect **optimiste**. Ce n’est **pas** une preuve. Un cookie forgé passe le proxy.
+- Cookies HTTP-only, Secure en prod : laisser better-auth. Ne pas désactiver CSRF / origin checks.
+- Routes protégées : `/collection`, `/profile`. Après session, **toujours** filtrer `userId` en base.
+
+## Données
+
+```ts
+// ❌
+db.select().from(collectionItem)
+// ✅
+db.select().from(collectionItem).where(eq(collectionItem.userId, session.user.id))
+```
+
+Pas de SQL interpolé. Drizzle seulement. Inputs : Zod avant insert. HTML : pas de `dangerouslySetInnerHTML` hors `ThemeScript`.
+
+## Discogs
+
+Uniquement `src/lib/discogs/client.ts`. User-Agent identifié. 429 → `DiscogsError`. Jamais les clés au client. Pochettes = URL, pas de blob en base.

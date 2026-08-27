@@ -1,0 +1,32 @@
+---
+description: Naming, fichiers, imports, structure des composants
+alwaysApply: true
+---
+
+# Consistance
+
+## Fichiers
+
+- kebab-case : `bottom-bar.tsx`, `collection-item-card.tsx`
+- Pas de `utils.ts` fourre-tout. Un module = un rôle.
+- Barrel `index.ts` seulement pour un dossier public (db, schema). Pas de re-export circulaire.
+
+## Nommage
+
+- Composants : `PascalCase`. Hooks : `useCamelCase`. Fonctions : `camelCase` verbe (`listCollectionItems`).
+- Types métier dans `src/lib/**/types.ts`, pas dans le JSX.
+- Booléens : `isFavorite`, `hasCover`. Pas `favorite`.
+
+## Imports
+
+Ordre : packages → `@/` internes → relatifs → styles. Alias `@/*` uniquement (jamais `../../lib`).
+
+## Composants
+
+- Server Component par défaut. `"use client"` seulement pour state, events, browser APIs.
+- Props explicites, pas de `children` non typé : `children: ReactNode`.
+- Un composant UI ne parle pas à Drizzle ni Discogs. Il reçoit des données déjà adaptées.
+
+## UI classes
+
+Tokens sémantiques : `bg-background`, `bg-primary`, `text-on-primary`, `rounded-rs-md`. Pas de `bg-[#…]`, pas de `shadow-[…]` ad hoc. États : hover / active / disabled / focus visibles.

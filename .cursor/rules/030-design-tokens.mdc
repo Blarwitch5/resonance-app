@@ -1,0 +1,35 @@
+---
+description: Tokens OKLCH validés — source de vérité visuelle
+globs: "**/*.{css,tsx}"
+alwaysApply: false
+---
+
+# Tokens (validés)
+
+Source : `src/app/globals.css`. Thème via `data-theme="light|dark"` (le script résout `auto`). Preview : `/dev/tokens`.
+
+## Rôles
+
+| Token | Rôle | Interdit |
+| --- | --- | --- |
+| `background` / `surface` / `surface-elevated` | Page, cartes, modales | |
+| `text` | Titres, body | |
+| `text-secondary` | Sous-titres, meta | Body long |
+| `text-tertiary` | Placeholders, hints | Texte essentiel |
+| `text-disabled` | Disabled | Contenu lisible |
+| `primary` + `on-primary` | CTA unique (vinyl) | Texte primary sur fond page en small |
+| `primary-soft` + `on-primary-soft` | Chip, nav active | Bouton principal |
+| `secondary` + `on-secondary` | Action cassette / secondaire | Deux CTA primaires |
+| `accent` | Focus ring, ondes | Boutons |
+| `vinyl` / `cassette` / `cd` | Identité format | Remplacer primary |
+| `*-soft` sémantiques | Fonds success/error | Texte seul |
+
+CTA : `bg-primary text-on-primary hover:bg-primary-hover`.
+Nav active : `bg-primary-soft text-on-primary-soft`.
+Focus : `outline-none ring-2 ring-border-strong`.
+
+## Contraste (AA)
+
+Light : primary L baissé, secondary L=0.55 (plus le copper 0.65 trop clair). Dark : primary **éclairci** (L=0.72) pour rester un fill lisible ; `on-primary` devient sombre. Ne pas inverser ces paires.
+
+Pas de hex. Radius : `rounded-rs-sm|md|lg`.

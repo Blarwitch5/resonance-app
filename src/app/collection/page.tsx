@@ -221,7 +221,10 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
           <div className="flex flex-wrap gap-2 lg:hidden">
             <FacetChips listen={listen} />
           </div>
-          <div className="hidden gap-3 lg:flex lg:flex-wrap lg:items-center lg:justify-between">
+          <div
+            id="collection-listen"
+            className="hidden gap-3 lg:flex lg:flex-wrap lg:items-center lg:justify-between"
+          >
             <SortChips active={sort} listen={listen} />
             <ViewChips active={settings.viewMode} listen={listen} page={page} />
           </div>

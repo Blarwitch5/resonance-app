@@ -3,6 +3,9 @@ import { JetBrains_Mono, Poppins } from "next/font/google";
 
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { ThemeScript } from "@/components/theme-script";
+import { getSession } from "@/lib/session";
+import { getUserSettings } from "@/lib/settings/repository";
+import type { Locale } from "@/lib/settings/types";
 
 import "./globals.css";
 
@@ -52,10 +55,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await documentLocale();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${poppins.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
@@ -68,4 +73,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </body>
     </html>
   );
+}
+
+async function documentLocale(): Promise<Locale> {
+  const session = await getSession();
+
+  if (!session) {
+    return "en";
+  }
+
+  return (await getUserSettings(session.user.id)).locale;
 }

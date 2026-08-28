@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { MEDIA_CONDITIONS, MEDIA_FORMATS, type MediaCondition, type MediaFormat } from "@/lib/collection/types";
 import { ValidationError } from "@/lib/errors";
-import { THEME_PREFERENCES, VIEW_MODES, type ThemePreference, type UserSettings, type ViewMode } from "@/lib/settings/types";
+import { LOCALES, THEME_PREFERENCES, VIEW_MODES, type Locale, type ThemePreference, type UserSettings, type ViewMode } from "@/lib/settings/types";
 
 export const RESONANCE_BACKUP_VERSION = 1;
 
@@ -57,6 +57,8 @@ export interface ResonanceBackupSettings {
   viewMode: ViewMode;
   defaultFormat?: MediaFormat | null;
   bio: string | null;
+  locale?: Locale;
+  marketValueEnabled?: boolean;
 }
 
 export interface ResonanceBackup {
@@ -82,6 +84,8 @@ export function toResonanceBackup(input: {
       viewMode: input.settings.viewMode,
       defaultFormat: input.settings.defaultFormat,
       bio: input.settings.bio,
+      locale: input.settings.locale,
+      marketValueEnabled: input.settings.marketValueEnabled,
     },
     records: input.items.map((item) => ({
       discogsId: item.discogsId,
@@ -142,6 +146,8 @@ const backupSettingsSchema = z.object({
   viewMode: z.enum(VIEW_MODES),
   defaultFormat: z.enum(MEDIA_FORMATS).nullable().optional(),
   bio: z.string().trim().max(280).nullable(),
+  locale: z.enum(LOCALES).optional().default("en"),
+  marketValueEnabled: z.boolean().optional().default(false),
 });
 
 const backupSchema = z.object({

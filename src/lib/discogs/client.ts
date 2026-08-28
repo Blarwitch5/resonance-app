@@ -4,6 +4,7 @@ import type { MediaFormat, RecordSide, ReleaseDraft } from "@/lib/collection/typ
 import { toRecordSides, toReleaseDraftFromCollection, toReleasePreview } from "@/lib/discogs/adapter";
 import { isBarcodeQuery, normalizeBarcode } from "@/lib/discogs/barcode";
 import { discogsYearParam } from "@/lib/discogs/href";
+import { parseMarketplaceStats, type MarketplaceAsk } from "@/lib/discogs/market";
 import type { DiscogsCollectionEntry, DiscogsRelease, DiscogsSearchHit } from "@/lib/discogs/types";
 import { getEnv } from "@/lib/env";
 import { DiscogsError } from "@/lib/errors";
@@ -180,6 +181,28 @@ export async function getDiscogsRelease(discogsId: number): Promise<DiscogsRelea
 
   const response = await discogsFetch(`/releases/${discogsId}`);
   return readJson<DiscogsRelease>(response);
+}
+
+export async function getMarketplaceAsk(discogsId: number): Promise<MarketplaceAsk | null> {
+  if (!Number.isInteger(discogsId) || discogsId <= 0) {
+    return null;
+  }
+
+  try {
+    const response = await discogsFetch(`/marketplace/stats/${discogsId}`);
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    return parseMarketplaceStats(await readJson<unknown>(response));
+  } catch (error) {
+    if (error instanceof DiscogsError) {
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export interface ReleaseListen {

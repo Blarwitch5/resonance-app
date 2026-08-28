@@ -47,6 +47,8 @@ describe("toResonanceBackup", () => {
     expect(JSON.stringify(backup)).not.toContain("secret-row");
     expect(backup.settings.bio).toBe("Still spinning.");
     expect(backup.settings.defaultFormat).toBe("vinyl");
+    expect(backup.settings.locale).toBe("en");
+    expect(backup.settings.marketValueEnabled).toBe(false);
     expect(backup.records).toEqual([
       {
         discogsId: 12345,
@@ -128,6 +130,26 @@ describe("parseResonanceBackup", () => {
     };
 
     expect(parseResonanceBackup({ ...backup, settings }).settings.defaultFormat).toBeUndefined();
+  });
+
+  it("still hears an older copy without a language or market whisper", () => {
+    const backup = toResonanceBackup({
+      exportedAt: new Date("2026-08-24T11:00:00.000Z"),
+      settings: DEFAULT_USER_SETTINGS,
+      items: [],
+    });
+    const settings = {
+      vinylEnabled: backup.settings.vinylEnabled,
+      cassetteEnabled: backup.settings.cassetteEnabled,
+      cdEnabled: backup.settings.cdEnabled,
+      theme: backup.settings.theme,
+      viewMode: backup.settings.viewMode,
+      bio: backup.settings.bio,
+    };
+
+    const parsed = parseResonanceBackup({ ...backup, settings }).settings;
+    expect(parsed.locale).toBe("en");
+    expect(parsed.marketValueEnabled).toBe(false);
   });
 
   it("ignores an account id smuggled into a record", () => {

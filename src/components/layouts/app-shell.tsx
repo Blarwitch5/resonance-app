@@ -14,13 +14,13 @@ import { PALETTE_RECORD_MAX, type PaletteRecord } from "@/lib/collection/palette
 import { listCollectionItems } from "@/lib/collection/repository";
 import { getSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
-import { enabledFormats } from "@/lib/settings/types";
+import { enabledFormats, type Locale } from "@/lib/settings/types";
 
 interface AppShellProps {
   children: ReactNode;
 }
 
-async function loadShelfChrome(userId: string): Promise<[ReturnType<typeof enabledFormats>, PaletteRecord[]]> {
+async function loadShelfChrome(userId: string): Promise<[ReturnType<typeof enabledFormats>, PaletteRecord[], Locale]> {
   const [settings, items] = await Promise.all([
     getUserSettings(userId),
     listCollectionItems(userId, { kind: "owned", pageSize: PALETTE_RECORD_MAX }),
@@ -33,18 +33,20 @@ async function loadShelfChrome(userId: string): Promise<[ReturnType<typeof enabl
       artist: item.artist,
       title: item.title,
     })),
+    settings.locale,
   ];
 }
 
 export async function AppShell({ children }: AppShellProps) {
   const session = await getSession();
-  const [formats, records] = session
+  const [formats, records, locale] = session
     ? await loadShelfChrome(session.user.id)
-    : [[], []];
+    : [[], [], "en" as const];
 
   return (
     <div className="flex min-h-dvh bg-background pt-[env(safe-area-inset-top)] transition-colors duration-500">
       <Sidebar
+        locale={locale}
         formatNav={
           formats.length > 1 ? (
             <Suspense fallback={null}>
@@ -68,7 +70,7 @@ export async function AppShell({ children }: AppShellProps) {
           </main>
         </PullToRefresh>
         <InstallHint />
-        <BottomBar />
+        <BottomBar locale={locale} />
       </div>
       <KeyboardShortcuts formats={formats} />
       <Suspense fallback={null}>

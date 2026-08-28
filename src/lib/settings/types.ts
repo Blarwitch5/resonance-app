@@ -8,6 +8,10 @@ export const VIEW_MODES = ["list", "grid"] as const;
 
 export type ViewMode = (typeof VIEW_MODES)[number];
 
+export const LOCALES = ["en", "fr"] as const;
+
+export type Locale = (typeof LOCALES)[number];
+
 export interface UserSettings {
   vinylEnabled: boolean;
   cassetteEnabled: boolean;
@@ -16,6 +20,8 @@ export interface UserSettings {
   viewMode: ViewMode;
   defaultFormat: MediaFormat | null;
   bio: string | null;
+  locale: Locale;
+  marketValueEnabled: boolean;
   onboardedAt: Date | null;
 }
 
@@ -27,6 +33,8 @@ export const DEFAULT_USER_SETTINGS: UserSettings = {
   viewMode: "list",
   defaultFormat: "vinyl",
   bio: null,
+  locale: "en",
+  marketValueEnabled: false,
   onboardedAt: null,
 };
 
@@ -73,6 +81,14 @@ export function parseThemePreference(value: string | undefined): ThemePreference
 
 export function parseViewMode(value: string | undefined): ViewMode | undefined {
   if (value === "list" || value === "grid") {
+    return value;
+  }
+
+  return undefined;
+}
+
+export function parseLocale(value: string | undefined): Locale | undefined {
+  if (value === "en" || value === "fr") {
     return value;
   }
 

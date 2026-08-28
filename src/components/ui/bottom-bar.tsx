@@ -5,14 +5,20 @@ import { usePathname } from "next/navigation";
 
 import { isMainNavActive, MAIN_NAV } from "@/components/ui/main-nav";
 import { useMainNavHrefs } from "@/components/ui/use-main-nav-href";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
-export function BottomBar() {
+interface BottomBarProps {
+  locale?: Locale;
+}
+
+export function BottomBar({ locale = "en" }: BottomBarProps) {
   const pathname = usePathname();
   const hrefs = useMainNavHrefs();
 
   return (
     <nav
-      aria-label="Main"
+      aria-label={t(locale, "nav.main")}
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur-md transition-colors duration-500 lg:hidden"
     >
       <ul className="mx-auto flex max-w-lg items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)]">
@@ -35,7 +41,7 @@ export function BottomBar() {
                   className={`size-5 motion-safe:group-hover:vibrato ${isActive ? "motion-safe:animate-[ripple_500ms_ease-out]" : ""}`}
                   aria-hidden
                 />
-                {tab.label}
+                {t(locale, `nav.${tab.id}`)}
               </Link>
             </li>
           );

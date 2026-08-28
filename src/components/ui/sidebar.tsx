@@ -7,13 +7,16 @@ import type { ReactNode } from "react";
 import { isMainNavActive, MAIN_NAV, sidebarSubNavKind } from "@/components/ui/main-nav";
 import { ResonanceLockup } from "@/components/ui/resonance-mark";
 import { useMainNavHrefs } from "@/components/ui/use-main-nav-href";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 interface SidebarProps {
   formatNav?: ReactNode;
   profileNav?: ReactNode;
+  locale?: Locale;
 }
 
-export function Sidebar({ formatNav, profileNav }: SidebarProps) {
+export function Sidebar({ formatNav, profileNav, locale = "en" }: SidebarProps) {
   const pathname = usePathname();
   const hrefs = useMainNavHrefs();
 
@@ -22,7 +25,7 @@ export function Sidebar({ formatNav, profileNav }: SidebarProps) {
       <div className="px-6 py-8">
         <ResonanceLockup tagline="Where your music resonates." />
       </div>
-      <nav aria-label="Main" className="flex flex-1 flex-col gap-2 px-3">
+      <nav aria-label={t(locale, "nav.main")} className="flex flex-1 flex-col gap-2 px-3">
         {MAIN_NAV.map((link) => {
           const isActive = isMainNavActive(pathname, link.href);
           const Icon = link.icon;
@@ -41,7 +44,7 @@ export function Sidebar({ formatNav, profileNav }: SidebarProps) {
                 }`}
               >
                 <Icon className="size-5 motion-safe:group-hover:vibrato" aria-hidden />
-                {link.label}
+                {t(locale, `nav.${link.id}`)}
               </Link>
               {subNav}
             </div>

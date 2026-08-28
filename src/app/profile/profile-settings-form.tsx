@@ -1,7 +1,7 @@
 "use client";
 
-import { LayoutGrid, Monitor, Moon, Save, Sun, UserRound } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { Ear, Image, Languages, LayoutGrid, Monitor, Moon, Save, Sun, UserRound } from "lucide-react";
+import { useActionState, useEffect, useState } from "react";
 
 import { saveSettingsAction, type SaveSettingsState } from "@/app/profile/actions";
 import { Button } from "@/components/ui/button";
@@ -11,35 +11,26 @@ import { TextAreaField, TextField } from "@/components/ui/field";
 import { formatIcons, formatLabels } from "@/components/ui/format-icon";
 import { Notice } from "@/components/ui/notice";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
-import { MAX_DISPLAY_NAME } from "@/lib/profile/types";
+import { t } from "@/lib/i18n/translate";
+import { MAX_DISPLAY_NAME, MAX_PORTRAIT_URL } from "@/lib/profile/types";
 import {
+  LOCALES,
   THEME_PREFERENCES,
   VIEW_MODES,
   enabledFormats,
   preferredFormat,
+  type Locale,
   type ThemePreference,
   type UserSettings,
-  type ViewMode,
 } from "@/lib/settings/types";
 
 const initialState: SaveSettingsState = { error: null, saved: false };
-
-const themeLabel: Record<ThemePreference, string> = {
-  light: "Light",
-  dark: "Dark",
-  auto: "Auto",
-};
 
 const themeIcons = {
   light: Sun,
   dark: Moon,
   auto: Monitor,
 } as const;
-
-const viewLabel: Record<ViewMode, string> = {
-  list: "Auto",
-  grid: "Grid",
-};
 
 const viewIcons = {
   list: Monitor,
@@ -48,16 +39,26 @@ const viewIcons = {
 
 interface ProfileSettingsFormProps {
   name: string;
+  image?: string | null;
   settings: UserSettings;
 }
 
-export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps) {
+export function ProfileSettingsForm({ name, image = null, settings }: ProfileSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(saveSettingsAction, initialState);
+  const [locale, setLocale] = useState<Locale>(settings.locale);
   const leadingFormat = preferredFormat(enabledFormats(settings), settings.defaultFormat);
+
+  useEffect(() => {
+    setLocale(settings.locale);
+  }, [settings.locale]);
 
   useEffect(() => {
     applyTheme(settings.theme);
   }, [settings.theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -65,7 +66,7 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
         id="name"
         name="name"
         type="text"
-        label="Name"
+        label={t(locale, "settings.name")}
         autoComplete="name"
         required
         maxLength={MAX_DISPLAY_NAME}
@@ -73,18 +74,52 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
         icon={UserRound}
       />
 
+      <TextField
+        id="portrait"
+        name="portrait"
+        type="url"
+        label={t(locale, "settings.portrait")}
+        autoComplete="photo"
+        inputMode="url"
+        maxLength={MAX_PORTRAIT_URL}
+        defaultValue={image ?? ""}
+        placeholder={t(locale, "settings.portraitPlaceholder")}
+        icon={Image}
+      />
+      <p className="-mt-3 text-sm leading-6 text-text-secondary">{t(locale, "settings.portraitHint")}</p>
+
       <TextAreaField
         id="bio"
         name="bio"
-        label="Bio"
+        label={t(locale, "settings.bio")}
         rows={3}
         maxLength={280}
         defaultValue={settings.bio ?? ""}
-        placeholder="A few words about the records that stay with you."
+        placeholder={t(locale, "settings.bioPlaceholder")}
       />
 
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Theme</legend>
+        <legend className={legendClass}>{t(locale, "settings.language")}</legend>
+        <div className="flex flex-wrap gap-2">
+          {LOCALES.map((option) => (
+            <label key={option} className={choiceChipClass}>
+              <input
+                type="radio"
+                name="locale"
+                value={option}
+                checked={option === locale}
+                className="sr-only"
+                onChange={() => setLocale(option)}
+              />
+              <Languages className="size-4 shrink-0" aria-hidden />
+              {t(locale, option === "en" ? "settings.english" : "settings.french")}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>{t(locale, "settings.theme")}</legend>
         <div className="flex flex-wrap gap-2">
           {THEME_PREFERENCES.map((theme) => {
             const Icon = themeIcons[theme];
@@ -100,7 +135,7 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
                   onChange={() => applyTheme(theme)}
                 />
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {themeLabel[theme]}
+                {themeLabel(locale, theme)}
               </label>
             );
           })}
@@ -108,10 +143,8 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
       </fieldset>
 
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Shelf layout</legend>
-        <p className="text-sm leading-6 text-text-secondary">
-          Auto keeps a list in your hand, and opens the covers on a wide desk.
-        </p>
+        <legend className={legendClass}>{t(locale, "settings.shelfLayout")}</legend>
+        <p className="text-sm leading-6 text-text-secondary">{t(locale, "settings.shelfLayoutHint")}</p>
         <div className="flex flex-wrap gap-2">
           {VIEW_MODES.map((view) => {
             const Icon = viewIcons[view];
@@ -126,7 +159,7 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
                   className="sr-only"
                 />
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {viewLabel[view]}
+                {t(locale, view === "list" ? "settings.layoutAuto" : "settings.layoutGrid")}
               </label>
             );
           })}
@@ -134,7 +167,7 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
       </fieldset>
 
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Formats you collect</legend>
+        <legend className={legendClass}>{t(locale, "settings.formats")}</legend>
         <div className="flex flex-wrap gap-2">
           {MEDIA_FORMATS.map((format) => {
             const Icon = formatIcons[format];
@@ -156,10 +189,8 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
       </fieldset>
 
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>The format that leads</legend>
-        <p className="text-sm leading-6 text-text-secondary">
-          Explorer starts here. Confirm follows when this pressing already lives with you.
-        </p>
+        <legend className={legendClass}>{t(locale, "settings.leading")}</legend>
+        <p className="text-sm leading-6 text-text-secondary">{t(locale, "settings.leadingHint")}</p>
         <div className="flex flex-wrap gap-2">
           {MEDIA_FORMATS.map((format) => {
             const Icon = formatIcons[format];
@@ -181,15 +212,42 @@ export function ProfileSettingsForm({ name, settings }: ProfileSettingsFormProps
         </div>
       </fieldset>
 
+      <fieldset className={fieldsetClass}>
+        <legend className={legendClass}>{t(locale, "settings.market")}</legend>
+        <p className="text-sm leading-6 text-text-secondary">{t(locale, "settings.marketHint")}</p>
+        <label className={choiceChipClass}>
+          <input
+            type="checkbox"
+            name="marketValueEnabled"
+            defaultChecked={settings.marketValueEnabled}
+            className="sr-only"
+          />
+          <Ear className="size-4 shrink-0" aria-hidden />
+          {t(locale, "settings.marketOn")}
+        </label>
+      </fieldset>
+
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
-      {state.saved ? <Notice tone="success">Your space is updated.</Notice> : null}
+      {state.saved ? <Notice tone="success">{t(locale, "settings.saved")}</Notice> : null}
 
       <Button type="submit" disabled={isPending}>
         <Save className="size-4 shrink-0" aria-hidden />
-        {isPending ? "Saving…" : "Save"}
+        {isPending ? t(locale, "settings.saving") : t(locale, "settings.save")}
       </Button>
     </form>
   );
+}
+
+function themeLabel(locale: Locale, theme: ThemePreference): string {
+  if (theme === "light") {
+    return t(locale, "settings.light");
+  }
+
+  if (theme === "dark") {
+    return t(locale, "settings.dark");
+  }
+
+  return t(locale, "settings.auto");
 }
 
 function isFormatEnabled(settings: UserSettings, format: MediaFormat): boolean {

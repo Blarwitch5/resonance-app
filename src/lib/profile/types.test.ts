@@ -4,6 +4,7 @@ import {
   initialsFromName,
   isProfileNavActive,
   parseDisplayName,
+  parsePortraitUrl,
   parseProfileTab,
   parseSettingsFlag,
   profileEngagement,
@@ -165,5 +166,23 @@ describe("initialsFromName", () => {
   it("stays quiet without a name", () => {
     expect(initialsFromName("")).toBe("?");
     expect(initialsFromName("   ")).toBe("?");
+  });
+});
+
+describe("parsePortraitUrl", () => {
+  it("keeps a still from the web", () => {
+    expect(parsePortraitUrl("  https://i.discogs.com/face.jpg  ")).toBe("https://i.discogs.com/face.jpg");
+  });
+
+  it("clears an empty portrait", () => {
+    expect(parsePortraitUrl("")).toBeNull();
+    expect(parsePortraitUrl("   ")).toBeNull();
+    expect(parsePortraitUrl(undefined)).toBeNull();
+  });
+
+  it("refuses anything that is not https", () => {
+    expect(parsePortraitUrl("http://example.com/face.jpg")).toBeUndefined();
+    expect(parsePortraitUrl("javascript:alert(1)")).toBeUndefined();
+    expect(parsePortraitUrl("not-a-url")).toBeUndefined();
   });
 });

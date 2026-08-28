@@ -134,6 +134,7 @@ export function profileFromSearchInput(tab: ProfileTab, value: string): ProfileQ
 }
 
 export const MAX_DISPLAY_NAME = 80;
+export const MAX_PORTRAIT_URL = 2048;
 
 export function parseDisplayName(value: string | undefined): string | undefined {
   const name = value?.trim() ?? "";
@@ -143,6 +144,30 @@ export function parseDisplayName(value: string | undefined): string | undefined 
   }
 
   return name;
+}
+
+export function parsePortraitUrl(value: string | undefined): string | null | undefined {
+  const portrait = value?.trim() ?? "";
+
+  if (portrait.length === 0) {
+    return null;
+  }
+
+  if (portrait.length > MAX_PORTRAIT_URL || !portrait.startsWith("https://")) {
+    return undefined;
+  }
+
+  try {
+    const url = new URL(portrait);
+
+    if (url.protocol !== "https:") {
+      return undefined;
+    }
+
+    return portrait;
+  } catch {
+    return undefined;
+  }
 }
 
 export function initialsFromName(name: string): string {

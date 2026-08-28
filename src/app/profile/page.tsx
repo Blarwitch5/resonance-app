@@ -156,7 +156,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                     <RestoreResonanceForm />
                   </SheetSection>
                   <SheetSection icon={Settings} title="Settings">
-                    <ProfileSettingsForm name={session.user.name} settings={settings} />
+                    <ProfileSettingsForm name={session.user.name} image={session.user.image} settings={settings} />
                   </SheetSection>
                   <SheetSection icon={KeyRound} title="Password">
                     <ChangePasswordForm />
@@ -165,7 +165,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </>
               ) : null}
             </ProfileSettingsSheet>
-            <ProfileAvatar name={session.user.name} formats={formats} />
+            <ProfileAvatar name={session.user.name} imageUrl={session.user.image} formats={formats} />
           </div>
         }
       />

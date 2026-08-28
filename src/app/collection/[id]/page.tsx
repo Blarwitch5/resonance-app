@@ -29,10 +29,12 @@ import { decadeLabel } from "@/lib/collection/stats";
 import { decadeFromYear } from "@/lib/collection/types";
 import { loadDeezerPreviews } from "@/lib/deezer/client";
 import { attachDeezerPreviews } from "@/lib/deezer/preview";
-import { getReleaseListen } from "@/lib/discogs/client";
+import { getMarketplaceAsk, getReleaseListen } from "@/lib/discogs/client";
+import { marketplaceVoice } from "@/lib/discogs/market";
 import { journalDocumentTitle } from "@/lib/document-title";
 import { DiscogsError, NotFoundError } from "@/lib/errors";
 import { requireSession } from "@/lib/session";
+import { getUserSettings } from "@/lib/settings/repository";
 
 interface CollectionItemPageProps {
   params: Promise<{ id: string }>;
@@ -75,7 +77,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
   const isArrivalWave = parseWaveFlag(query.wave) && !item.isWishlist;
   const decade = decadeFromYear(item.year);
   const kinPageSize = SHELF_KIN_LIMIT + (item.isWishlist ? 0 : 1);
-  const [pressing, neighbors, previews, artistRecords, decadeRecords] = await Promise.all([
+  const [pressing, neighbors, previews, artistRecords, decadeRecords, settings] = await Promise.all([
     loadPressingListen(item.discogsId),
     listShelfNeighbors(session.user.id, item.id, item.isWishlist),
     loadDeezerPreviews(item.artist, item.title),
@@ -91,7 +93,13 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
           pageSize: kinPageSize,
         })
       : Promise.resolve([]),
+    getUserSettings(session.user.id),
   ]);
+  const marketAsk =
+    settings.marketValueEnabled && item.discogsId !== null
+      ? await getMarketplaceAsk(item.discogsId)
+      : null;
+  const marketLine = marketAsk ? marketplaceVoice(settings.locale, marketAsk) : null;
   const kin = pickShelfKin({
     currentId: item.id,
     artist: item.artist,
@@ -145,6 +153,9 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <PressingThreads threads={threads} title={item.title} showArtist />
+            {marketLine ? (
+              <p className="text-sm leading-6 text-text-secondary">{marketLine}</p>
+            ) : null}
             {item.isWishlist ? (
               <div className="flex flex-wrap gap-2">
                 <StatusPill tone="secondary" icon={Bookmark}>

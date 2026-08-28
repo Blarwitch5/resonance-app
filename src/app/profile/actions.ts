@@ -11,10 +11,10 @@ import type { CollectionKind, ReleaseDraft } from "@/lib/collection/types";
 import { listDiscogsUserShelves } from "@/lib/discogs/client";
 import { AppError, DatabaseError, toErrorMessage, ValidationError } from "@/lib/errors";
 import { parsePasswordChange, passwordChangeFailure } from "@/lib/profile/password";
-import { parseDisplayName } from "@/lib/profile/types";
+import { parseDisplayName, parsePortraitUrl } from "@/lib/profile/types";
 import { requireSession } from "@/lib/session";
 import { getUserSettings, upsertUserSettings } from "@/lib/settings/repository";
-import { enabledFormats, parseDefaultFormat, parseThemePreference, parseViewMode, preferredFormat, type UserSettings } from "@/lib/settings/types";
+import { enabledFormats, parseDefaultFormat, parseLocale, parseThemePreference, parseViewMode, preferredFormat, type UserSettings } from "@/lib/settings/types";
 
 export interface SaveSettingsState {
   error: string | null;
@@ -34,6 +34,12 @@ export async function saveSettingsAction(
 
     if (!name) {
       throw new ValidationError("A name stays between 1 and 80 characters.");
+    }
+
+    const portrait = parsePortraitUrl(String(formData.get("portrait") ?? ""));
+
+    if (portrait === undefined) {
+      throw new ValidationError("A portrait needs a quiet HTTPS link.");
     }
 
     const bioResult = bioSchema.safeParse(String(formData.get("bio") ?? ""));
@@ -58,6 +64,8 @@ export async function saveSettingsAction(
 
     const current = await getUserSettings(session.user.id);
     const viewMode = parseViewMode(String(formData.get("viewMode") ?? "")) ?? current.viewMode;
+    const locale = parseLocale(String(formData.get("locale") ?? "")) ?? current.locale;
+    const marketValueEnabled = formData.get("marketValueEnabled") === "on";
     const formats = { vinylEnabled, cassetteEnabled, cdEnabled };
     const defaultFormat = preferredFormat(
       enabledFormats({ ...current, ...formats }),
@@ -66,6 +74,8 @@ export async function saveSettingsAction(
     const patch: UserSettings = {
       theme,
       viewMode,
+      locale,
+      marketValueEnabled,
       ...formats,
       defaultFormat,
       bio: bioResult.data.length > 0 ? bioResult.data : null,
@@ -74,17 +84,23 @@ export async function saveSettingsAction(
 
     await upsertUserSettings(session.user.id, patch);
 
-    if (name !== session.user.name) {
+    const currentImage = session.user.image ?? null;
+
+    if (name !== session.user.name || portrait !== currentImage) {
       try {
         await auth.api.updateUser({
-          body: { name },
+          body: {
+            ...(name !== session.user.name ? { name } : {}),
+            ...(portrait !== currentImage ? { image: portrait } : {}),
+          },
           headers: await headers(),
         });
       } catch (error) {
-        throw new DatabaseError("Your name could not be saved.", { cause: error });
+        throw new DatabaseError("Your space could not be saved.", { cause: error });
       }
     }
 
+    revalidatePath("/", "layout");
     revalidatePath("/collection");
     revalidatePath("/explorer");
     revalidatePath("/profile");
@@ -225,6 +241,8 @@ export async function restoreResonanceAction(
         backup.settings.defaultFormat ?? current.defaultFormat,
       ),
       bio: backup.settings.bio,
+      locale: backup.settings.locale ?? current.locale,
+      marketValueEnabled: backup.settings.marketValueEnabled ?? current.marketValueEnabled,
       onboardedAt: current.onboardedAt ?? new Date(),
     });
 

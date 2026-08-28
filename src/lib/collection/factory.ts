@@ -40,3 +40,11 @@ export function createCollectionItem(input: {
     isWishlist: input.kind === "wishlist",
   };
 }
+
+export function catalogToRemember(kept: string | null, heard: string | null): string | null {
+  if (kept?.trim()) {
+    return null;
+  }
+
+  return heard?.trim() || null;
+}

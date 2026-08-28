@@ -1,6 +1,7 @@
 import { Bookmark, Library } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { cache } from "react";
 
 import { ItemMemoryForm } from "@/app/collection/[id]/item-memory-form";
@@ -19,10 +20,11 @@ import { PressingThreads } from "@/components/ui/pressing-threads";
 import { RecordSides } from "@/components/ui/record-sides";
 import { ShelfKin } from "@/components/ui/shelf-kin";
 import { ShelfNeighbors } from "@/components/ui/shelf-neighbors";
+import { catalogToRemember } from "@/lib/collection/factory";
 import { collectionHref, parseWaveFlag } from "@/lib/collection/href";
 import { pickShelfKin, SHELF_KIN_LIMIT } from "@/lib/collection/kin";
 import { toPressingThreads } from "@/lib/collection/pressing-threads";
-import { getCollectionItem, listCollectionItems, listShelfNeighbors } from "@/lib/collection/repository";
+import { getCollectionItem, listCollectionItems, listShelfNeighbors, updateCollectionItem } from "@/lib/collection/repository";
 import { decadeLabel } from "@/lib/collection/stats";
 import { decadeFromYear } from "@/lib/collection/types";
 import { loadDeezerPreviews } from "@/lib/deezer/client";
@@ -117,6 +119,13 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
     formatNames: pressing.formatNames,
     creditLine: pressing.creditLine,
   });
+  const remembered = catalogToRemember(item.catalogNumber, pressing.catalogNumber);
+
+  if (remembered) {
+    after(() => {
+      void rememberCatalogNumber(session.user.id, item.id, remembered);
+    });
+  }
   const sides = attachDeezerPreviews(pressing.sides, previews);
   const backHref = listBackHref(query.from, "/collection");
 
@@ -181,6 +190,14 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
       </div>
     </AppShell>
   );
+}
+
+async function rememberCatalogNumber(userId: string, id: string, catalogNumber: string): Promise<void> {
+  try {
+    await updateCollectionItem(userId, id, { catalogNumber });
+  } catch {
+    return;
+  }
 }
 
 async function loadPressingListen(discogsId: number | null) {

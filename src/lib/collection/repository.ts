@@ -389,6 +389,7 @@ export async function updateCollectionItem(
     isWishlist?: boolean;
     purchaseLocation?: string | null;
     purchaseDate?: Date | null;
+    catalogNumber?: string | null;
   },
 ) {
   try {

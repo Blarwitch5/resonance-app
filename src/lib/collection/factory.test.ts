@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createCollectionItem } from "@/lib/collection/factory";
+import { catalogToRemember, createCollectionItem } from "@/lib/collection/factory";
 import type { ReleaseDraft } from "@/lib/collection/types";
 import { ValidationError } from "@/lib/errors";
 
@@ -47,5 +47,20 @@ describe("createCollectionItem", () => {
     expect(() => createCollectionItem({ draft: { ...draft, artist: "" }, kind: "owned" })).toThrow(
       ValidationError,
     );
+  });
+});
+
+describe("catalogToRemember", () => {
+  it("keeps a catalog the shelf has not heard yet", () => {
+    expect(catalogToRemember(null, " GEF 24536 ")).toBe("GEF 24536");
+  });
+
+  it("does not overwrite a catalog already on the pressing", () => {
+    expect(catalogToRemember("CL 1355", "CS 8163")).toBeNull();
+  });
+
+  it("stays quiet without a catalog to keep", () => {
+    expect(catalogToRemember(null, "   ")).toBeNull();
+    expect(catalogToRemember("  ", null)).toBeNull();
   });
 });

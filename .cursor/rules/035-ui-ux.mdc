@@ -21,7 +21,7 @@ Loading, empty, error, success, disabled, partiel (offline). Empty Collection : 
 ## Interaction
 
 - Cibles ≥ 44px (`min-h-11` / `min-h-12` / bottom bar `min-h-14`).
-- Swipe / long-press : plus tard, avec alternative bouton visible.
+- Long-press mobile : ouvre le même `RecordMenu` que le clic droit desktop. Boutons visibles restent. Swipe : plus tard.
 - Overlay : `bg-overlay`, Esc ferme, focus trap.
 - Motion : ripple / vague légère. `prefers-reduced-motion` déjà global — ne pas le contourner.
 

@@ -12,6 +12,7 @@ import {
   useSyncExternalStore,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
@@ -19,6 +20,7 @@ import { createPortal } from "react-dom";
 import { Notice } from "@/components/ui/notice";
 import { trapFocus } from "@/components/ui/trap-focus";
 import { pressingCopyVoice, type PressingCopyKind } from "@/lib/collection/copy-pressing";
+import { LONG_PRESS_MS, pointerLeftPressZone, shouldArmLongPress } from "@/lib/collection/long-press";
 import {
   clampMenuPosition,
   explorerMenuActions,
@@ -104,6 +106,9 @@ export function RecordMenu({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const ignoreClose = useRef(false);
+  const pressOrigin = useRef<{ x: number; y: number } | null>(null);
+  const pressTimer = useRef(0);
+  const suppressClick = useRef(false);
   const menuId = useId();
   const isClient = useSyncExternalStore(subscribeToClient, () => true, () => false);
   const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
@@ -252,17 +257,84 @@ export function RecordMenu({
     };
   }, [anchor, close, isConfirmingRelease]);
 
+  useEffect(() => {
+    return () => {
+      if (pressTimer.current) {
+        window.clearTimeout(pressTimer.current);
+      }
+    };
+  }, []);
+
+  function clearPress() {
+    if (pressTimer.current) {
+      window.clearTimeout(pressTimer.current);
+      pressTimer.current = 0;
+    }
+
+    pressOrigin.current = null;
+  }
+
   function onContextMenu(event: ReactMouseEvent<HTMLDivElement>) {
-    if (!isDesktopViewport() || actions.length === 0) {
+    if (actions.length === 0) {
       return;
     }
 
     event.preventDefault();
+
+    if (!isDesktopViewport()) {
+      suppressClick.current = true;
+    }
+
     openAt(event.clientX, event.clientY);
   }
 
+  function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!shouldArmLongPress({ isDesktop: isDesktopViewport(), button: event.button }) || actions.length === 0) {
+      return;
+    }
+
+    pressOrigin.current = { x: event.clientX, y: event.clientY };
+    pressTimer.current = window.setTimeout(() => {
+      const origin = pressOrigin.current;
+      pressTimer.current = 0;
+
+      if (!origin) {
+        return;
+      }
+
+      suppressClick.current = true;
+      openAt(origin.x, origin.y);
+    }, LONG_PRESS_MS);
+  }
+
+  function onPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const origin = pressOrigin.current;
+
+    if (!origin || pressTimer.current === 0) {
+      return;
+    }
+
+    if (pointerLeftPressZone(origin, { x: event.clientX, y: event.clientY })) {
+      clearPress();
+    }
+  }
+
+  function onPointerUp() {
+    clearPress();
+  }
+
+  function onClickCapture(event: ReactMouseEvent<HTMLDivElement>) {
+    if (!suppressClick.current) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    suppressClick.current = false;
+  }
+
   function onKeyDownCapture(event: ReactKeyboardEvent<HTMLDivElement>) {
-    if (!isDesktopViewport() || actions.length === 0) {
+    if (actions.length === 0) {
       return;
     }
 
@@ -369,7 +441,17 @@ export function RecordMenu({
   }
 
   return (
-    <div ref={wrapperRef} onContextMenu={onContextMenu} onKeyDown={onKeyDownCapture}>
+    <div
+      ref={wrapperRef}
+      className="touch-callout-none touch-manipulation select-none lg:select-text"
+      onContextMenu={onContextMenu}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onClickCapture={onClickCapture}
+      onKeyDown={onKeyDownCapture}
+    >
       {children}
       {isClient && anchor
         ? createPortal(

@@ -5,18 +5,23 @@ import {
   attachDeezerPreviews,
   deezerAlbumQuery,
   hasDeezerPreview,
+  hasQuietSampleTracks,
   isDeezerPreviewUrl,
   matchTrackPreview,
   normalizeTrackTitle,
   pickDeezerAlbum,
+  isDeezerPreviewAudioType,
   sampleArtworkUrl,
+  sampleListenHref,
   sampleCueLabel,
   sampleCues,
   sampleNowPlaying,
+  samplePlaybackFailure,
   sampleSeekRatio,
   sampleSeekSeconds,
   samplePositionState,
   shouldToggleSampleOnSpace,
+  trackHasSample,
 } from "@/lib/deezer/preview";
 
 const preview = "https://cdns-preview-d.dzcdn.net/stream/c-abc123.mp3";
@@ -33,9 +38,33 @@ describe("normalizeTrackTitle", () => {
 describe("isDeezerPreviewUrl", () => {
   it("keeps Deezer CDN previews only", () => {
     expect(isDeezerPreviewUrl(preview)).toBe(true);
+    expect(
+      isDeezerPreviewUrl(
+        "https://cdnt-preview.dzcdn.net/api/1/1/f/8/c/0/f8c5dc3837912dba37c9a1ab3170cc3f.mp3?hdnea=exp=1",
+      ),
+    ).toBe(true);
     expect(isDeezerPreviewUrl("https://evil.example/x.mp3")).toBe(false);
     expect(isDeezerPreviewUrl("http://cdns-preview-d.dzcdn.net/stream/c-abc123.mp3")).toBe(false);
+    expect(isDeezerPreviewUrl("https://cdns-preview-d.dzcdn.net/cover/c-abc123.jpg")).toBe(false);
+    expect(isDeezerPreviewUrl("https://e-cdns-images.dzcdn.net/images/cover/abc.mp3")).toBe(false);
     expect(isDeezerPreviewUrl("not a url")).toBe(false);
+  });
+});
+
+describe("sampleListenHref", () => {
+  it("keeps the sample on Resonance so the browser never reads Deezer", () => {
+    expect(sampleListenHref(preview)).toBe(`/api/resonance/sample?src=${encodeURIComponent(preview)}`);
+    expect(sampleListenHref("https://evil.example/x.mp3")).toBeNull();
+  });
+});
+
+describe("isDeezerPreviewAudioType", () => {
+  it("lets audio through and refuses an HTML wall", () => {
+    expect(isDeezerPreviewAudioType("audio/mpeg")).toBe(true);
+    expect(isDeezerPreviewAudioType("application/octet-stream")).toBe(true);
+    expect(isDeezerPreviewAudioType("")).toBe(true);
+    expect(isDeezerPreviewAudioType("text/html; charset=utf-8")).toBe(false);
+    expect(isDeezerPreviewAudioType("application/json")).toBe(false);
   });
 });
 
@@ -75,6 +104,38 @@ describe("hasDeezerPreview", () => {
         {
           heading: "Side A",
           tracks: [{ position: "A1", title: "So What", duration: "9:22", previewUrl: null }],
+        },
+      ]),
+    ).toBe(false);
+  });
+});
+
+describe("trackHasSample", () => {
+  it("hears only a real Deezer preview", () => {
+    expect(trackHasSample({ previewUrl: preview })).toBe(true);
+    expect(trackHasSample({ previewUrl: null })).toBe(false);
+    expect(trackHasSample({ previewUrl: "https://evil.example/x.mp3" })).toBe(false);
+  });
+});
+
+describe("hasQuietSampleTracks", () => {
+  it("notices a face without a sample beside ones that sing", () => {
+    expect(
+      hasQuietSampleTracks([
+        {
+          heading: "Side A",
+          tracks: [
+            { position: "A1", title: "So What", duration: "9:22", previewUrl: preview },
+            { position: "A2", title: "Freddie Freeloader", duration: "9:46", previewUrl: null },
+          ],
+        },
+      ]),
+    ).toBe(true);
+    expect(
+      hasQuietSampleTracks([
+        {
+          heading: "Side A",
+          tracks: [{ position: "A1", title: "So What", duration: "9:22", previewUrl: preview }],
         },
       ]),
     ).toBe(false);
@@ -251,6 +312,25 @@ describe("samplePositionState", () => {
   it("keeps the playhead inside the sample", () => {
     expect(samplePositionState({ duration: 30, progress: -1 })?.position).toBe(0);
     expect(samplePositionState({ duration: 30, progress: 2 })?.position).toBe(30);
+  });
+});
+
+describe("samplePlaybackFailure", () => {
+  it("stays quiet when a sample is interrupted", () => {
+    expect(samplePlaybackFailure(new DOMException("The play() request was interrupted.", "AbortError"))).toBe(
+      "abort",
+    );
+  });
+
+  it("asks to try again when the room blocked autoplay", () => {
+    expect(samplePlaybackFailure(new DOMException("play() failed because the user didn't interact", "NotAllowedError"))).toBe(
+      "blocked",
+    );
+  });
+
+  it("names a sample that could not be heard", () => {
+    expect(samplePlaybackFailure(new Error("network"))).toBe("hear");
+    expect(samplePlaybackFailure("no")).toBe("hear");
   });
 });
 

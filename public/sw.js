@@ -42,7 +42,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const kind = offlineFetchKind(url);
+  const kind = offlineFetchKind(url, event.request.destination);
 
   if (kind === "bypass") {
     return;
@@ -66,7 +66,15 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkOnlyWithOfflinePage(event.request));
 });
 
-function offlineFetchKind(url) {
+function offlineFetchKind(url, destination) {
+  if (destination === "audio" || destination === "video") {
+    return "bypass";
+  }
+
+  if (url.hostname.endsWith(".dzcdn.net")) {
+    return "bypass";
+  }
+
   if (url.pathname.startsWith("/api/")) {
     return "bypass";
   }

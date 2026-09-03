@@ -18,7 +18,22 @@ export function normalizeTrackTitle(value: string): string {
 export function isDeezerPreviewUrl(value: string): boolean {
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && url.hostname.endsWith(".dzcdn.net") && url.pathname.length > 1;
+    const path = url.pathname.toLowerCase();
+    return (
+      url.protocol === "https:" &&
+      url.hostname.endsWith(".dzcdn.net") &&
+      url.hostname.includes("preview") &&
+      path.endsWith(".mp3")
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function isDeezerCdnUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname.endsWith(".dzcdn.net");
   } catch {
     return false;
   }
@@ -58,7 +73,7 @@ export interface SampleCue {
 export function sampleCues(sides: readonly RecordSide[]): SampleCue[] {
   return sides.flatMap((side, sideIndex) =>
     side.tracks.flatMap((track, trackIndex) => {
-      if (!track.previewUrl || !isDeezerPreviewUrl(track.previewUrl)) {
+      if (!trackHasSample(track)) {
         return [];
       }
 
@@ -94,8 +109,36 @@ export function adjacentSample(cues: readonly SampleCue[], key: string, delta: n
   return next ?? null;
 }
 
+export function trackHasSample<T extends { previewUrl: string | null }>(
+  track: T,
+): track is T & { previewUrl: string } {
+  return Boolean(track.previewUrl && isDeezerPreviewUrl(track.previewUrl));
+}
+
+export function sampleListenHref(url: string): string | null {
+  if (!isDeezerPreviewUrl(url)) {
+    return null;
+  }
+
+  return `/api/resonance/sample?src=${encodeURIComponent(url)}`;
+}
+
+export function isDeezerPreviewAudioType(value: string): boolean {
+  const type = value.split(";")[0]?.trim().toLowerCase() ?? "";
+
+  if (type.length === 0) {
+    return true;
+  }
+
+  return type.startsWith("audio/") || type === "application/octet-stream";
+}
+
 export function hasDeezerPreview(sides: readonly RecordSide[]): boolean {
-  return sides.some((side) => side.tracks.some((track) => Boolean(track.previewUrl)));
+  return sides.some((side) => side.tracks.some((track) => trackHasSample(track)));
+}
+
+export function hasQuietSampleTracks(sides: readonly RecordSide[]): boolean {
+  return sides.some((side) => side.tracks.some((track) => !trackHasSample(track)));
 }
 
 const DISCOGS_ARTWORK_HOSTS = new Set(["i.discogs.com", "st.discogs.com", "img.discogs.com"]);
@@ -171,6 +214,22 @@ export function samplePositionState(input: { duration: number; progress: number 
     playbackRate: 1,
     position,
   };
+}
+
+export type SamplePlaybackFailure = "abort" | "blocked" | "hear";
+
+export function samplePlaybackFailure(cause: unknown): SamplePlaybackFailure {
+  const name = cause instanceof Error ? cause.name : "";
+
+  if (name === "AbortError") {
+    return "abort";
+  }
+
+  if (name === "NotAllowedError") {
+    return "blocked";
+  }
+
+  return "hear";
 }
 
 export function shouldToggleSampleOnSpace(input: {

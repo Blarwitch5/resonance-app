@@ -20,6 +20,7 @@ interface RecordRowProps {
   memory?: string;
   threads?: ShelfCardThreadView | null;
   locale?: Locale;
+  priority?: boolean;
 }
 
 export function RecordRow({
@@ -33,6 +34,7 @@ export function RecordRow({
   memory,
   threads = null,
   locale = "en",
+  priority = false,
 }: RecordRowProps) {
   const FormatGlyph = formatIcons[format];
   const artistThread = threads?.artist ?? { label: artist, href: null, ariaLabel: null };
@@ -48,7 +50,7 @@ export function RecordRow({
         data-record-link=""
         className="w-16 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
       >
-        <CoverArt url={coverUrl} alt={coverAlt(locale, title, artist)} sizes="64px" />
+        <CoverArt url={coverUrl} alt={coverAlt(locale, title, artist)} sizes="64px" priority={priority} />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <Link

@@ -7,6 +7,8 @@ describe("pressingCopyVoice", () => {
     expect(pressingCopyVoice("barcode", "07464405791", false)).toEqual({
       ariaLabel: "Copy barcode 07464405791",
       label: "07464405791",
+      kind: "Barcode",
+      hint: "The code printed on the sleeve.",
       error: "That barcode could not be copied.",
     });
   });
@@ -15,6 +17,8 @@ describe("pressingCopyVoice", () => {
     expect(pressingCopyVoice("catalog", "CL 1355", false)).toEqual({
       ariaLabel: "Copy catalog CL 1355",
       label: "CL 1355",
+      kind: "Catalog",
+      hint: "The number this pressing wears from its label.",
       error: "That catalog number could not be copied.",
     });
   });

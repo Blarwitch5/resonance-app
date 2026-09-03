@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { glassPanelClass } from "@/components/ui/chrome";
+import { sidebarShellClass } from "@/components/ui/chrome";
 import { isMainNavActive, MAIN_NAV, sidebarSubNavKind } from "@/components/ui/main-nav";
 import { ResonanceLockup } from "@/components/ui/resonance-mark";
 import { useMainNavHrefs } from "@/components/ui/use-main-nav-href";
@@ -22,9 +22,7 @@ export function Sidebar({ formatNav, profileNav, locale = "en" }: SidebarProps) 
   const hrefs = useMainNavHrefs();
 
   return (
-    <aside
-      className={`hidden w-60 shrink-0 lg:flex lg:h-full lg:flex-col lg:rounded-none lg:border-y-0 lg:border-l-0 ${glassPanelClass}`}
-    >
+    <aside className={sidebarShellClass}>
       <div className="px-6 py-8 standalone:py-6">
         <ResonanceLockup tagline={t(locale, "brand.tagline")} />
       </div>

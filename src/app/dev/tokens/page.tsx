@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { glassPanelClass } from "@/components/ui/chrome";
+
 export const metadata: Metadata = {
   title: "Tokens",
 };
@@ -80,9 +82,9 @@ export default function DesignTokensPage() {
           Sidebar and the PWA tabs. Inset from the screen edge. Cards stay matte.
         </p>
         <div className="relative mt-4 overflow-hidden rounded-rs-lg bg-background p-8">
-          <div className="rounded-rs-lg border border-glass-border bg-glass px-6 py-8 text-text backdrop-blur-xl backdrop-saturate-150">
+          <div className={`rounded-rs-lg px-6 py-8 text-text ${glassPanelClass}`}>
             <p className="font-medium">glass + glass-border</p>
-            <p className="mt-1 text-sm text-text-secondary">backdrop-blur-xl · saturate-150</p>
+            <p className="mt-1 text-sm text-text-secondary">backdrop-blur-xl · saturate via theme</p>
           </div>
         </div>
       </section>

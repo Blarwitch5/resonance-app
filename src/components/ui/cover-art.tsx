@@ -13,7 +13,7 @@ export function CoverArt({
   url,
   alt,
   sizes = "(max-width: 768px) 50vw, 200px",
-  className = "",
+  className = "w-full",
   priority = false,
   isInteractive = false,
 }: CoverArtProps) {
@@ -22,8 +22,9 @@ export function CoverArt({
     : "";
 
   return (
-    <div className={`relative w-full overflow-hidden rounded-rs-sm bg-surface-pressed ${className}`.trim()}>
-      <span className="block w-full pt-[100%]" aria-hidden />
+    <div
+      className={`relative aspect-square overflow-hidden rounded-rs-sm bg-surface-pressed ${className}`.trim()}
+    >
       {url ? (
         <Image
           src={url}
@@ -33,8 +34,8 @@ export function CoverArt({
           sizes={sizes}
           unoptimized
           priority={priority}
-          className={`absolute inset-0 object-cover ${listenClass}`.trim()}
-          style={{ width: "100%", height: "100%" }}
+          loading={priority ? "eager" : "lazy"}
+          className={`absolute inset-0 size-full object-cover ${listenClass}`.trim()}
         />
       ) : (
         <div

@@ -9,7 +9,7 @@ interface SidebarSubNavProps {
 
 export function SidebarSubNav({ label, children }: SidebarSubNavProps) {
   return (
-    <div role="group" aria-label={label} className="ml-8 flex flex-col gap-1 border-l border-border pl-2">
+    <div role="group" aria-label={label} className="ml-8 flex flex-col gap-1">
       {children}
     </div>
   );

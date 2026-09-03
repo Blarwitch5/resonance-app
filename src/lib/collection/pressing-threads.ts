@@ -53,7 +53,7 @@ export interface PressingThreadView {
   condition: { label: string; href: string; ariaLabel: string } | null;
   barcode: string | null;
   found: { where: string; when: string | null; href: string | null; whenHref: string | null } | null;
-  discogs: { href: string; title: string; artist: string } | null;
+  discogs: { href: string; title: string; artist: string; id: number } | null;
   elsewhereHref: string;
 }
 
@@ -120,11 +120,12 @@ export function toPressingThreads(source: PressingThreadSource, locale: Locale =
             whenHref: foundYear !== undefined ? collectionHref({ when: foundYear }) : null,
           }
         : null,
-    discogs: discogsHref
+    discogs: discogsHref && discogsId
       ? {
           href: discogsHref,
           title: source.title,
           artist: source.artist,
+          id: discogsId,
         }
       : null,
     elsewhereHref: explorerSearchHref({

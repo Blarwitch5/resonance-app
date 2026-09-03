@@ -50,6 +50,7 @@ describe("toPressingThreads", () => {
       whenHref: "/collection?when=2024",
     });
     expect(threads.discogs?.href).toBe("https://www.discogs.com/release/12345");
+    expect(threads.discogs?.id).toBe(12345);
     expect(threads.elsewhereHref).toBe("/explorer?q=Miles+Davis+Kind+of+Blue&format=vinyl");
   });
 

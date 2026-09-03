@@ -20,6 +20,7 @@ interface RecordTileProps {
   sizes?: string;
   threads?: ShelfCardThreadView | null;
   locale?: Locale;
+  priority?: boolean;
 }
 
 export function RecordTile({
@@ -32,6 +33,7 @@ export function RecordTile({
   sizes,
   threads = null,
   locale = "en",
+  priority = false,
 }: RecordTileProps) {
   const artistThread = threads?.artist ?? { label: artist, href: null, ariaLabel: null };
   const yearThread = threads?.year ?? toYearThread(year);
@@ -43,7 +45,13 @@ export function RecordTile({
         data-record-link=""
         className="group block rounded-rs-md outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
       >
-        <CoverArt url={coverUrl} alt={coverAlt(locale, title, artist)} sizes={sizes} isInteractive />
+        <CoverArt
+          url={coverUrl}
+          alt={coverAlt(locale, title, artist)}
+          sizes={sizes}
+          priority={priority}
+          isInteractive
+        />
       </Link>
       <RecordTileCaption
         heading={

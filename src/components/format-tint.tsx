@@ -3,7 +3,6 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useLayoutEffect } from "react";
 
-import { formatSwatchClasses } from "@/components/ui/format-icon";
 import { formatListenFromLocation } from "@/lib/collection/href";
 import type { MediaFormat } from "@/lib/collection/types";
 
@@ -30,14 +29,5 @@ export function FormatTint({ formats }: FormatTintProps) {
     };
   }, [format]);
 
-  if (!format) {
-    return null;
-  }
-
-  return (
-    <div
-      aria-hidden
-      className={`pointer-events-none absolute inset-x-0 top-0 z-20 h-1 ${formatSwatchClasses[format]}`}
-    />
-  );
+  return null;
 }

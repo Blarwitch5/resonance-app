@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { ChipLink } from "@/components/ui/chip";
 import { CopyPressingButton } from "@/components/ui/copy-pressing-button";
 import { FormatIcon } from "@/components/ui/format-icon";
+import { formatIcons } from "@/components/ui/format-tokens";
 import { PressingLinks } from "@/components/ui/pressing-links";
 import { displayTitleClass } from "@/components/ui/type";
 import { useT } from "@/components/locale-provider";
@@ -55,6 +56,7 @@ export function PressingThreads({
 }: PressingThreadsProps) {
   const t = useT();
   const hasChips = threads.genres.length > 0 || threads.condition !== null;
+  const FormatGlyph = formatIcons[threads.format];
 
   return (
     <>
@@ -104,7 +106,10 @@ export function PressingThreads({
           ) : null}
         </p>
         {threads.formatLine ? (
-          <p className="text-sm leading-6 text-text-secondary">{threads.formatLine}</p>
+          <p className="flex items-center gap-2 text-sm leading-6 text-text-secondary">
+            <FormatGlyph className="size-4 shrink-0" aria-hidden />
+            <span>{threads.formatLine}</span>
+          </p>
         ) : null}
         {threads.creditLine ? (
           <p className="text-sm leading-6 text-text-secondary">{threads.creditLine}</p>
@@ -168,6 +173,7 @@ export function PressingThreads({
         {showLinks ? (
           <PressingLinks
             href={threads.discogs?.href}
+            releaseId={threads.discogs?.id}
             title={threads.title}
             artist={threads.artist}
             elsewhereHref={threads.elsewhereHref}

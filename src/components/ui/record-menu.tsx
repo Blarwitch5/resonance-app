@@ -180,27 +180,26 @@ export function RecordMenu({
   const swipeActions = recordSwipeActions(visibleActions);
   const reveal = swipeRevealWidth(swipeActions.length);
   const showSwipe = canSwipe && swipeActions.length > 0;
+  const revealRef = useRef(reveal);
+  revealRef.current = reveal;
 
-  function applySwipeOffset(next: number) {
-    const offset = clampSwipeOffset(next, reveal);
+  const applySwipeOffset = useCallback((next: number) => {
+    const offset = clampSwipeOffset(next, revealRef.current);
     swipeOffsetRef.current = offset;
     if (swipeSheetRef.current) {
       swipeSheetRef.current.style.transform = `translate3d(${-offset}px, 0, 0)`;
     }
-  }
+  }, []);
 
-  function restSwipe() {
+  const restSwipe = useCallback(() => {
     applySwipeOffset(0);
     setSwipeOffset(0);
     setIsSwipeDragging(false);
     setIsConfirmingRelease(false);
-  }
+  }, [applySwipeOffset]);
 
   const restSwipeRef = useRef(restSwipe);
-
-  useEffect(() => {
-    restSwipeRef.current = restSwipe;
-  });
+  restSwipeRef.current = restSwipe;
 
   const close = useCallback(() => {
     setAnchor(null);
@@ -260,17 +259,9 @@ export function RecordMenu({
   }, []);
 
   useLayoutEffect(() => {
-    if (swipeOffsetRef.current === 0) {
-      return;
-    }
-
-    const offset = clampSwipeOffset(reveal, reveal);
-    swipeOffsetRef.current = offset;
-    if (swipeSheetRef.current) {
-      swipeSheetRef.current.style.transform = `translate3d(${-offset}px, 0, 0)`;
-    }
-    setSwipeOffset(offset);
-  }, [reveal]);
+    applySwipeOffset(swipeOffsetRef.current === 0 ? 0 : reveal);
+    setSwipeOffset(swipeOffsetRef.current);
+  }, [applySwipeOffset, reveal]);
 
   useLayoutEffect(() => {
     if (!anchor || !menuRef.current) {
@@ -356,10 +347,6 @@ export function RecordMenu({
   }, []);
 
   useEffect(() => {
-    if (swipeOffset === 0 && !isSwipeDragging) {
-      return;
-    }
-
     function onScroll() {
       restSwipeRef.current();
     }
@@ -371,6 +358,10 @@ export function RecordMenu({
 
       event.preventDefault();
       restSwipeRef.current();
+    }
+
+    if (swipeOffset === 0 && !isSwipeDragging) {
+      return;
     }
 
     window.addEventListener("scroll", onScroll, true);
@@ -639,7 +630,7 @@ export function RecordMenu({
   }
 
   const swipeFrame = showSwipe ? (
-    <div className="relative overflow-hidden lg:overflow-visible">
+    <div className="relative overflow-hidden rounded-rs-md lg:overflow-visible">
       <div
         className="absolute inset-y-0 right-0 flex lg:hidden"
         role="group"

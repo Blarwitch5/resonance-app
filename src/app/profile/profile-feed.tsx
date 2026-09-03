@@ -74,7 +74,7 @@ export function ProfileFeed({
   return (
     <>
       <ul className={shelfResultsClass(layout)}>
-        {feed.items.map((item) => {
+        {feed.items.map((item, index) => {
           const href = journalFromHref(item.id, from);
           const threads = shelfCardThreads(
             {
@@ -101,6 +101,7 @@ export function ProfileFeed({
                 format={item.format}
                 threads={threads}
                 locale={locale}
+                priority={index < 8}
               />
             ) : (
               <RecordTile
@@ -112,6 +113,7 @@ export function ProfileFeed({
                 format={item.format}
                 locale={locale}
                 threads={threads}
+                priority={index < 8}
               />
             );
 

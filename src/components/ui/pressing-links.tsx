@@ -13,11 +13,12 @@ interface PressingLinksProps {
   title: string;
   artist: string;
   href?: string | null;
+  releaseId?: number;
   elsewhereHref: string;
   locale?: Locale;
 }
 
-export function PressingLinks({ href, title, artist, elsewhereHref, locale }: PressingLinksProps) {
+export function PressingLinks({ href, releaseId, title, artist, elsewhereHref, locale }: PressingLinksProps) {
   const contextLocale = useLocale();
   const lang = locale ?? contextLocale;
 
@@ -25,7 +26,7 @@ export function PressingLinks({ href, title, artist, elsewhereHref, locale }: Pr
     <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-start sm:gap-x-6">
       {href ? (
         <>
-          <DiscogsPressingLink href={href} title={title} locale={lang} />
+          <DiscogsPressingLink href={href} title={title} releaseId={releaseId} locale={lang} />
           <SharePressingButton href={href} title={title} artist={artist} />
         </>
       ) : null}

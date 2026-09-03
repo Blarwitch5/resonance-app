@@ -111,7 +111,7 @@ function ShelfRecordList({
 }) {
   return (
     <ul className={className}>
-      {items.map((item) => {
+      {items.map((item, index) => {
         const foundOn =
           sort === "found"
             ? foundDateLabel(item.purchaseDate)
@@ -164,6 +164,7 @@ function ShelfRecordList({
                       memory={memoryExcerpt(item.notes)}
                       threads={threads}
                       locale={locale}
+                      priority={index < 8}
                     />
                   ) : (
                     <RecordTile
@@ -176,6 +177,7 @@ function ShelfRecordList({
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       threads={threads}
                       locale={locale}
+                      priority={index < 8}
                     />
                   )}
                 </KeptCloseSlot>

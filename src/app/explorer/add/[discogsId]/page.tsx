@@ -24,6 +24,7 @@ import {
 } from "@/lib/collection/confirm";
 import { collectionHref, journalFromHref } from "@/lib/collection/href";
 import { pickShelfKin, SHELF_KIN_LIMIT } from "@/lib/collection/kin";
+import { confirmCoverStickyClass } from "@/lib/collection/layout";
 import { toPressingThreads } from "@/lib/collection/pressing-threads";
 import { listCollectionItems, listShelfCopies } from "@/lib/collection/repository";
 import { decadeFromYear } from "@/lib/collection/types";
@@ -178,12 +179,14 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
       </header>
 
       <div className="grid items-start gap-8 sm:grid-cols-[minmax(0,16rem)_1fr]">
-        <CoverArt
-          url={preview.coverUrl}
-          alt={coverAlt(locale, preview.title, preview.artist)}
-          sizes="(max-width: 640px) 80vw, 256px"
-          priority
-        />
+        <div className={confirmCoverStickyClass}>
+          <CoverArt
+            url={preview.coverUrl}
+            alt={coverAlt(locale, preview.title, preview.artist)}
+            sizes="(max-width: 640px) 80vw, 256px"
+            priority
+          />
+        </div>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <PressingThreads threads={threads} showLinks locale={locale} />

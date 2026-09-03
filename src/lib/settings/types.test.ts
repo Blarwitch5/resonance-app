@@ -74,7 +74,9 @@ describe("DEFAULT_USER_SETTINGS", () => {
 describe("shelfResultsClass", () => {
   it("keeps a list a list, even on a wide desk", () => {
     expect(shelfResultsClass("list")).toContain("flex-col");
-    expect(shelfResultsClass("list")).toContain("-mx-4");
+    expect(shelfResultsClass("list")).toContain("gap-1");
+    expect(shelfResultsClass("list")).toContain("p-1");
+    expect(shelfResultsClass("list")).not.toContain("-mx-4");
     expect(shelfResultsClass("list")).not.toContain("divide-y");
     expect(shelfResultsClass("list")).not.toContain("grid-cols");
   });
@@ -86,8 +88,9 @@ describe("shelfResultsClass", () => {
 });
 
 describe("shelfListHitClass", () => {
-  it("keeps list hover inset from the fill, aligned with the page", () => {
-    expect(shelfListHitClass).toContain("px-4");
+  it("keeps list hover rounded, with room beside the cover", () => {
+    expect(shelfListHitClass).toContain("rounded-rs-md");
+    expect(shelfListHitClass).toContain("px-3");
     expect(shelfListHitClass).toContain("hover:bg-surface-pressed");
   });
 });

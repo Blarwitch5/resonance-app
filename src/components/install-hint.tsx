@@ -127,6 +127,19 @@ function isBeforeInstallPromptEvent(event: Event): event is BeforeInstallPromptE
   return "prompt" in event && typeof (event as BeforeInstallPromptEvent).prompt === "function";
 }
 
+let capturedPrompt: BeforeInstallPromptEvent | null = null;
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    if (!isBeforeInstallPromptEvent(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    capturedPrompt = event;
+  });
+}
+
 export function InstallHint() {
   const t = useT();
   const pathname = usePathname();
@@ -137,7 +150,7 @@ export function InstallHint() {
     () => SERVER_ENVIRONMENT,
   );
   const [didDismiss, setDidDismiss] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(capturedPrompt);
   const [isPrompting, setIsPrompting] = useState(false);
 
   const dismiss = useCallback(() => {
@@ -153,6 +166,7 @@ export function InstallHint() {
       }
 
       event.preventDefault();
+      capturedPrompt = event;
       setInstallPrompt(event);
     }
 
@@ -190,9 +204,9 @@ export function InstallHint() {
   }
 
   const canShowPath = HINT_PATHS.has(pathname);
-  const canOfferInstall = environment.isIos || installPrompt !== null;
+  const canOfferIos = environment.isIos && environment.isMobile;
+  const canOfferInstall = canOfferIos || installPrompt !== null;
   const isVisible =
-    environment.isMobile &&
     !environment.isStandalone &&
     !environment.wasDismissed &&
     !didDismiss &&
@@ -203,11 +217,17 @@ export function InstallHint() {
     return null;
   }
 
+  const installBody = environment.isIos
+    ? t("install.ios")
+    : environment.isMobile
+      ? t("install.android")
+      : t("install.desktop");
+
   return (
     <>
       <div className="h-28 shrink-0 lg:hidden" aria-hidden />
       <aside
-        className="fixed right-20 bottom-[calc(var(--rs-bottom-chrome)+max(0.75rem,env(safe-area-inset-bottom)))] left-4 z-30 rounded-rs-md border border-border bg-surface-elevated p-4 lg:hidden"
+        className="fixed right-20 bottom-[calc(var(--rs-bottom-chrome)+max(0.75rem,env(safe-area-inset-bottom)))] left-4 z-30 rounded-rs-md border border-border bg-surface-elevated p-4 lg:inset-x-auto lg:right-3 lg:bottom-3 lg:w-80"
         aria-labelledby={titleId}
       >
         <div className="flex items-start gap-3">
@@ -221,7 +241,7 @@ export function InstallHint() {
               {t("install.title")}
             </p>
             <p className="text-sm leading-6 text-text-secondary">
-              {environment.isIos ? t("install.ios") : t("install.android")}
+              {installBody}
             </p>
           </div>
           <button

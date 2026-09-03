@@ -13,6 +13,7 @@ Source : `src/app/globals.css`. Thème via `data-theme="light|dark"` (le script 
 | Token | Rôle | Interdit |
 | --- | --- | --- |
 | `background` / `surface` / `surface-elevated` | Page, cartes, modales | |
+| `sidebar` | Rail desktop seulement — lavis lilas opaque | Verre, page, cartes |
 | `text` | Titres, body | |
 | `text-secondary` | Sous-titres, meta | Body long |
 | `text-tertiary` | Placeholders, hints | Texte essentiel |
@@ -30,6 +31,6 @@ Focus : `outline-none ring-2 ring-border-strong`.
 
 ## Contraste (AA)
 
-Light : primary L baissé, secondary L=0.55 (plus le copper 0.65 trop clair). Dark : primary **éclairci** (L=0.72) pour rester un fill lisible ; `on-primary` devient sombre. Ne pas inverser ces paires.
+Light : primary L baissé, secondary L=0.55 (plus le copper 0.65 trop clair). Dark : loin = plus foncé (page L≈0.07), près du lecteur = plus clair (cartes L≈0.13, élevé L≈0.19). Borders en voile (blanc ~10 %) — le relief vient du fond, pas du trait. Texte L≈0.97 / meta L≈0.65 / hints L≈0.50. Primary **éclairci** (L≈0.82, C≈0.12) — lilas lisible, pas neon ; `on-primary` reste sombre. Wash format dark ≤ 5 %. Ne pas inverser ces paires.
 
 Pas de hex. Radius : `rounded-rs-sm|md|lg`.

@@ -44,6 +44,7 @@
   --color-overlay-light: var(--rs-overlay-light);
   --color-glass: var(--rs-glass);
   --color-glass-border: var(--rs-glass-border);
+  --color-sidebar: var(--rs-sidebar);
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
   --radius-rs-sm: 0.75rem;
@@ -53,6 +54,7 @@
 
 :root,
 [data-theme="light"] {
+  --rs-glass-saturate: 1.5;
   --rs-background: oklch(0.98 0.005 280);
   --rs-surface: oklch(0.95 0.01 280);
   --rs-surface-elevated: oklch(0.97 0.01 280);
@@ -93,49 +95,53 @@
   --rs-overlay-light: oklch(0.08 0.01 280 / 0.2);
   --rs-glass: oklch(0.96 0.04 280 / 0.72);
   --rs-glass-border: oklch(0.99 0.02 280 / 0.55);
+  --rs-sidebar: oklch(0.96 0.03 280);
 }
 
 [data-theme="dark"] {
-  --rs-background: oklch(0.08 0.01 280);
-  --rs-surface: oklch(0.12 0.02 280);
-  --rs-surface-elevated: oklch(0.16 0.02 280);
-  --rs-surface-pressed: oklch(0.2 0.02 280);
-  --rs-text: oklch(0.95 0.01 280);
-  --rs-text-secondary: oklch(0.78 0.02 280);
-  --rs-text-tertiary: oklch(0.68 0.02 280);
-  --rs-text-disabled: oklch(0.5 0.01 280);
-  --rs-primary: oklch(0.72 0.18 280);
-  --rs-primary-hover: oklch(0.76 0.16 280);
-  --rs-primary-active: oklch(0.66 0.18 280);
-  --rs-on-primary: oklch(0.16 0.04 280);
-  --rs-primary-soft: oklch(0.22 0.08 280);
-  --rs-on-primary-soft: oklch(0.86 0.08 280);
-  --rs-secondary: oklch(0.78 0.12 45);
-  --rs-secondary-hover: oklch(0.82 0.11 45);
-  --rs-secondary-active: oklch(0.72 0.12 45);
-  --rs-on-secondary: oklch(0.18 0.03 45);
-  --rs-secondary-soft: oklch(0.24 0.05 45);
-  --rs-on-secondary-soft: oklch(0.88 0.06 45);
-  --rs-accent: oklch(0.78 0.14 280);
-  --rs-accent-hover: oklch(0.82 0.12 280);
-  --rs-vinyl: oklch(0.72 0.18 280);
-  --rs-cassette: oklch(0.78 0.12 45);
-  --rs-cd: oklch(0.74 0.14 240);
-  --rs-success: oklch(0.78 0.12 140);
-  --rs-success-soft: oklch(0.22 0.05 140);
-  --rs-warning: oklch(0.82 0.12 80);
-  --rs-warning-soft: oklch(0.22 0.05 80);
-  --rs-error: oklch(0.76 0.14 20);
-  --rs-error-soft: oklch(0.22 0.06 20);
-  --rs-info: oklch(0.78 0.1 220);
-  --rs-info-soft: oklch(0.22 0.05 220);
-  --rs-border: oklch(0.24 0.02 280);
-  --rs-border-subtle: oklch(0.2 0.02 280);
-  --rs-border-strong: oklch(0.36 0.03 280);
-  --rs-overlay: oklch(0.08 0.01 280 / 0.7);
-  --rs-overlay-light: oklch(0.08 0.01 280 / 0.4);
-  --rs-glass: oklch(0.18 0.02 280 / 0.52);
-  --rs-glass-border: oklch(0.95 0.01 280 / 0.16);
+  /* Night ink. Far = darker, near the reader = lighter. Borders whisper. */
+  --rs-glass-saturate: 1.12;
+  --rs-background: oklch(0.07 0.008 280);
+  --rs-surface: oklch(0.13 0.012 280);
+  --rs-surface-elevated: oklch(0.19 0.014 280);
+  --rs-surface-pressed: oklch(0.24 0.014 280);
+  --rs-text: oklch(0.97 0.006 280);
+  --rs-text-secondary: oklch(0.65 0.016 280);
+  --rs-text-tertiary: oklch(0.5 0.012 280);
+  --rs-text-disabled: oklch(0.4 0.01 280);
+  --rs-primary: oklch(0.82 0.12 280);
+  --rs-primary-hover: oklch(0.86 0.11 280);
+  --rs-primary-active: oklch(0.76 0.12 280);
+  --rs-on-primary: oklch(0.14 0.03 280);
+  --rs-primary-soft: oklch(0.24 0.055 280);
+  --rs-on-primary-soft: oklch(0.94 0.04 280);
+  --rs-secondary: oklch(0.82 0.08 45);
+  --rs-secondary-hover: oklch(0.86 0.07 45);
+  --rs-secondary-active: oklch(0.76 0.08 45);
+  --rs-on-secondary: oklch(0.16 0.03 45);
+  --rs-secondary-soft: oklch(0.24 0.04 45);
+  --rs-on-secondary-soft: oklch(0.94 0.035 45);
+  --rs-accent: oklch(0.84 0.1 280);
+  --rs-accent-hover: oklch(0.88 0.09 280);
+  --rs-vinyl: oklch(0.82 0.12 280);
+  --rs-cassette: oklch(0.82 0.08 45);
+  --rs-cd: oklch(0.8 0.08 240);
+  --rs-success: oklch(0.82 0.08 140);
+  --rs-success-soft: oklch(0.24 0.04 140);
+  --rs-warning: oklch(0.84 0.08 80);
+  --rs-warning-soft: oklch(0.24 0.04 80);
+  --rs-error: oklch(0.8 0.1 20);
+  --rs-error-soft: oklch(0.24 0.045 20);
+  --rs-info: oklch(0.82 0.07 220);
+  --rs-info-soft: oklch(0.24 0.04 220);
+  --rs-border: oklch(0.92 0.02 280 / 0.1);
+  --rs-border-subtle: oklch(0.92 0.02 280 / 0.06);
+  --rs-border-strong: oklch(0.92 0.02 280 / 0.28);
+  --rs-overlay: oklch(0.06 0.008 280 / 0.72);
+  --rs-overlay-light: oklch(0.06 0.008 280 / 0.42);
+  --rs-glass: oklch(0.18 0.014 280 / 0.88);
+  --rs-glass-border: oklch(0.92 0.02 280 / 0.1);
+  --rs-sidebar: oklch(0.16 0.035 280);
 }
 
 html[data-format="vinyl"] {
@@ -160,15 +166,19 @@ html[data-theme="light"][data-format] {
   --rs-border-subtle: color-mix(in oklch, var(--rs-format-wash) 8%, oklch(0.92 0.01 280));
   --rs-glass: color-mix(in oklch, var(--rs-format-wash) 16%, oklch(0.96 0.03 280 / 0.72));
   --rs-glass-border: color-mix(in oklch, var(--rs-format-wash) 10%, oklch(0.99 0.02 280 / 0.55));
+  --rs-sidebar: color-mix(in oklch, var(--rs-format-wash) 10%, oklch(0.96 0.03 280));
 }
 
 html[data-theme="dark"][data-format] {
-  --rs-background: color-mix(in oklch, var(--rs-format-wash) 18%, oklch(0.08 0.01 280));
-  --rs-surface: color-mix(in oklch, var(--rs-format-wash) 14%, oklch(0.12 0.02 280));
-  --rs-surface-elevated: color-mix(in oklch, var(--rs-format-wash) 12%, oklch(0.16 0.02 280));
-  --rs-surface-pressed: color-mix(in oklch, var(--rs-format-wash) 14%, oklch(0.2 0.02 280));
-  --rs-border: color-mix(in oklch, var(--rs-format-wash) 12%, oklch(0.24 0.02 280));
-  --rs-border-subtle: color-mix(in oklch, var(--rs-format-wash) 10%, oklch(0.2 0.02 280));
+  --rs-background: color-mix(in oklch, var(--rs-format-wash) 5%, oklch(0.07 0.008 280));
+  --rs-surface: color-mix(in oklch, var(--rs-format-wash) 4%, oklch(0.13 0.012 280));
+  --rs-surface-elevated: color-mix(in oklch, var(--rs-format-wash) 4%, oklch(0.19 0.014 280));
+  --rs-surface-pressed: color-mix(in oklch, var(--rs-format-wash) 4%, oklch(0.24 0.014 280));
+  --rs-border: color-mix(in oklch, var(--rs-format-wash) 12%, oklch(0.92 0.02 280 / 0.1));
+  --rs-border-subtle: color-mix(in oklch, var(--rs-format-wash) 8%, oklch(0.92 0.02 280 / 0.06));
+  --rs-glass: color-mix(in oklch, var(--rs-format-wash) 5%, oklch(0.18 0.014 280 / 0.88));
+  --rs-glass-border: color-mix(in oklch, var(--rs-format-wash) 8%, oklch(0.92 0.02 280 / 0.1));
+  --rs-sidebar: color-mix(in oklch, var(--rs-format-wash) 8%, oklch(0.16 0.035 280));
 }
 
 @media (prefers-reduced-transparency: reduce) {

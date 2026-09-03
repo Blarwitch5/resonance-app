@@ -21,12 +21,14 @@ describe("offlineFetchPlan", () => {
     ).toBe("cover");
   });
 
-  it("leaves Explorer, auth, and APIs on the wire", () => {
+  it("leaves Explorer, auth, APIs, and Deezer samples on the wire", () => {
     expect(offlineFetchPlan("https://resonance.app/explorer?q=Nirvana").kind).toBe("network");
     expect(offlineFetchPlan("https://resonance.app/api/auth/ok").kind).toBe("bypass");
     expect(offlineFetchPlan("https://resonance.app/sign-in").kind).toBe("network");
     expect(offlineFetchPlan("https://resonance.app/profile").kind).toBe("network");
     expect(offlineFetchPlan("https://resonance.app/collection/not-a-journal").kind).toBe("network");
+    expect(offlineFetchPlan("https://cdns-preview-d.dzcdn.net/stream/c-abc123.mp3").kind).toBe("bypass");
+    expect(offlineFetchPlan("https://resonance.app/collection", "audio").kind).toBe("bypass");
   });
 
   it("whispers only when the shelf is already in the hand and the air is quiet", () => {

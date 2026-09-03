@@ -9,8 +9,16 @@ const JOURNAL_ID =
 
 const COVER_HOSTS = new Set(["i.discogs.com", "st.discogs.com", "img.discogs.com"]);
 
-export function offlineFetchPlan(href: string): OfflineFetchPlan {
+export function offlineFetchPlan(href: string, destination = ""): OfflineFetchPlan {
+  if (destination === "audio" || destination === "video") {
+    return { kind: "bypass" };
+  }
+
   const url = new URL(href);
+
+  if (url.hostname.endsWith(".dzcdn.net")) {
+    return { kind: "bypass" };
+  }
 
   if (url.pathname.startsWith("/api/")) {
     return { kind: "bypass" };

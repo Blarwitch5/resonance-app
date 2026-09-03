@@ -1,23 +1,28 @@
 "use client";
 
-import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { sampleDockClass } from "@/components/ui/chrome";
 import { CoverArt } from "@/components/ui/cover-art";
-import { glassPanelClass } from "@/components/ui/chrome";
 import { Notice } from "@/components/ui/notice";
 import { RecordSideHeading } from "@/components/ui/record-side-heading";
+import { recordTitleClass } from "@/components/ui/type";
 import { useT, useLocale } from "@/components/locale-provider";
 import type { RecordSide } from "@/lib/collection/types";
 import {
   adjacentSample,
+  hasQuietSampleTracks,
   sampleCueLabel,
   sampleCues,
+  sampleListenHref,
   sampleNowPlaying,
+  samplePlaybackFailure,
   samplePositionState,
   sampleSeekRatio,
   sampleSeekSeconds,
   shouldToggleSampleOnSpace,
+  trackHasSample,
   type SampleCue,
 } from "@/lib/deezer/preview";
 
@@ -26,9 +31,10 @@ interface RecordSamplePlayerProps {
   artist?: string;
   title?: string;
   coverUrl?: string | null;
+  keepClose?: ReactNode;
 }
 
-export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSamplePlayerProps) {
+export function RecordSamplePlayer({ sides, artist, title, coverUrl, keepClose }: RecordSamplePlayerProps) {
   const t = useT();
   const locale = useLocale();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -41,11 +47,12 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const canSkip = cues.length > 1;
+  const hasQuietTracks = useMemo(() => hasQuietSampleTracks(sides), [sides]);
   const previous = queued ? adjacentSample(cues, queued.key, -1) : null;
   const next = queued ? adjacentSample(cues, queued.key, 1) : null;
   const nowPlaying = queued
     ? sampleNowPlaying({
-        track: sampleCueLabel(queued),
+        track: queued.title,
         artist,
         album: title,
         coverUrl,
@@ -62,17 +69,34 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
 
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty("--rs-sample-dock", queued ? "4.75rem" : "0px");
+    const desk = window.matchMedia("(min-width: 1024px)");
+
+    function syncDock() {
+      if (!queued) {
+        root.style.removeProperty("--rs-sample-dock");
+        return;
+      }
+
+      root.style.setProperty("--rs-sample-dock", desk.matches ? "11rem" : "10rem");
+    }
+
+    syncDock();
+    desk.addEventListener("change", syncDock);
 
     return () => {
+      desk.removeEventListener("change", syncDock);
       root.style.removeProperty("--rs-sample-dock");
     };
   }, [queued]);
 
   const startSample = useCallback(async (sample: SampleCue) => {
     const audio = audioRef.current;
+    const href = sampleListenHref(sample.url);
 
-    if (!audio) {
+    if (!audio || !href) {
+      setQueued(sample);
+      setIsPlaying(false);
+      setError(t("sample.couldNotHear"));
       return;
     }
 
@@ -80,16 +104,20 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
     setProgress(0);
     setDuration(0);
     setError(null);
-    audio.src = sample.url;
+    audio.src = href;
 
     try {
       await audio.play();
       setIsPlaying(true);
     } catch (cause) {
+      if (samplePlaybackFailure(cause) === "abort") {
+        return;
+      }
+
       setIsPlaying(false);
       setError(sampleErrorMessage(cause, t));
     }
-  }, []);
+  }, [t]);
 
   const togglePlayback = useCallback(async () => {
     const audio = audioRef.current;
@@ -109,10 +137,30 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
       setIsPlaying(true);
       setError(null);
     } catch (cause) {
+      if (samplePlaybackFailure(cause) === "abort") {
+        return;
+      }
+
       setIsPlaying(false);
       setError(sampleErrorMessage(cause, t));
     }
-  }, [isPlaying, queued]);
+  }, [isPlaying, queued, t]);
+
+  const stopSample = useCallback(() => {
+    const audio = audioRef.current;
+    audio?.pause();
+
+    if (audio) {
+      audio.removeAttribute("src");
+      audio.load();
+    }
+
+    setQueued(null);
+    setIsPlaying(false);
+    setProgress(0);
+    setDuration(0);
+    setError(null);
+  }, []);
 
   const hearCue = useCallback(
     async (cue: SampleCue | null) => {
@@ -151,16 +199,28 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
     navigator.mediaSession.setActionHandler("pause", () => {
       void togglePlayback();
     });
+    try {
+      navigator.mediaSession.setActionHandler("stop", () => {
+        stopSample();
+      });
+    } catch {
+      // Some rooms do not name a stop action.
+    }
     navigator.mediaSession.setActionHandler("previoustrack", canSkip ? () => void hearCue(previous) : null);
     navigator.mediaSession.setActionHandler("nexttrack", canSkip ? () => void hearCue(next) : null);
 
     return () => {
       navigator.mediaSession.setActionHandler("play", null);
       navigator.mediaSession.setActionHandler("pause", null);
+      try {
+        navigator.mediaSession.setActionHandler("stop", null);
+      } catch {
+        // Some rooms do not name a stop action.
+      }
       navigator.mediaSession.setActionHandler("previoustrack", null);
       navigator.mediaSession.setActionHandler("nexttrack", null);
     };
-  }, [canSkip, hearCue, isPlaying, next, nowPlaying, previous, togglePlayback]);
+  }, [canSkip, hearCue, isPlaying, next, nowPlaying, previous, stopSample, togglePlayback]);
 
   useEffect(() => {
     const position = samplePositionState({ duration, progress });
@@ -270,7 +330,9 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
     <div className="flex flex-col gap-4">
       <p className="text-sm leading-6 text-text-secondary">
         {t("sample.intro")}{" "}
-        <span className="text-text-tertiary">{t("sample.fromDeezer")}</span>
+        <span className="text-text-tertiary">
+          {hasQuietTracks ? t("sample.someQuiet") : t("sample.fromDeezer")}
+        </span>
       </p>
 
       <div className="flex flex-col gap-6">
@@ -287,7 +349,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
                     key={`${track.position}-${track.title}-${trackIndex}`}
                     className="grid grid-cols-[2.75rem_2.75rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-border-subtle py-1 last:border-b-0"
                   >
-                    {track.previewUrl ? (
+                    {trackHasSample(track) ? (
                       <button
                         type="button"
                         className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong ${
@@ -312,7 +374,10 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
                         )}
                       </button>
                     ) : (
-                      <span className="size-11" aria-hidden />
+                      <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-disabled">
+                        <Play className="size-4" aria-hidden />
+                        <span className="sr-only">{t("sample.quietTrack", { title: track.title })}</span>
+                      </span>
                     )}
                     <span className="font-mono text-xs leading-5 text-text-tertiary">
                       {track.position || "·"}
@@ -331,13 +396,35 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
 
       {queued && nowPlaying ? (
         <div
-          className={`fixed inset-x-3 bottom-[calc(4.5rem+max(0.75rem,env(safe-area-inset-bottom)))] z-30 rounded-rs-lg px-4 py-2 lg:inset-x-auto lg:right-3 lg:bottom-3 lg:left-60 ${glassPanelClass}`}
+          className={sampleDockClass}
           role="region"
           aria-labelledby={headingId}
         >
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <CoverArt url={nowPlaying.artwork} alt="" sizes="44px" className="size-11 w-11 shrink-0" />
+          <div className="relative flex min-w-0 flex-col gap-2">
+            <div className="absolute top-0 right-0 z-10 flex">
+              {keepClose}
+              <button
+                type="button"
+                className="inline-flex size-11 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
+                aria-label={t("sample.stopTitle", { title: sampleCueLabel(queued) })}
+                onClick={stopSample}
+              >
+                <X className="size-4" aria-hidden />
+              </button>
+            </div>
+            <div className={`flex min-w-0 items-center gap-3 ${keepClose ? "pr-24" : "pr-10"}`}>
+              <CoverArt url={nowPlaying.artwork} alt="" sizes="48px" className="size-12 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p id={headingId} className={`line-clamp-2 ${recordTitleClass}`} title={nowPlaying.title}>
+                  {nowPlaying.title}
+                </p>
+                <p className="truncate text-xs leading-5 text-text-secondary">
+                  {queued.position ? `${queued.position} · ` : null}
+                  {nowPlaying.artist} · {t("sample.fromDeezerLine")}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center gap-1">
               <button
                 type="button"
                 className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong disabled:text-text-disabled"
@@ -371,14 +458,6 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
               >
                 <SkipForward className="size-4" aria-hidden />
               </button>
-              <div className="min-w-0 flex-1">
-                <p id={headingId} className="truncate text-sm leading-6 text-text">
-                  {nowPlaying.title}
-                </p>
-                <p className="truncate text-xs leading-5 text-text-tertiary">
-                  {nowPlaying.artist} · {t("sample.fromDeezerLine")}
-                </p>
-              </div>
             </div>
             <div
               ref={seekRef}
@@ -396,7 +475,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
                     })
                   : t("sample.position")
               }
-              className="flex min-h-11 cursor-pointer items-center outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
+              className="flex min-h-11 min-w-0 cursor-pointer items-center outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
               onPointerDown={(event) => {
                 event.currentTarget.setPointerCapture(event.pointerId);
                 seekFromClientX(event.clientX);
@@ -450,6 +529,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
       <audio
         ref={audioRef}
         preload="none"
+        playsInline
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={hearFollowing}
@@ -509,9 +589,5 @@ function sampleErrorMessage(
   cause: unknown,
   t: (path: string) => string,
 ): string {
-  if (cause instanceof Error && cause.name === "NotAllowedError") {
-    return t("sample.couldNotStart");
-  }
-
-  return t("sample.couldNotHear");
+  return samplePlaybackFailure(cause) === "blocked" ? t("sample.couldNotStart") : t("sample.couldNotHear");
 }

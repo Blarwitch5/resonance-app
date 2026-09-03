@@ -23,6 +23,7 @@ import { ShelfNeighbors } from "@/components/ui/shelf-neighbors";
 import { catalogToRemember } from "@/lib/collection/factory";
 import { collectionHref, parseWaveFlag } from "@/lib/collection/href";
 import { pickShelfKin, SHELF_KIN_LIMIT } from "@/lib/collection/kin";
+import { journalCoverStickyClass } from "@/lib/collection/layout";
 import { toPressingThreads } from "@/lib/collection/pressing-threads";
 import { getCollectionItem, listCollectionItems, listShelfNeighbors, updateCollectionItem } from "@/lib/collection/repository";
 import { decadeFromYear } from "@/lib/collection/types";
@@ -147,13 +148,15 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
       <BackLink href={backHref}>{listBackLabel(backHref, settings.locale)}</BackLink>
       <ShelfNeighbors before={neighbors.before} after={neighbors.after} from={query.from} />
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,20rem)_1fr]">
-        <CoverArt
-          url={item.coverUrl}
-          alt={coverAlt(settings.locale, item.title, item.artist)}
-          sizes="(max-width: 1024px) 80vw, 320px"
-          className={isArrivalWave ? "motion-safe:ripple-in" : undefined}
-          priority
-        />
+        <div className={journalCoverStickyClass}>
+          <CoverArt
+            url={item.coverUrl}
+            alt={coverAlt(settings.locale, item.title, item.artist)}
+            sizes="(max-width: 1024px) 80vw, 320px"
+            className={isArrivalWave ? "motion-safe:ripple-in" : undefined}
+            priority
+          />
+        </div>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <PressingThreads threads={threads} title={item.title} showArtist />
@@ -170,6 +173,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
             <KeptCloseForm id={item.id} isFavorite={item.isFavorite} />
             <PressingLinks
               href={threads.discogs?.href}
+              releaseId={threads.discogs?.id}
               title={threads.title}
               artist={threads.artist}
               elsewhereHref={threads.elsewhereHref}
@@ -191,6 +195,9 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
             title={item.title}
             coverUrl={item.coverUrl}
             locale={settings.locale}
+            keepClose={
+              <KeptCloseForm id={item.id} isFavorite={item.isFavorite} variant="icon" />
+            }
           />
           {kin ? (
             <ShelfKin

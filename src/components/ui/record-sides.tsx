@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ListMusic } from "lucide-react";
 
 import { SectionHeading } from "@/components/ui/page-header";
@@ -15,9 +16,10 @@ interface RecordSidesProps {
   title?: string;
   coverUrl?: string | null;
   locale?: Locale;
+  keepClose?: ReactNode;
 }
 
-export function RecordSides({ sides, artist, title, coverUrl, locale = "en" }: RecordSidesProps) {
+export function RecordSides({ sides, artist, title, coverUrl, locale = "en", keepClose }: RecordSidesProps) {
   if (sides.length === 0) {
     return null;
   }
@@ -33,9 +35,18 @@ export function RecordSides({ sides, artist, title, coverUrl, locale = "en" }: R
         {listen ? <p className="text-sm leading-6 text-text-secondary">{listen}</p> : null}
       </div>
       {hasDeezerPreview(sides) ? (
-        <RecordSamplePlayer sides={sides} artist={artist} title={title} coverUrl={coverUrl} />
+        <RecordSamplePlayer
+          sides={sides}
+          artist={artist}
+          title={title}
+          coverUrl={coverUrl}
+          keepClose={keepClose}
+        />
       ) : (
-        <StaticRecordSides sides={sides} locale={locale} />
+        <>
+          <p className="text-sm leading-6 text-text-tertiary">{t(locale, "sample.noneHere")}</p>
+          <StaticRecordSides sides={sides} locale={locale} />
+        </>
       )}
     </section>
   );

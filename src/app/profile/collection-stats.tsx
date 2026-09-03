@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { BarList } from "@/components/ui/bar-list";
+import { type ChartTone } from "@/components/ui/chart-tone";
+import { ColumnChart, type ColumnChartItem } from "@/components/ui/column-chart";
 import { DonutChart } from "@/components/ui/donut-chart";
 import {
   formatFillClasses,
@@ -123,6 +125,7 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
           <DonutChart
             total={insight.total}
             caption={formatCaption}
+            unit={t(locale, insight.total === 1 ? "stats.recordUnit" : "stats.recordsUnit")}
             segments={insight.formats.map((entry) => ({
               key: entry.format,
               label: formatLabel(locale, entry.format),
@@ -147,9 +150,10 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
           {insight.decades.length > 0 ? (
             <ChartPanel icon={Hourglass} title={t(locale, "stats.acrossYears")}>
               {story ? <p className="text-sm leading-6 text-text-secondary">{story}</p> : null}
-              <BarList
+              <TimeChart
+                tone="vinyl"
                 items={insight.decades.map((entry) => ({
-                  label: decadeName(locale, entry.decade),
+                  label: String(entry.decade),
                   count: entry.count,
                   href: collectionHref({ decade: entry.decade }),
                   ariaLabel: hearDecadeOnShelf(locale, decadeName(locale, entry.decade)),
@@ -161,6 +165,8 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
           {artistsWhoStay.length > 0 ? (
             <ChartPanel icon={Heart} title={t(locale, "stats.artistsStay")}>
               <BarList
+                tone="cassette"
+                variant="marks"
                 items={artistsWhoStay.map((artist) => ({
                   label: artist.name,
                   count: artist.count,
@@ -182,6 +188,8 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
           {hasGenreMix ? (
             <ChartPanel icon={Music} title={t(locale, "stats.soundsKeep")}>
               <BarList
+                tone="cassette"
+                variant="marks"
                 items={insight.topGenres.map((genre) => ({
                   label: genre.name,
                   count: genre.count,
@@ -195,6 +203,8 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
           {labelsWhoStay.length > 0 ? (
             <ChartPanel icon={Tag} title={t(locale, "stats.labelsReturn")}>
               <BarList
+                tone="vinyl"
+                variant="marks"
                 items={labelsWhoStay.map((entry) => ({
                   label: entry.name,
                   count: entry.count,
@@ -218,6 +228,8 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
           {placesWhoStay.length > 0 ? (
             <ChartPanel icon={MapPin} title={t(locale, "stats.whereFound")}>
               <BarList
+                tone="cassette"
+                variant="marks"
                 items={placesWhoStay.map((entry) => ({
                   label: entry.name,
                   count: entry.count,
@@ -229,13 +241,16 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
           ) : null}
           {yearsWhoStay.length > 0 ? (
             <ChartPanel icon={Calendar} title={t(locale, "stats.whenFound")}>
-              <BarList
-                items={yearsWhoStay.map((entry) => ({
-                  label: String(entry.year),
-                  count: entry.count,
-                  href: collectionHref({ when: entry.year }),
-                  ariaLabel: t(locale, "thread.hearFound", { place: String(entry.year) }),
-                }))}
+              <TimeChart
+                tone="cassette"
+                items={[...yearsWhoStay]
+                  .sort((left, right) => left.year - right.year)
+                  .map((entry) => ({
+                    label: String(entry.year),
+                    count: entry.count,
+                    href: collectionHref({ when: entry.year }),
+                    ariaLabel: t(locale, "thread.hearFound", { place: String(entry.year) }),
+                  }))}
               />
             </ChartPanel>
           ) : null}
@@ -244,7 +259,8 @@ export function CollectionStats({ insight, engagement = [], locale = "en" }: Col
 
       {hasArrivedTimeline ? (
         <ChartPanel icon={CalendarPlus} title={t(locale, "stats.whenArrived")}>
-          <BarList
+          <TimeChart
+            tone="cd"
             items={arrivedYears.map((entry) => ({
               label: String(entry.year),
               count: entry.count,
@@ -308,7 +324,7 @@ function ChartPanel({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-rs-md border border-border bg-surface px-4 py-4">
+    <div className="flex flex-col gap-4 rounded-rs-md border border-border bg-surface px-6 py-4">
       <h3 className={`flex items-center gap-2 ${kickerClass}`}>
         <Icon className="size-3.5 shrink-0" aria-hidden />
         {title}
@@ -316,4 +332,12 @@ function ChartPanel({
       {children}
     </div>
   );
+}
+
+function TimeChart({ items, tone }: { items: ColumnChartItem[]; tone: ChartTone }) {
+  if (items.length >= 2) {
+    return <ColumnChart tone={tone} items={items} />;
+  }
+
+  return <BarList tone={tone} variant="marks" items={items} />;
 }

@@ -1,19 +1,25 @@
-import { ChevronLeft, ChevronRight, Library, Radio, Search, SearchX } from "lucide-react";
+import { ChevronLeft, ChevronRight, Library, Radio, SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { BarcodeScanner } from "@/app/explorer/barcode-scanner";
+import { ExplorerFeed } from "@/app/explorer/explorer-feed";
 import { ExplorerReleaseCard } from "@/app/explorer/explorer-release-card";
+import { ExplorerSearch } from "@/app/explorer/explorer-search";
 import { AppShell } from "@/components/layouts/app-shell";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { ExplorerFacetChips } from "@/components/ui/explorer-facet-chips";
 import { ExplorerThreadForm } from "@/components/ui/explorer-thread-form";
 import { FormatChips } from "@/components/ui/format-chips";
 import { ListenSheet } from "@/components/ui/listen-sheet";
 import { Notice } from "@/components/ui/notice";
 import { PageHeader, SectionHeading } from "@/components/ui/page-header";
-import { SearchField } from "@/components/ui/search-field";
+import { bodyClass } from "@/components/ui/type";
+import { ViewChips } from "@/components/ui/view-chips";
 import { echoDiscoveries, echoHeadline, echoSeedFromInsight, type EchoSeed } from "@/lib/collection/echo";
+import { shelfResultsClass } from "@/lib/collection/layout";
+import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 import { collectionHref } from "@/lib/collection/href";
 import { listCollectionStatItems, listShelfPresence } from "@/lib/collection/repository";
 import { summarizeCollection, type CollectionInsight } from "@/lib/collection/stats";
@@ -36,6 +42,8 @@ import {
   explorerSearchHref,
   explorerWhenFromParams,
   hasExplorerListen,
+  MAX_SEARCH_PAGE,
+  parseSearchPage,
   resolveExplorerFormat,
   type ExplorerFormatParam,
   type ExplorerQuery,
@@ -45,11 +53,12 @@ import { explorerDocumentTitle } from "@/lib/document-title";
 import { toErrorMessage } from "@/lib/errors";
 import { getSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
-import { enabledFormats, preferredFormat } from "@/lib/settings/types";
+import { enabledFormats, preferredFormat, type ViewMode } from "@/lib/settings/types";
 
 export async function generateMetadata({ searchParams }: ExplorerPageProps): Promise<Metadata> {
   const { q, decade, year, genre, label } = await searchParams;
   const when = explorerWhenFromParams(year, decade);
+  const locale = await getLocale();
   return {
     title: explorerDocumentTitle({
       query: q,
@@ -57,11 +66,10 @@ export async function generateMetadata({ searchParams }: ExplorerPageProps): Pro
       decade: when.decade,
       genre: parseGenreFilter(genre),
       label: parseLabelFilter(label),
+      locale,
     }),
   };
 }
-
-const MAX_SEARCH_PAGE = 50;
 
 interface ExplorerPageProps {
   searchParams: Promise<{
@@ -80,16 +88,6 @@ interface SearchOutcome {
   error: string | null;
   page: number;
   pages: number;
-}
-
-function parseSearchPage(raw: string | undefined): number {
-  const parsed = Number.parseInt(raw ?? "1", 10);
-
-  if (!Number.isInteger(parsed) || parsed < 1) {
-    return 1;
-  }
-
-  return Math.min(parsed, MAX_SEARCH_PAGE);
 }
 
 async function searchReleases(listen: ExplorerQuery): Promise<SearchOutcome> {
@@ -131,7 +129,9 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
   const label = parseLabelFilter(rawLabel);
   const { year, decade } = explorerWhenFromParams(rawYear, rawDecade);
   const session = await getSession();
+  const locale = await getLocale();
   const settings = session ? await getUserSettings(session.user.id) : null;
+  const viewMode: ViewMode = settings?.viewMode ?? "list";
   const enabled = settings ? enabledFormats(settings) : MEDIA_FORMATS.slice();
   const preferred = preferredFormat(enabled, settings?.defaultFormat);
   const format = resolveExplorerFormat(rawFormat, enabled, preferred);
@@ -163,6 +163,7 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
     listen,
     insight: shelfInsight,
     drafts: threadDrafts,
+    locale,
   });
   const hasShelfSuggestions = threadGroups.shelf.length > 0;
   const hasResultSuggestions = threadGroups.results.length > 0;
@@ -177,52 +178,34 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
   return (
     <AppShell>
       <PageHeader
-        title="Explorer"
-        description="Search Discogs, scan a barcode, then add the pressing to your resonance."
+        title={t(locale, "explorer.title")}
+        description={t(locale, "explorer.description")}
       />
 
-      <form action="/explorer" method="get" className="flex flex-col gap-3 sm:flex-row">
-        {formatParam ? <input type="hidden" name="format" value={formatParam} /> : null}
-        {genre ? <input type="hidden" name="genre" value={genre} /> : null}
-        {label ? <input type="hidden" name="label" value={label} /> : null}
-        {decade !== undefined ? <input type="hidden" name="decade" value={String(decade)} /> : null}
-        {year !== undefined ? <input type="hidden" name="year" value={String(year)} /> : null}
-        <SearchField
-          id="explorer-q"
-          name="q"
-          defaultValue={query}
-          placeholder="Artist, album, barcode…"
-          label="Search Discogs"
-        />
-        <div className="flex gap-3">
-          <BarcodeScanner />
-          <Button type="submit" className="flex-1 sm:flex-none">
-            <Search className="size-4 shrink-0" aria-hidden />
-            Search
-          </Button>
-        </div>
-      </form>
-
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <ExplorerSearch listen={listen} query={query} />
+
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
           <FormatChips
             active={format}
             enabled={enabled}
             buildHref={(next) => explorerSearchHref({ ...listen, format: next ?? "all", page: 1 })}
+            locale={locale}
           />
           <div className="hidden lg:contents">
             <ExplorerFacetChips listen={listen} insight={shelfInsight} drafts={threadDrafts} />
           </div>
           <ListenSheet
             count={listenCount}
-            title="Shape this listen"
-            description="A genre, a label, a year — from your shelf, these pressings, or beyond."
+            title={t(locale, "explorer.listenTitle")}
+            description={t(locale, "explorer.listenDescription")}
             clearHref={clearHref}
-            clearLabel="Listen without these threads"
+            clearLabel={t(locale, "explorer.listenClear")}
           >
             {hasShelfSuggestions ? (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-text">From your shelf</p>
+                <p className="text-sm font-medium text-text">{t(locale, "thread.fromShelf")}</p>
                 <div className="flex flex-wrap gap-2">
                   <ExplorerFacetChips
                     listen={listen}
@@ -236,7 +219,7 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
             ) : null}
             {hasResultSuggestions ? (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-text">From these pressings</p>
+                <p className="text-sm font-medium text-text">{t(locale, "thread.fromPressings")}</p>
                 <div className="flex flex-wrap gap-2">
                   <ExplorerFacetChips
                     listen={listen}
@@ -250,6 +233,11 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
             ) : null}
             <ExplorerThreadForm listen={listen} idPrefix="explorer-sheet" />
           </ListenSheet>
+          {session ? (
+            <div className="ms-auto">
+              <ViewChips active={viewMode} next={explorerSearchHref(listen)} />
+            </div>
+          ) : null}
         </div>
         <div className="hidden max-w-3xl lg:block">
           <ExplorerThreadForm listen={listen} idPrefix="explorer-desk" dense />
@@ -257,13 +245,14 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
         <div className="flex flex-wrap gap-2 lg:hidden">
           <ExplorerFacetChips listen={listen} insight={shelfInsight} drafts={threadDrafts} show="active" />
         </div>
+        </div>
       </div>
 
       {searchError ? <Notice tone="error">{searchError}</Notice> : null}
 
       {!hasListen && echo === null ? (
-        <p className="text-sm leading-6 text-text-secondary">
-          Start with a title you still hear, or hold a barcode to the light.
+        <p className={bodyClass}>
+          {t(locale, "explorer.hint")}
         </p>
       ) : null}
 
@@ -274,51 +263,47 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
           presence={echo.presence}
           format={formatParam}
           canWishlist={session !== null}
+          locale={locale}
+          layout={viewMode}
         />
       ) : null}
 
       {hasListen && !searchError && results.length === 0 ? (
         <div className="flex flex-col gap-4">
-          <p className="flex items-center gap-2 text-sm leading-6 text-text-secondary">
+          <p className={`flex items-center gap-2 ${bodyClass}`}>
             <SearchX className="size-4 shrink-0" aria-hidden />
             {requestedPage > 1
-              ? "Nothing more resonated."
+              ? t(locale, "explorer.nothingMore")
               : isBarcodeQuery(query)
-                ? "Nothing resonated with that barcode."
-                : "Nothing resonated with that search."}
+                ? t(locale, "explorer.nothingBarcode")
+                : t(locale, "explorer.nothingSearch")}
           </p>
           {requestedPage > 1 ? (
             <ButtonLink href={explorerSearchHref({ ...listen, page: 1 })} variant="ghost" className="self-start">
               <ChevronLeft className="size-4 shrink-0" aria-hidden />
-              Back to the first pressings
+              {t(locale, "back.firstPressings")}
             </ButtonLink>
           ) : null}
         </div>
       ) : null}
 
       {results.length > 0 ? (
-        <>
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
-            {results.map((draft, index) => (
-              <li key={draft.discogsId ?? `${draft.artist}-${draft.title}`}>
-                <ExplorerReleaseCard
-                  draft={draft}
-                  listen={listen}
-                  searchQuery={query}
-                  from={explorerSearchHref(listen)}
-                  priority={index < 4}
-                  canWishlist={session !== null}
-                  presence={
-                    draft.discogsId
-                      ? (presence.get(draft.discogsId) ?? { status: "absent" })
-                      : { status: "absent" }
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-          <SearchPager listen={{ ...listen, page }} pages={pages} />
-        </>
+        <ExplorerFeed
+          key={explorerSearchHref({ ...listen, page: undefined })}
+          items={results.map((draft) => ({
+            draft,
+            presence: draft.discogsId
+              ? (presence.get(draft.discogsId) ?? { status: "absent" })
+              : { status: "absent" },
+          }))}
+          listen={listen}
+          page={page}
+          pages={pages}
+          searchQuery={query}
+          canWishlist={session !== null}
+          locale={locale}
+          layout={viewMode}
+        />
       ) : null}
     </AppShell>
   );
@@ -370,12 +355,16 @@ function EchoRange({
   presence,
   format,
   canWishlist,
+  locale,
+  layout,
 }: {
   seed: EchoSeed;
   drafts: ReleaseDraft[];
   presence: Map<number, Exclude<ShelfPresence, { status: "absent" }>>;
   format?: ExplorerFormatParam;
   canWishlist: boolean;
+  locale: Locale;
+  layout: ViewMode;
 }) {
   const headingId = "echo-range-heading";
   const shelfHref =
@@ -387,21 +376,21 @@ function EchoRange({
     <section className="flex flex-col gap-6" aria-labelledby={headingId}>
       <div className="flex flex-col gap-3">
         <SectionHeading icon={Radio} id={headingId}>
-          In your echo range
+          {t(locale, "explorer.echoTitle")}
         </SectionHeading>
-        <p className="text-sm leading-6 text-text-secondary">{echoHeadline(seed, drafts.length)}</p>
+        <p className={bodyClass}>{echoHeadline(seed, drafts.length, locale)}</p>
         <div className="flex flex-wrap gap-3">
           <ButtonLink href={shelfHref} variant="ghost">
             <Library className="size-4 shrink-0" aria-hidden />
-            On your shelf
+            {t(locale, "explorer.onYourShelf")}
           </ButtonLink>
           <ButtonLink href={explorerSearchHref({ ...further, format })}>
-            Listen further
+            {t(locale, "common.listenFurther")}
             <ChevronRight className="size-4 shrink-0" aria-hidden />
           </ButtonLink>
         </div>
       </div>
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className={shelfResultsClass(layout)}>
         {drafts.map((draft, index) => (
           <li key={draft.discogsId ?? `${draft.artist}-${draft.title}`}>
             <ExplorerReleaseCard
@@ -411,6 +400,8 @@ function EchoRange({
               from={explorerSearchHref({ format })}
               priority={index < 4}
               canWishlist={canWishlist}
+              locale={locale}
+              layout={layout}
               presence={
                 draft.discogsId
                   ? (presence.get(draft.discogsId) ?? { status: "absent" })
@@ -421,41 +412,5 @@ function EchoRange({
         ))}
       </ul>
     </section>
-  );
-}
-
-function SearchPager({ listen, pages }: { listen: ExplorerQuery; pages: number }) {
-  const page = listen.page && listen.page > 1 ? listen.page : 1;
-
-  if (pages <= 1) {
-    return null;
-  }
-
-  const hasEarlier = page > 1;
-  const hasFurther = page < pages;
-
-  return (
-    <nav
-      aria-label="More pressings"
-      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p className="text-sm leading-6 text-text-secondary">
-        {hasFurther ? "There are more pressings of this search." : "You have heard the last of this search."}
-      </p>
-      <div className="flex flex-wrap gap-3">
-        {hasEarlier ? (
-          <ButtonLink href={explorerSearchHref({ ...listen, page: page - 1 })} variant="ghost">
-            <ChevronLeft className="size-4 shrink-0" aria-hidden />
-            The ones before
-          </ButtonLink>
-        ) : null}
-        {hasFurther ? (
-          <ButtonLink href={explorerSearchHref({ ...listen, page: page + 1 })}>
-            Listen further
-            <ChevronRight className="size-4 shrink-0" aria-hidden />
-          </ButtonLink>
-        ) : null}
-      </div>
-    </nav>
   );
 }

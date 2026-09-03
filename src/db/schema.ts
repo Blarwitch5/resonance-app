@@ -11,6 +11,8 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
+import { CREDENTIAL_ACCOUNT_ISSUER } from "@/lib/auth-origins";
+
 export const mediaFormat = pgEnum("media_format", ["vinyl", "cassette", "cd"]);
 export const mediaCondition = pgEnum("media_condition", [
   "mint",
@@ -58,6 +60,7 @@ export const account = pgTable(
     id: text("id").primaryKey(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
+    issuer: text("issuer").notNull().default(CREDENTIAL_ACCOUNT_ISSUER),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),

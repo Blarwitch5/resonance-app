@@ -1,7 +1,5 @@
 import { collectionHref } from "@/lib/collection/href";
-import { decadeLabel } from "@/lib/collection/stats";
 import {
-  CONDITION_LABELS,
   decadeFromYear,
   parseArtistFilter,
   parseFoundFilter,
@@ -13,6 +11,9 @@ import {
   type MediaFormat,
 } from "@/lib/collection/types";
 import { discogsReleaseHref, explorerQueryFromPressing, explorerSearchHref } from "@/lib/discogs/href";
+import { conditionLabel, decadeName, hearDecadeOnShelf, hearOnShelf } from "@/lib/i18n/labels";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 export interface PressingThreadSource {
   format: MediaFormat;
@@ -56,12 +57,12 @@ export interface PressingThreadView {
   elsewhereHref: string;
 }
 
-export function toPressingThreads(source: PressingThreadSource): PressingThreadView {
+export function toPressingThreads(source: PressingThreadSource, locale: Locale = "en"): PressingThreadView {
   const artist = parseArtistFilter(source.artist);
   const label = parseLabelFilter(source.label ?? undefined);
   const pressedYear = parseWhenFilter(source.year === null ? undefined : String(source.year));
   const decade = decadeFromYear(pressedYear ?? null);
-  const decadeName = decade !== undefined ? decadeLabel(decade) : null;
+  const decadeTitle = decade !== undefined ? decadeName(locale, decade) : null;
   const foundPlace = parseFoundFilter(source.purchaseLocation ?? undefined);
   const foundWhen = toFoundWhen(source.purchaseDate);
   const foundYear = whenFromDate(source.purchaseDate);
@@ -81,14 +82,14 @@ export function toPressingThreads(source: PressingThreadSource): PressingThreadV
     artistHref: artist ? collectionHref({ artist }) : null,
     year: source.year,
     yearHref: pressedYear !== undefined ? collectionHref({ year: pressedYear }) : null,
-    yearAria: pressedYear !== undefined ? `Hear ${pressedYear} on your shelf` : null,
+    yearAria: pressedYear !== undefined ? hearOnShelf(locale, String(pressedYear)) : null,
     decade:
-      decade === undefined || decadeName === null
+      decade === undefined || decadeTitle === null
         ? null
         : {
-            label: decadeName,
+            label: decadeTitle,
             href: collectionHref({ decade }),
-            ariaLabel: `Hear the ${decadeName} on your shelf`,
+            ariaLabel: hearDecadeOnShelf(locale, decadeTitle),
           },
     label: source.label,
     labelHref: label ? collectionHref({ label }) : null,
@@ -102,16 +103,18 @@ export function toPressingThreads(source: PressingThreadSource): PressingThreadV
     }),
     condition: condition
       ? {
-          label: CONDITION_LABELS[condition],
+          label: conditionLabel(locale, condition),
           href: collectionHref({ condition }),
-          ariaLabel: `Hear ${CONDITION_LABELS[condition].toLowerCase()} pressings on your shelf`,
+          ariaLabel: t(locale, "thread.hearCondition", {
+            condition: conditionLabel(locale, condition).toLowerCase(),
+          }),
         }
       : null,
     barcode: source.barcode,
     found:
       foundWhere || foundWhen
         ? {
-            where: foundWhere ?? "Somewhere along the way",
+            where: foundWhere ?? t(locale, "journal.somewhere"),
             when: foundWhen,
             href: foundPlace ? collectionHref({ found: foundPlace }) : null,
             whenHref: foundYear !== undefined ? collectionHref({ when: foundYear }) : null,

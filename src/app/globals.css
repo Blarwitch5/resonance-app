@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant standalone (&:where([data-display="standalone"] *));
+
 /* Tokens validés : source unique. Ne pas ajouter de hex / hsl hors de ce fichier. */
 @theme inline {
   --color-background: var(--rs-background);
@@ -40,6 +42,8 @@
   --color-border-strong: var(--rs-border-strong);
   --color-overlay: var(--rs-overlay);
   --color-overlay-light: var(--rs-overlay-light);
+  --color-glass: var(--rs-glass);
+  --color-glass-border: var(--rs-glass-border);
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
   --radius-rs-sm: 0.75rem;
@@ -87,6 +91,8 @@
   --rs-border-strong: oklch(0.78 0.02 280);
   --rs-overlay: oklch(0.08 0.01 280 / 0.5);
   --rs-overlay-light: oklch(0.08 0.01 280 / 0.2);
+  --rs-glass: oklch(0.96 0.04 280 / 0.72);
+  --rs-glass-border: oklch(0.99 0.02 280 / 0.55);
 }
 
 [data-theme="dark"] {
@@ -128,6 +134,8 @@
   --rs-border-strong: oklch(0.36 0.03 280);
   --rs-overlay: oklch(0.08 0.01 280 / 0.7);
   --rs-overlay-light: oklch(0.08 0.01 280 / 0.4);
+  --rs-glass: oklch(0.18 0.02 280 / 0.52);
+  --rs-glass-border: oklch(0.95 0.01 280 / 0.16);
 }
 
 html[data-format="vinyl"] {
@@ -150,6 +158,8 @@ html[data-theme="light"][data-format] {
   --rs-surface-pressed: color-mix(in oklch, var(--rs-format-wash) 9%, oklch(0.93 0.01 280));
   --rs-border: color-mix(in oklch, var(--rs-format-wash) 10%, oklch(0.9 0.01 280));
   --rs-border-subtle: color-mix(in oklch, var(--rs-format-wash) 8%, oklch(0.92 0.01 280));
+  --rs-glass: color-mix(in oklch, var(--rs-format-wash) 16%, oklch(0.96 0.03 280 / 0.72));
+  --rs-glass-border: color-mix(in oklch, var(--rs-format-wash) 10%, oklch(0.99 0.02 280 / 0.55));
 }
 
 html[data-theme="dark"][data-format] {
@@ -161,11 +171,28 @@ html[data-theme="dark"][data-format] {
   --rs-border-subtle: color-mix(in oklch, var(--rs-format-wash) 10%, oklch(0.2 0.02 280));
 }
 
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme="light"],
+  [data-theme="dark"] {
+    --rs-glass: var(--rs-surface-elevated);
+    --rs-glass-border: var(--rs-border);
+  }
+}
+
 html,
 body {
   background: var(--rs-background);
   color: var(--rs-text);
   transition: background-color 400ms ease;
+}
+
+:root {
+  --rs-bottom-chrome: 5.25rem;
+}
+
+html[data-display="standalone"] {
+  --rs-bottom-chrome: 4.5rem;
 }
 
 body {

@@ -7,13 +7,15 @@ import { completeOnboardingAction, type WelcomeState } from "@/app/welcome/actio
 import { Button } from "@/components/ui/button";
 import { choiceChipClass } from "@/components/ui/chip";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
-import { formatIcons, formatLabels } from "@/components/ui/format-icon";
+import { formatIcons } from "@/components/ui/format-icon";
 import { Notice } from "@/components/ui/notice";
+import { useT } from "@/components/locale-provider";
 import { MEDIA_FORMATS } from "@/lib/collection/types";
 
 const initialState: WelcomeState = { error: null };
 
 export function WelcomeForm() {
+  const t = useT();
   const [step, setStep] = useState<"arrive" | "formats">("arrive");
   const [state, formAction, isPending] = useActionState(completeOnboardingAction, initialState);
 
@@ -21,7 +23,7 @@ export function WelcomeForm() {
     return (
       <div className="flex flex-col gap-3">
         <Button type="button" className="w-full" onClick={() => setStep("formats")}>
-          Continue
+          {t("common.continue")}
         </Button>
         <SkipButton />
       </div>
@@ -33,9 +35,9 @@ export function WelcomeForm() {
       <form action={formAction} className="flex flex-col gap-6">
         <input type="hidden" name="intent" value="start" />
         <fieldset className={fieldsetClass}>
-          <legend className={legendClass}>What lives with you?</legend>
+          <legend className={legendClass}>{t("welcome.whatLives")}</legend>
           <p className="text-sm leading-6 text-text-secondary">
-            Vinyl first. Keep only the formats that still play in your room.
+            {t("welcome.formatsHint")}
           </p>
           <div className="flex flex-wrap gap-2">
             {MEDIA_FORMATS.map((format) => {
@@ -50,7 +52,7 @@ export function WelcomeForm() {
                     className="sr-only"
                   />
                   <Icon className="size-4 shrink-0" aria-hidden />
-                  {formatLabels[format]}
+                  {t(`format.${format}`)}
                 </label>
               );
             })}
@@ -59,7 +61,7 @@ export function WelcomeForm() {
         {state.error ? <Notice tone="error">{state.error}</Notice> : null}
         <Button type="submit" disabled={isPending} className="w-full">
           <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-          {isPending ? "Opening…" : "Open your shelf"}
+          {isPending ? t("welcome.opening") : t("welcome.openShelf")}
         </Button>
       </form>
       <SkipButton />
@@ -68,6 +70,7 @@ export function WelcomeForm() {
 }
 
 function SkipButton() {
+  const t = useT();
   const [state, formAction, isPending] = useActionState(completeOnboardingAction, initialState);
 
   return (
@@ -75,7 +78,7 @@ function SkipButton() {
       <input type="hidden" name="intent" value="skip" />
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       <Button type="submit" variant="ghost" disabled={isPending} className="w-full">
-        {isPending ? "Opening…" : "I'll wander first"}
+        {isPending ? t("welcome.opening") : t("welcome.wander")}
       </Button>
     </form>
   );

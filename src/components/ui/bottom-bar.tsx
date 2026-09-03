@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { glassPanelClass } from "@/components/ui/chrome";
 import { isMainNavActive, MAIN_NAV } from "@/components/ui/main-nav";
 import { useMainNavHrefs } from "@/components/ui/use-main-nav-href";
 import { t } from "@/lib/i18n/translate";
@@ -19,9 +20,9 @@ export function BottomBar({ locale = "en" }: BottomBarProps) {
   return (
     <nav
       aria-label={t(locale, "nav.main")}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur-md transition-colors duration-500 lg:hidden"
+      className={`fixed right-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 z-40 rounded-rs-lg lg:hidden ${glassPanelClass}`}
     >
-      <ul className="mx-auto flex max-w-lg items-stretch justify-around px-2 pb-[env(safe-area-inset-bottom)]">
+      <ul className="mx-auto flex max-w-lg items-stretch justify-around px-2 py-1">
         {MAIN_NAV.map((tab) => {
           const isActive = isMainNavActive(pathname, tab.href);
           const Icon = tab.icon;
@@ -31,7 +32,7 @@ export function BottomBar({ locale = "en" }: BottomBarProps) {
               <Link
                 href={hrefs[tab.href]}
                 aria-current={isActive ? "page" : undefined}
-                className={`group mx-1 flex min-h-14 flex-col items-center justify-center gap-1 rounded-rs-sm text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-border-strong ${
+                className={`group mx-1 flex min-h-14 flex-col items-center justify-center gap-1 rounded-rs-md text-xs font-medium transition-colors outline-none standalone:min-h-12 focus-visible:ring-2 focus-visible:ring-border-strong ${
                   isActive
                     ? "bg-primary-soft text-on-primary-soft"
                     : "text-text-secondary hover:bg-surface-pressed hover:text-text"

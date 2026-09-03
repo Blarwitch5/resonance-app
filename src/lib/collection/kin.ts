@@ -1,3 +1,6 @@
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
+
 export const SHELF_KIN_LIMIT = 4;
 
 export function shelfKinHeadline(
@@ -5,6 +8,7 @@ export function shelfKinHeadline(
   name: string,
   count: number,
   isOnShelf = true,
+  locale: Locale = "en",
 ): string | null {
   const who = name.trim();
 
@@ -15,22 +19,22 @@ export function shelfKinHeadline(
   if (!isOnShelf) {
     if (kind === "decade") {
       return count === 1
-        ? `The ${who} already live on your shelf.`
-        : `${count} from the ${who} already live on your shelf.`;
+        ? t(locale, "stats.kinDecadeOne", { name: who })
+        : t(locale, "stats.kinDecadeMany", { count, name: who });
     }
 
     return count === 1
-      ? `${who} already lives on your shelf.`
-      : `${count} from ${who} already live on your shelf.`;
+      ? t(locale, "stats.kinArtistOne", { name: who })
+      : t(locale, "stats.kinArtistMany", { count, name: who });
   }
 
-  const more = count === 1 ? "1 more" : `${count} more`;
+  const more = count === 1 ? t(locale, "stats.moreOne") : t(locale, "stats.moreMany", { count });
 
   if (kind === "decade") {
-    return `${more} from the ${who} on your shelf.`;
+    return t(locale, "stats.kinMoreDecade", { more, name: who });
   }
 
-  return `${more} from ${who} on your shelf.`;
+  return t(locale, "stats.kinMoreArtist", { more, name: who });
 }
 
 export function pickShelfKin<T extends { id: string }>(input: {
@@ -42,10 +46,12 @@ export function pickShelfKin<T extends { id: string }>(input: {
   decadeHref: string | null;
   decadeRecords: readonly T[];
   isOnShelf?: boolean;
+  locale?: Locale;
 }): { headline: string; href: string; records: T[] } | null {
   const isOnShelf = input.isOnShelf ?? true;
+  const locale = input.locale ?? "en";
   const fromArtist = otherPressings(input.artistRecords, input.currentId);
-  const artistLine = shelfKinHeadline("artist", input.artist, fromArtist.length, isOnShelf);
+  const artistLine = shelfKinHeadline("artist", input.artist, fromArtist.length, isOnShelf, locale);
 
   if (artistLine) {
     return {
@@ -60,7 +66,7 @@ export function pickShelfKin<T extends { id: string }>(input: {
   }
 
   const fromDecade = otherPressings(input.decadeRecords, input.currentId);
-  const decadeLine = shelfKinHeadline("decade", input.decadeLabel, fromDecade.length, isOnShelf);
+  const decadeLine = shelfKinHeadline("decade", input.decadeLabel, fromDecade.length, isOnShelf, locale);
 
   if (!decadeLine) {
     return null;

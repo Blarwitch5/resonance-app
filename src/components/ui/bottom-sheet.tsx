@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from "
 import { createPortal } from "react-dom";
 
 import { trapFocus } from "@/components/ui/trap-focus";
+import { useT } from "@/components/locale-provider";
 
 interface BottomSheetProps {
   id?: string;
@@ -27,6 +28,7 @@ export function BottomSheet({
   dismissOnDesktop = false,
   children,
 }: BottomSheetProps) {
+  const t = useT();
   const titleId = useId();
   const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -98,7 +100,7 @@ export function BottomSheet({
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-overlay"
-        aria-label="Dismiss"
+        aria-label={t("common.dismiss")}
         onClick={onClose}
       />
       <div
@@ -126,7 +128,7 @@ export function BottomSheet({
             ref={closeRef}
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
           >
             <X className="size-5" aria-hidden />

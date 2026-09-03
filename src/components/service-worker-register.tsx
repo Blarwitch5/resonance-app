@@ -35,7 +35,7 @@ async function clearServiceWorker() {
 
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter((key) => key.startsWith("resonance-shell-")).map((key) => caches.delete(key)),
+      keys.filter((key) => key.startsWith("resonance-")).map((key) => caches.delete(key)),
     );
   } catch {
     return;

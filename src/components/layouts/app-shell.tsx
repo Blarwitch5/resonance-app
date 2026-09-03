@@ -1,10 +1,14 @@
 import { Suspense, type ReactNode } from "react";
 
+import { DocumentLocale } from "@/components/document-locale";
 import { FormatTint } from "@/components/format-tint";
 import { InstallHint } from "@/components/install-hint";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
+import { ContentPane } from "@/components/layouts/content-pane";
 import { ListenPalette } from "@/components/listen-palette";
+import { LocaleProvider } from "@/components/locale-provider";
 import { PullToRefresh } from "@/components/pull-to-refresh";
+import { QuietShelfNotice } from "@/components/quiet-shelf-notice";
 import { RememberReturn } from "@/components/remember-return";
 import { BottomBar } from "@/components/ui/bottom-bar";
 import { CollectionFormatNav } from "@/components/ui/collection-format-nav";
@@ -44,7 +48,9 @@ export async function AppShell({ children }: AppShellProps) {
     : [[], [], "en" as const];
 
   return (
-    <div className="flex min-h-dvh bg-background pt-[env(safe-area-inset-top)] transition-colors duration-500">
+    <LocaleProvider locale={locale}>
+    <div className="flex min-h-dvh bg-background pt-[env(safe-area-inset-top)] transition-colors duration-500 lg:h-dvh lg:overflow-hidden lg:pt-0">
+      <DocumentLocale locale={locale} />
       <Sidebar
         locale={locale}
         formatNav={
@@ -60,18 +66,21 @@ export async function AppShell({ children }: AppShellProps) {
           </Suspense>
         }
       />
-      <div className="relative flex min-h-dvh flex-1 flex-col pb-[calc(5rem+env(safe-area-inset-bottom)+var(--rs-sample-dock,0px))] lg:pb-(--rs-sample-dock,0px)">
+      <ContentPane>
         <Suspense fallback={null}>
           <FormatTint formats={formats} />
         </Suspense>
         <PullToRefresh>
-          <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
+          <main className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 flex-col gap-8 px-4 py-6 standalone:gap-6 standalone:py-4 sm:px-6 lg:px-8">
+            <Suspense fallback={null}>
+              <QuietShelfNotice />
+            </Suspense>
             {children}
           </main>
         </PullToRefresh>
         <InstallHint />
         <BottomBar locale={locale} />
-      </div>
+      </ContentPane>
       <KeyboardShortcuts formats={formats} />
       <Suspense fallback={null}>
         <ListenPalette records={records} formats={formats} />
@@ -80,5 +89,6 @@ export async function AppShell({ children }: AppShellProps) {
         <RememberReturn />
       </Suspense>
     </div>
+    </LocaleProvider>
   );
 }

@@ -6,6 +6,8 @@ import { RecordTile } from "@/components/ui/record-tile";
 import { journalFromHref } from "@/lib/collection/href";
 import { shelfCardThreads } from "@/lib/collection/shelf-threads";
 import type { MediaCondition, MediaFormat } from "@/lib/collection/types";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 interface ShelfKinRecord {
   id: string;
@@ -26,9 +28,10 @@ interface ShelfKinProps {
   href: string;
   records: ShelfKinRecord[];
   from?: string;
+  locale?: Locale;
 }
 
-export function ShelfKin({ headline, href, records, from }: ShelfKinProps) {
+export function ShelfKin({ headline, href, records, from, locale = "en" }: ShelfKinProps) {
   if (records.length === 0) {
     return null;
   }
@@ -37,7 +40,7 @@ export function ShelfKin({ headline, href, records, from }: ShelfKinProps) {
     <section className="flex flex-col gap-4" aria-labelledby="shelf-kin-heading">
       <div className="flex flex-col gap-2">
         <SectionHeading icon={Library} id="shelf-kin-heading">
-          Also on the shelf
+          {t(locale, "journal.alsoOnShelf")}
         </SectionHeading>
         <Link
           href={href}
@@ -57,6 +60,7 @@ export function ShelfKin({ headline, href, records, from }: ShelfKinProps) {
               year={record.year}
               format={record.format}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              locale={locale}
               threads={shelfCardThreads(
                 {
                   artist: record.artist,
@@ -69,6 +73,7 @@ export function ShelfKin({ headline, href, records, from }: ShelfKinProps) {
                   foundWhen: record.purchaseDate,
                 },
                 {},
+                locale,
               )}
             />
           </li>

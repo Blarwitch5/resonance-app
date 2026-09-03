@@ -47,7 +47,7 @@ function toUserSettings(row: {
   };
 }
 
-export const getUserSettings = cache(async (userId: string): Promise<UserSettings> => {
+export async function loadUserSettings(userId: string): Promise<UserSettings> {
   try {
     const [row] = await getDb()
       .select(settingsColumns)
@@ -63,7 +63,9 @@ export const getUserSettings = cache(async (userId: string): Promise<UserSetting
   } catch (error) {
     throw new DatabaseError("Your settings could not be loaded.", { cause: error });
   }
-});
+}
+
+export const getUserSettings = cache(loadUserSettings);
 
 export async function upsertUserSettings(
   userId: string,

@@ -6,10 +6,13 @@ import { hasShelfItems, listCollectionItems } from "@/lib/collection/repository"
 import { tonightDayKey, tonightFromShelf } from "@/lib/collection/tonight";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
+import { t } from "@/lib/i18n/translate";
 
-export const metadata: Metadata = {
-  title: "Tonight",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const session = await requireSession();
+  const settings = await getUserSettings(session.user.id);
+  return { title: t(settings.locale, "document.tonight") };
+}
 
 export default async function TonightPage() {
   const session = await requireSession();

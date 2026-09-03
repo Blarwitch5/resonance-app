@@ -14,6 +14,7 @@ import { Notice } from "@/components/ui/notice";
 import { PressingArtist, PressingThreads } from "@/components/ui/pressing-threads";
 import { RecordSides } from "@/components/ui/record-sides";
 import { ShelfKin } from "@/components/ui/shelf-kin";
+import { eyebrowClass, pageTitleClass } from "@/components/ui/type";
 import {
   confirmFormats,
   confirmInitialFormat,
@@ -25,7 +26,6 @@ import { collectionHref, journalFromHref } from "@/lib/collection/href";
 import { pickShelfKin, SHELF_KIN_LIMIT } from "@/lib/collection/kin";
 import { toPressingThreads } from "@/lib/collection/pressing-threads";
 import { listCollectionItems, listShelfCopies } from "@/lib/collection/repository";
-import { decadeLabel } from "@/lib/collection/stats";
 import { decadeFromYear } from "@/lib/collection/types";
 import { loadDeezerPreviews } from "@/lib/deezer/client";
 import { attachDeezerPreviews } from "@/lib/deezer/preview";
@@ -34,9 +34,12 @@ import { getDiscogsRelease } from "@/lib/discogs/client";
 import { explorerBackHref } from "@/lib/discogs/href";
 import { journalDocumentTitle } from "@/lib/document-title";
 import { toErrorMessage } from "@/lib/errors";
+import { coverAlt, decadeName } from "@/lib/i18n/labels";
+import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
-import { enabledFormats, preferredFormat } from "@/lib/settings/types";
+import { enabledFormats, preferredFormat, type Locale } from "@/lib/settings/types";
 
 interface AddReleasePageProps {
   params: Promise<{ discogsId: string }>;
@@ -89,17 +92,17 @@ export async function generateMetadata({ params }: AddReleasePageProps): Promise
   const discogsId = Number.parseInt(rawId, 10);
 
   if (!Number.isInteger(discogsId) || discogsId <= 0) {
-    return { title: "Confirm" };
+    return { title: t(await getLocale(), "document.confirm") };
   }
 
   const loaded = await loadConfirmRelease(discogsId, session.user.id);
 
   if (!loaded.ok) {
-    return { title: "Confirm" };
+    return { title: t(await getLocale(), "document.confirm") };
   }
 
   const preview = toReleasePreview(loaded.release);
-  return { title: journalDocumentTitle(preview.title, preview.artist) };
+  return { title: journalDocumentTitle(preview.title, preview.artist, loaded.settings.locale) };
 }
 
 export default async function AddReleasePage({ params, searchParams }: AddReleasePageProps) {
@@ -115,16 +118,18 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
   const loaded = await loadConfirmRelease(discogsId, session.user.id);
 
   if (!loaded.ok) {
+    const locale = await getLocale();
     return (
       <AppShell>
         <div className="flex flex-col gap-3">
-          <h1 className="text-2xl font-semibold text-text">This release could not be opened.</h1>
+          <h1 className={pageTitleClass}>{t(locale, "explorer.couldNotOpen")}</h1>
           <Notice tone="error">{loaded.message}</Notice>
         </div>
       </AppShell>
     );
   }
 
+  const locale = loaded.settings.locale;
   const preview = toReleasePreview(loaded.release);
   const sides = loaded.sides;
   const threads = toPressingThreads({
@@ -140,7 +145,7 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
     catalogNumber: preview.catalogNumber,
     formatNames: preview.formatNames,
     creditLine: preview.creditLine,
-  });
+  }, locale);
   const formats = enabledFormats(loaded.settings);
   const remaining = confirmFormats(formats, loaded.copies);
   const owned = confirmOwnedCopy(loaded.copies);
@@ -156,41 +161,43 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
     artist: preview.artist,
     artistHref: collectionHref({ artist: preview.artist }),
     artistRecords: loaded.artistRecords,
-    decadeLabel: decade !== undefined ? decadeLabel(decade) : null,
+    decadeLabel: decade !== undefined ? decadeName(locale, decade) : null,
     decadeHref: decade !== undefined ? collectionHref({ decade }) : null,
     decadeRecords: loaded.decadeRecords,
     isOnShelf: Boolean(owned),
+    locale,
   });
 
   return (
     <AppShell>
-      <BackLink href={explorerBackHref(query.from)}>Back to Explorer</BackLink>
+      <BackLink href={explorerBackHref(query.from)}>{t(locale, "back.explorer")}</BackLink>
       <header className="flex flex-col gap-2">
-        <p className="text-sm font-medium tracking-[0.2em] text-primary uppercase">Confirm</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-text">{preview.title}</h1>
+        <p className={eyebrowClass}>{t(locale, "common.confirm")}</p>
+        <h1 className={pageTitleClass}>{preview.title}</h1>
         <PressingArtist name={threads.artist} href={threads.artistHref} />
       </header>
 
       <div className="grid items-start gap-8 sm:grid-cols-[minmax(0,16rem)_1fr]">
         <CoverArt
           url={preview.coverUrl}
-          alt={`Cover of ${preview.title} by ${preview.artist}`}
+          alt={coverAlt(locale, preview.title, preview.artist)}
           sizes="(max-width: 640px) 80vw, 256px"
           priority
         />
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
-            <PressingThreads threads={threads} showLinks />
+            <PressingThreads threads={threads} showLinks locale={locale} />
           </div>
           <RecordSides
             sides={sides}
             artist={preview.artist}
             title={preview.title}
             coverUrl={preview.coverUrl}
+            locale={locale}
           />
-          <ConfirmShelf copies={{ owned, waiting }} title={preview.title} from={query.from} />
+          <ConfirmShelf copies={{ owned, waiting }} title={preview.title} from={query.from} locale={locale} />
           {kin ? (
-            <ShelfKin headline={kin.headline} href={kin.href} records={kin.records} from={query.from} />
+            <ShelfKin headline={kin.headline} href={kin.href} records={kin.records} from={query.from} locale={locale} />
           ) : null}
           {preview.discogsId && remaining.length > 0 && defaultFormat ? (
             <AddReleaseForm
@@ -199,7 +206,7 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
               formats={remaining}
             />
           ) : loaded.copies.length > 0 && remaining.length === 0 ? (
-            <p className="text-sm leading-6 text-text-secondary">This pressing already lives with you.</p>
+            <p className="text-sm leading-6 text-text-secondary">{t(locale, "explorer.alreadyLives")}</p>
           ) : null}
         </div>
       </div>
@@ -211,10 +218,12 @@ function ConfirmShelf({
   copies,
   title,
   from,
+  locale,
 }: {
   copies: { owned: ShelfCopy | undefined; waiting: ShelfCopy | undefined };
   title: string;
   from?: string;
+  locale: Locale;
 }) {
   const { owned, waiting } = copies;
 
@@ -227,41 +236,41 @@ function ConfirmShelf({
       {owned ? (
         <div className="flex flex-col gap-3">
           <StatusPill tone="primary" icon={Library}>
-            On your shelf
+            {t(locale, "explorer.onYourShelf")}
           </StatusPill>
           <ButtonLink
             href={journalFromHref(owned.id, from)}
             variant="ghost"
             className="self-start"
-            aria-label={`Open ${title} in your journal`}
+            aria-label={t(locale, "explorer.openJournalAria", { title })}
             isRecordLink
           >
             <BookOpen className="size-4 shrink-0" aria-hidden />
-            Open journal
+            {t(locale, "explorer.openJournal")}
           </ButtonLink>
         </div>
       ) : null}
       {waiting ? (
         <div className="flex flex-col gap-3">
           <StatusPill tone="secondary" icon={Bookmark}>
-            Wishlisted
+            {t(locale, "explorer.wishlisted")}
           </StatusPill>
           <form action={moveWishlistToShelfAction}>
             <input type="hidden" name="itemId" value={waiting.id} />
             <Button type="submit">
               <Library className="size-4 shrink-0" aria-hidden />
-              Move to shelf
+              {t(locale, "explorer.moveToShelf")}
             </Button>
           </form>
           <ButtonLink
             href={journalFromHref(waiting.id, from)}
             variant="ghost"
             className="self-start"
-            aria-label={`Open waiting ${title} in your journal`}
+            aria-label={t(locale, "explorer.openWaitingAria", { title })}
             isRecordLink
           >
             <BookOpen className="size-4 shrink-0" aria-hidden />
-            Open journal
+            {t(locale, "explorer.openJournal")}
           </ButtonLink>
         </div>
       ) : null}

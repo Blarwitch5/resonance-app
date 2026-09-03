@@ -1,5 +1,7 @@
 import type { MediaFormat, ShelfPresence } from "@/lib/collection/types";
 import { explorerQueryFromPressing, explorerSearchHref } from "@/lib/discogs/href";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 export type RecordMenuActionId =
   | "open"
@@ -30,25 +32,27 @@ export function recordMenuActions(input: {
   barcode?: string | null;
   catalogNumber?: string | null;
   canRelease?: boolean;
+  locale?: Locale;
 }): RecordMenuAction[] {
+  const locale = input.locale ?? "en";
   const actions: RecordMenuAction[] = [
-    { id: "open", label: `Open ${input.title} in your journal` },
+    { id: "open", label: t(locale, "menu.open", { title: input.title }) },
   ];
 
   if (input.canKeepClose) {
     actions.push({
       id: "keep",
-      label: input.isFavorite ? "Stop keeping this close" : "Keep this close",
+      label: input.isFavorite ? t(locale, "menu.stopKeep") : t(locale, "menu.keep"),
     });
   }
 
-  appendCopyActions(actions, input.barcode, input.catalogNumber);
-  appendTravelActions(actions, input.title, input.shareHref, input.elsewhereHref);
+  appendCopyActions(actions, locale, input.barcode, input.catalogNumber);
+  appendTravelActions(actions, locale, input.title, input.shareHref, input.elsewhereHref);
 
   if (input.canRelease) {
     actions.push({
       id: "release",
-      label: "Let this one go",
+      label: t(locale, "menu.letGo"),
     });
   }
 
@@ -64,55 +68,58 @@ export function explorerMenuActions(input: {
   elsewhereHref?: string | null;
   barcode?: string | null;
   catalogNumber?: string | null;
+  locale?: Locale;
 }): RecordMenuAction[] {
+  const locale = input.locale ?? "en";
   const actions: RecordMenuAction[] = [];
 
   if (input.presence.status === "absent") {
     if (input.addHref) {
       actions.push({
         id: "add",
-        label: `Add ${input.title} to your resonance`,
+        label: t(locale, "menu.add", { title: input.title }),
       });
     }
 
     if (input.canHold) {
       actions.push({
         id: "hold",
-        label: `Keep ${input.title} waiting`,
+        label: t(locale, "menu.hold", { title: input.title }),
       });
     }
   } else {
     actions.push({
       id: "open",
-      label: `Open ${input.title} in your journal`,
+      label: t(locale, "menu.open", { title: input.title }),
     });
 
     if (input.presence.status === "wishlist") {
       actions.push({
         id: "shelf",
-        label: `Move ${input.title} to your shelf`,
+        label: t(locale, "menu.shelf", { title: input.title }),
       });
     }
   }
 
-  appendCopyActions(actions, input.barcode, input.catalogNumber);
-  appendTravelActions(actions, input.title, input.shareHref, input.elsewhereHref);
+  appendCopyActions(actions, locale, input.barcode, input.catalogNumber);
+  appendTravelActions(actions, locale, input.title, input.shareHref, input.elsewhereHref);
   return actions;
 }
 
-export function recordMenuReleasePrompt(title: string): string {
-  return `${title} will leave your shelf. The memory goes with it.`;
+export function recordMenuReleasePrompt(title: string, locale: Locale = "en"): string {
+  return t(locale, "journal.leaveShelf", { title });
 }
 
-export function recordMenuReleaseConfirm(): RecordMenuAction[] {
+export function recordMenuReleaseConfirm(locale: Locale = "en"): RecordMenuAction[] {
   return [
-    { id: "keep-shelf", label: "Keep it" },
-    { id: "confirm-release", label: "Release" },
+    { id: "keep-shelf", label: t(locale, "menu.keepIt") },
+    { id: "confirm-release", label: t(locale, "menu.release") },
   ];
 }
 
 function appendCopyActions(
   actions: RecordMenuAction[],
+  locale: Locale,
   barcode?: string | null,
   catalogNumber?: string | null,
 ): void {
@@ -122,7 +129,7 @@ function appendCopyActions(
   if (catalog) {
     actions.push({
       id: "copy-catalog",
-      label: "Copy catalog",
+      label: t(locale, "menu.copyCatalog"),
       value: catalog,
     });
   }
@@ -130,7 +137,7 @@ function appendCopyActions(
   if (code) {
     actions.push({
       id: "copy-barcode",
-      label: "Copy barcode",
+      label: t(locale, "menu.copyBarcode"),
       value: code,
     });
   }
@@ -143,6 +150,7 @@ function copyValue(value: string | null | undefined): string | undefined {
 
 function appendTravelActions(
   actions: RecordMenuAction[],
+  locale: Locale,
   title: string,
   shareHref?: string | null,
   elsewhereHref?: string | null,
@@ -150,14 +158,14 @@ function appendTravelActions(
   if (shareHref) {
     actions.push({
       id: "share",
-      label: `Share ${title}`,
+      label: t(locale, "menu.share", { title }),
     });
   }
 
   if (elsewhereHref) {
     actions.push({
       id: "elsewhere",
-      label: `Hear other pressings of ${title}`,
+      label: t(locale, "menu.elsewhere", { title }),
     });
   }
 }
@@ -179,6 +187,21 @@ export function recordMenuElsewhereHref(
   }
 
   return explorerSearchHref({ query, format });
+}
+
+const RECORD_SWIPE_ACTION_IDS: ReadonlySet<RecordMenuActionId> = new Set([
+  "keep",
+  "add",
+  "hold",
+  "shelf",
+  "elsewhere",
+  "release",
+  "keep-shelf",
+  "confirm-release",
+]);
+
+export function recordSwipeActions(actions: readonly RecordMenuAction[]): RecordMenuAction[] {
+  return actions.filter((action) => RECORD_SWIPE_ACTION_IDS.has(action.id));
 }
 
 const MENU_EDGE = 8;

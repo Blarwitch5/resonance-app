@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Notice } from "@/components/ui/notice";
+import { useLocale } from "@/components/locale-provider";
 import { pressingCopyVoice, type PressingCopyKind } from "@/lib/collection/copy-pressing";
 
 interface CopyPressingButtonProps {
@@ -11,9 +12,10 @@ interface CopyPressingButtonProps {
 }
 
 export function CopyPressingButton({ kind, value }: CopyPressingButtonProps) {
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const voice = pressingCopyVoice(kind, value, copied);
+  const voice = pressingCopyVoice(kind, value, copied, locale);
 
   useEffect(() => {
     if (!copied) {
@@ -30,7 +32,7 @@ export function CopyPressingButton({ kind, value }: CopyPressingButtonProps) {
   }, [copied]);
 
   async function onCopy(): Promise<void> {
-    const failure = pressingCopyVoice(kind, value, false).error;
+    const failure = pressingCopyVoice(kind, value, false, locale).error;
     setError(null);
 
     try {

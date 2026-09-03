@@ -7,7 +7,8 @@ import { updateItemAction, type UpdateItemState } from "@/app/collection/[id]/ac
 import { Button } from "@/components/ui/button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
-import { CONDITION_LABELS, MEDIA_CONDITIONS, type MediaCondition } from "@/lib/collection/types";
+import { useT } from "@/components/locale-provider";
+import { MEDIA_CONDITIONS, type MediaCondition } from "@/lib/collection/types";
 
 const initialState: UpdateItemState = { error: null, saved: false };
 
@@ -26,6 +27,7 @@ export function ItemMemoryForm({
   purchaseLocation,
   purchaseDate,
 }: ItemMemoryFormProps) {
+  const t = useT();
   const [state, formAction, isPending] = useActionState(updateItemAction, initialState);
 
   return (
@@ -35,9 +37,9 @@ export function ItemMemoryForm({
       <TextField
         id="purchase-location"
         name="purchaseLocation"
-        label="Where it found you"
+        label={t("journal.whereFound")}
         defaultValue={purchaseLocation ?? ""}
-        placeholder="A shop, a friend, a city."
+        placeholder={t("journal.wherePlaceholder")}
         maxLength={120}
         icon={MapPin}
       />
@@ -46,16 +48,16 @@ export function ItemMemoryForm({
         id="purchase-date"
         name="purchaseDate"
         type="date"
-        label="When it found you"
+        label={t("journal.whenFound")}
         defaultValue={purchaseDate ?? ""}
         icon={Calendar}
       />
 
-      <SelectField id="condition" name="condition" label="Condition" defaultValue={condition ?? ""}>
-        <option value="">Unknown</option>
+      <SelectField id="condition" name="condition" label={t("condition.legend")} defaultValue={condition ?? ""}>
+        <option value="">{t("condition.unknown")}</option>
         {MEDIA_CONDITIONS.map((value) => (
           <option key={value} value={value}>
-            {CONDITION_LABELS[value]}
+            {t(`condition.${value}`)}
           </option>
         ))}
       </SelectField>
@@ -63,19 +65,19 @@ export function ItemMemoryForm({
       <TextAreaField
         id="notes"
         name="notes"
-        label="A memory"
+        label={t("journal.memory")}
         rows={5}
         defaultValue={notes ?? ""}
         maxLength={4000}
-        placeholder="Let this music resonate with your memories."
+        placeholder={t("journal.memoryPlaceholder")}
       />
 
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
-      {state.saved ? <Notice tone="success">Saved to your journal.</Notice> : null}
+      {state.saved ? <Notice tone="success">{t("journal.saved")}</Notice> : null}
 
       <Button type="submit" disabled={isPending}>
         <Save className="size-4 shrink-0" aria-hidden />
-        {isPending ? "Saving…" : "Save"}
+        {isPending ? t("common.saving") : t("common.save")}
       </Button>
     </form>
   );

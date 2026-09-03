@@ -1,4 +1,6 @@
 import { whenFromDate, type MediaFormat } from "@/lib/collection/types";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 export interface CollectionStatItem {
   format: MediaFormat;
@@ -149,14 +151,14 @@ export function decadeLabel(decade: number): string {
   return `${decade}s`;
 }
 
-export function decadeStory(insight: CollectionInsight): string | null {
+export function decadeStory(insight: CollectionInsight, locale: Locale = "en"): string | null {
   if (insight.decadeSpan === null) {
     return null;
   }
 
   if (insight.decadeSpan === 1) {
-    return "Your collection lives in one decade of sound.";
+    return t(locale, "stats.storyOne");
   }
 
-  return `Your collection spans ${insight.decadeSpan} decades of sound.`;
+  return t(locale, "stats.storyMany", { count: insight.decadeSpan });
 }

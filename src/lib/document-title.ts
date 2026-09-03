@@ -1,21 +1,17 @@
-import { decadeLabel } from "@/lib/collection/stats";
-import { CONDITION_LABELS, type MediaCondition, type MediaFormat } from "@/lib/collection/types";
+import type { MediaCondition, MediaFormat } from "@/lib/collection/types";
+import { conditionLabel, decadeName, formatLabel } from "@/lib/i18n/labels";
+import { t } from "@/lib/i18n/translate";
 import type { ProfileTab } from "@/lib/profile/types";
+import type { Locale } from "@/lib/settings/types";
 
 const MAX_LISTEN_TITLE = 48;
 
-const FORMAT_TITLE: Record<MediaFormat, string> = {
-  vinyl: "Vinyl",
-  cassette: "Cassette",
-  cd: "CD",
-};
-
-export function journalDocumentTitle(title: string, artist: string): string {
+export function journalDocumentTitle(title: string, artist: string, locale: Locale = "en"): string {
   const heading = title.trim();
   const who = artist.trim();
 
   if (heading.length === 0) {
-    return who.length > 0 ? who : "Journal";
+    return who.length > 0 ? who : t(locale, "document.journal");
   }
 
   if (who.length === 0) {
@@ -38,66 +34,68 @@ export function collectionDocumentTitle(input: {
   genre?: string;
   condition?: MediaCondition;
   format?: MediaFormat;
+  locale?: Locale;
 }): string {
+  const locale = input.locale ?? "en";
   const query = clipListenTitle(input.query);
 
   if (query) {
-    return `${query} · Collection`;
+    return `${query} · ${t(locale, "document.collection")}`;
   }
 
   if (input.year !== undefined) {
-    return `${input.year} · Collection`;
+    return `${input.year} · ${t(locale, "document.collection")}`;
   }
 
   const artist = clipListenTitle(input.artist);
 
   if (artist) {
-    return `${artist} · Collection`;
+    return `${artist} · ${t(locale, "document.collection")}`;
   }
 
   if (input.decade !== undefined) {
-    return `${decadeLabel(input.decade)} · Collection`;
+    return `${decadeName(locale, input.decade)} · ${t(locale, "document.collection")}`;
   }
 
   const label = clipListenTitle(input.label);
 
   if (label) {
-    return `${label} · Collection`;
+    return `${label} · ${t(locale, "document.collection")}`;
   }
 
   const found = clipListenTitle(input.found);
 
   if (found) {
-    return `${found} · Collection`;
+    return `${found} · ${t(locale, "document.collection")}`;
   }
 
   if (input.when !== undefined) {
-    return `Found in ${input.when} · Collection`;
+    return t(locale, "document.foundIn", { year: input.when });
   }
 
   if (input.arrived !== undefined) {
-    return `Arrived ${input.arrived} · Collection`;
+    return t(locale, "document.arrived", { year: input.arrived });
   }
 
   const genre = clipListenTitle(input.genre);
 
   if (genre) {
-    return `${genre} · Collection`;
+    return `${genre} · ${t(locale, "document.collection")}`;
   }
 
   if (input.condition) {
-    return `${CONDITION_LABELS[input.condition]} · Collection`;
+    return `${conditionLabel(locale, input.condition)} · ${t(locale, "document.collection")}`;
   }
 
   if (input.format) {
-    return `${FORMAT_TITLE[input.format]} · Collection`;
+    return `${formatLabel(locale, input.format)} · ${t(locale, "document.collection")}`;
   }
 
   if (input.keptClose) {
-    return "Kept close";
+    return t(locale, "document.keptClose");
   }
 
-  return "Collection";
+  return t(locale, "document.collection");
 }
 
 export function explorerDocumentTitle(input: {
@@ -106,46 +104,56 @@ export function explorerDocumentTitle(input: {
   decade?: number;
   genre?: string;
   label?: string;
+  locale?: Locale;
 }): string {
+  const locale = input.locale ?? "en";
   const query = clipListenTitle(input.query);
 
   if (query) {
-    return `${query} · Explorer`;
+    return `${query} · ${t(locale, "document.explorer")}`;
   }
 
   if (input.year !== undefined) {
-    return `${input.year} · Explorer`;
+    return `${input.year} · ${t(locale, "document.explorer")}`;
   }
 
   if (input.decade !== undefined) {
-    return `${decadeLabel(input.decade)} · Explorer`;
+    return `${decadeName(locale, input.decade)} · ${t(locale, "document.explorer")}`;
   }
 
   const genre = clipListenTitle(input.genre);
 
   if (genre) {
-    return `${genre} · Explorer`;
+    return `${genre} · ${t(locale, "document.explorer")}`;
   }
 
   const label = clipListenTitle(input.label);
 
   if (label) {
-    return `${label} · Explorer`;
+    return `${label} · ${t(locale, "document.explorer")}`;
   }
 
-  return "Explorer";
+  return t(locale, "document.explorer");
 }
 
 export function profileDocumentTitle(input: {
   tab: ProfileTab;
   settings?: boolean;
   query?: string;
+  locale?: Locale;
 }): string {
+  const locale = input.locale ?? "en";
+
   if (input.settings) {
-    return "Settings";
+    return t(locale, "document.settings");
   }
 
-  const place = input.tab === "close" ? "Kept close" : input.tab === "waiting" ? "Waiting" : "Profile";
+  const place =
+    input.tab === "close"
+      ? t(locale, "document.keptClose")
+      : input.tab === "waiting"
+        ? t(locale, "document.waiting")
+        : t(locale, "document.profile");
   const listen = clipListenTitle(input.query);
   return listen ? `${listen} · ${place}` : place;
 }

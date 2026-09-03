@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { hintClass } from "@/components/ui/type";
+
 export interface DonutSegment {
   key: string;
   label: string;
@@ -40,7 +42,7 @@ export function DonutChart({ segments, total, caption }: DonutChartProps) {
         </svg>
         <p className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
           <span className="text-lg font-semibold text-text">{total}</span>
-          <span className="text-xs text-text-tertiary">{total === 1 ? "record" : "records"}</span>
+          <span className={hintClass}>{total === 1 ? "record" : "records"}</span>
         </p>
       </div>
       <ul className="flex w-full flex-col gap-3">
@@ -57,7 +59,7 @@ export function DonutChart({ segments, total, caption }: DonutChartProps) {
 
           if (!slice.href) {
             return (
-              <li key={slice.key} className="flex items-center justify-between gap-3 text-sm">
+              <li key={slice.key} className="flex items-center justify-between gap-3 px-4 text-sm">
                 {row}
               </li>
             );
@@ -68,7 +70,7 @@ export function DonutChart({ segments, total, caption }: DonutChartProps) {
               <Link
                 href={slice.href}
                 aria-label={slice.ariaLabel}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-rs-sm text-sm outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong"
+                className="flex min-h-11 items-center justify-between gap-3 rounded-rs-sm px-4 text-sm outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong"
               >
                 {row}
               </Link>

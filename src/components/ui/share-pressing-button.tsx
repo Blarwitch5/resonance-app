@@ -4,6 +4,7 @@ import { Share } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Notice } from "@/components/ui/notice";
+import { useLocale } from "@/components/locale-provider";
 import { browserShareHost, offerPressingShare, sharePressingVoice } from "@/lib/collection/share-pressing";
 
 interface SharePressingButtonProps {
@@ -13,9 +14,10 @@ interface SharePressingButtonProps {
 }
 
 export function SharePressingButton({ href, title, artist }: SharePressingButtonProps) {
+  const locale = useLocale();
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const voice = sharePressingVoice(title, copied);
+  const voice = sharePressingVoice(title, copied, locale);
 
   useEffect(() => {
     if (!copied) {

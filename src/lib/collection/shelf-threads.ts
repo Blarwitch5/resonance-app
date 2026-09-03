@@ -1,8 +1,5 @@
 import { collectionHref } from "@/lib/collection/href";
-import { decadeLabel } from "@/lib/collection/stats";
 import {
-  CONDITION_LABELS,
-  FORMAT_LABELS,
   decadeFromYear,
   parseArtistFilter,
   parseFoundFilter,
@@ -14,6 +11,9 @@ import {
   type MediaCondition,
   type MediaFormat,
 } from "@/lib/collection/types";
+import { conditionLabel, decadeName, formatLabel, hearDecadeOnShelf, hearOnShelf } from "@/lib/i18n/labels";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 export interface ShelfCardThread {
   label: string;
@@ -45,6 +45,7 @@ export function shelfCardThreads(
     foundWhen?: Date | string | null;
   },
   listen: CollectionQuery,
+  locale: Locale = "en",
 ): ShelfCardThreadView {
   const artist = parseArtistFilter(item.artist);
   const year = parseWhenFilter(item.year === null ? undefined : String(item.year));
@@ -53,7 +54,7 @@ export function shelfCardThreads(
     .map((name) => parseGenreFilter(name))
     .find((name) => name !== undefined && name !== listen.genre);
   const decade = year === undefined ? undefined : decadeFromYear(year);
-  const decadeName = decade !== undefined ? decadeLabel(decade) : null;
+  const decadeTitle = decade !== undefined ? decadeName(locale, decade) : null;
   const isHearingArtist =
     artist !== undefined && (listen.artist?.trim().toLowerCase() ?? "") === artist.toLowerCase();
   const isHearingLabel =
@@ -73,7 +74,7 @@ export function shelfCardThreads(
       ? {
           label: artist,
           href: isHearingArtist ? null : collectionHref({ ...listen, artist, page: 1 }),
-          ariaLabel: isHearingArtist ? null : `Hear ${artist} on your shelf`,
+          ariaLabel: isHearingArtist ? null : hearOnShelf(locale, artist),
         }
       : null,
     year:
@@ -82,53 +83,55 @@ export function shelfCardThreads(
         : {
             label: String(year),
             href: isHearingYear ? null : collectionHref({ ...listen, year, decade: undefined, page: 1 }),
-            ariaLabel: isHearingYear ? null : `Hear ${year} on your shelf`,
+            ariaLabel: isHearingYear ? null : hearOnShelf(locale, String(year)),
           },
     label: label
       ? {
           label,
           href: isHearingLabel ? null : collectionHref({ ...listen, label, page: 1 }),
-          ariaLabel: isHearingLabel ? null : `Hear ${label} on your shelf`,
+          ariaLabel: isHearingLabel ? null : hearOnShelf(locale, label),
         }
       : null,
     genre: genre
       ? {
           label: genre,
           href: collectionHref({ ...listen, genre, page: 1 }),
-          ariaLabel: `Hear ${genre} on your shelf`,
+          ariaLabel: hearOnShelf(locale, genre),
         }
       : null,
     format: item.format
       ? {
-          label: FORMAT_LABELS[item.format],
+          label: formatLabel(locale, item.format),
           href:
             listen.format === item.format ? null : collectionHref({ ...listen, format: item.format, page: 1 }),
-          ariaLabel: listen.format === item.format ? null : `Hear ${FORMAT_LABELS[item.format]} on your shelf`,
+          ariaLabel: listen.format === item.format ? null : hearOnShelf(locale, formatLabel(locale, item.format)),
         }
       : null,
     decade:
-      decade === undefined || decadeName === null
+      decade === undefined || decadeTitle === null
         ? null
         : {
-            label: decadeName,
+            label: decadeTitle,
             href: isHearingDecade
               ? null
               : collectionHref({ ...listen, decade, year: undefined, page: 1 }),
-            ariaLabel: isHearingDecade ? null : `Hear the ${decadeName} on your shelf`,
+            ariaLabel: isHearingDecade ? null : hearDecadeOnShelf(locale, decadeTitle),
           },
     condition:
       condition === null || isHearingCondition
         ? null
         : {
-            label: CONDITION_LABELS[condition],
+            label: conditionLabel(locale, condition),
             href: collectionHref({ ...listen, condition, page: 1 }),
-            ariaLabel: `Hear ${CONDITION_LABELS[condition].toLowerCase()} pressings on your shelf`,
+            ariaLabel: t(locale, "thread.hearCondition", {
+              condition: conditionLabel(locale, condition).toLowerCase(),
+            }),
           },
     found: found
       ? {
           label: found,
           href: isHearingFound ? null : collectionHref({ ...listen, found, page: 1 }),
-          ariaLabel: isHearingFound ? null : `Hear the records that found you in ${found}`,
+          ariaLabel: isHearingFound ? null : t(locale, "thread.hearFound", { place: found }),
         }
       : null,
     foundWhen:
@@ -137,7 +140,19 @@ export function shelfCardThreads(
         : {
             label: String(foundWhen),
             href: isHearingFoundWhen ? null : collectionHref({ ...listen, when: foundWhen, page: 1 }),
-            ariaLabel: isHearingFoundWhen ? null : `Hear the records that found you in ${foundWhen}`,
+            ariaLabel: isHearingFoundWhen ? null : t(locale, "thread.hearFound", { place: String(foundWhen) }),
           },
   };
+}
+
+export function shelfCardDetails(
+  threads:
+    | Partial<Pick<ShelfCardThreadView, "year" | "label" | "found" | "foundWhen">>
+    | null
+    | undefined,
+  fallbackYear: ShelfCardThread | null = null,
+): ShelfCardThread[] {
+  return [threads?.year ?? fallbackYear, threads?.label, threads?.found, threads?.foundWhen].filter(
+    (thread): thread is ShelfCardThread => thread != null,
+  );
 }

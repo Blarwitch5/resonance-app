@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { releaseItemAction, type ReleaseItemState } from "@/app/collection/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
+import { useT } from "@/components/locale-provider";
 
 const initialState: ReleaseItemState = { error: null };
 
@@ -14,6 +15,7 @@ interface ReleaseRecordFormProps {
 }
 
 export function ReleaseRecordForm({ id, title }: ReleaseRecordFormProps) {
+  const t = useT();
   const [isConfirming, setIsConfirming] = useState(false);
   const [state, formAction, isPending] = useActionState(releaseItemAction, initialState);
 
@@ -35,7 +37,7 @@ export function ReleaseRecordForm({ id, title }: ReleaseRecordFormProps) {
   if (!isConfirming) {
     return (
       <Button type="button" variant="ghost" onClick={() => setIsConfirming(true)}>
-        Let this one go
+        {t("journal.letGo")}
       </Button>
     );
   }
@@ -44,15 +46,15 @@ export function ReleaseRecordForm({ id, title }: ReleaseRecordFormProps) {
     <form action={formAction} className="flex flex-col gap-4 rounded-rs-md border border-border bg-surface px-4 py-4">
       <input type="hidden" name="id" value={id} />
       <p role="status" className="text-sm leading-6 text-text-secondary">
-        {title} will leave your shelf. The memory goes with it.
+        {t("journal.leaveShelf", { title })}
       </p>
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button type="button" disabled={isPending} onClick={() => setIsConfirming(false)}>
-          Keep it
+          {t("journal.keepIt")}
         </Button>
         <Button type="submit" variant="ghost" disabled={isPending}>
-          {isPending ? "Releasing…" : "Release"}
+          {isPending ? t("journal.releasing") : t("journal.release")}
         </Button>
       </div>
     </form>

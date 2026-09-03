@@ -6,6 +6,7 @@ import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore }
 import { createPortal } from "react-dom";
 
 import { emptyStoredReturns, listReturnFromLocation, readStoredReturns } from "@/components/return-path";
+import { useLocale, useT } from "@/components/locale-provider";
 import { focusListenField } from "@/components/ui/focus-listen";
 import { FOCUS_SEARCH_KEY, focusSearchField } from "@/components/ui/focus-search";
 import { trapFocus } from "@/components/ui/trap-focus";
@@ -36,6 +37,8 @@ interface ListenPaletteProps {
 }
 
 export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -52,7 +55,7 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
     location: { pathname, search: searchParams.toString() },
     stored: isClient ? readStoredReturns() : emptyStoredReturns(),
   };
-  const rows = paletteRows(query, records, formats, from, nav);
+  const rows = paletteRows(query, records, formats, from, nav, locale);
   const safeIndex = rows.length === 0 ? 0 : Math.min(activeIndex, rows.length - 1);
   const active = rows[safeIndex];
 
@@ -194,7 +197,7 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-overlay"
-        aria-label="Dismiss"
+        aria-label={t("palette.dismiss")}
         onClick={close}
       />
       <div
@@ -234,7 +237,7 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
         }}
       >
         <h2 id={titleId} className="sr-only">
-          Jump
+          {t("palette.jump")}
         </h2>
         <div className="relative">
           <Search
@@ -249,8 +252,8 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
             maxLength={PALETTE_QUERY_MAX}
             autoComplete="off"
             spellCheck={false}
-            placeholder="Hear a title, or a quiet path"
-            aria-label="Jump"
+            placeholder={t("palette.placeholder")}
+            aria-label={t("palette.jump")}
             aria-controls={listId}
             aria-expanded
             aria-autocomplete="list"
@@ -260,7 +263,7 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
             className="min-h-12 w-full rounded-rs-sm border border-border bg-surface py-3 pr-4 pl-10 text-base font-normal text-text outline-none ring-border-strong focus:ring-2"
           />
         </div>
-        <ul id={listId} role="listbox" aria-label="Quiet paths" className="mt-3 max-h-80 overflow-y-auto">
+        <ul id={listId} role="listbox" aria-label={t("palette.quietPaths")} className="mt-3 max-h-80 overflow-y-auto">
           {rows.map((command, index) => {
             const isActive = index === safeIndex;
 

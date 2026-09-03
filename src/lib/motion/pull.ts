@@ -17,3 +17,11 @@ export function pullProgress(distance: number): number {
 export function shouldReleaseRefresh(distance: number): boolean {
   return resistedPull(distance) >= PULL_REFRESH_THRESHOLD;
 }
+
+export function shouldContinuePull(dx: number, dy: number, slop = 8): boolean {
+  if (dy <= slop) {
+    return false;
+  }
+
+  return Math.abs(dx) <= dy;
+}

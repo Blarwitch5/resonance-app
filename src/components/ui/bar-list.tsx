@@ -36,7 +36,7 @@ export function BarList({ items }: BarListProps) {
 
         if (!item.href) {
           return (
-            <li key={item.label} className="flex flex-col gap-1">
+            <li key={item.label} className="flex flex-col gap-1 px-4">
               {bar}
             </li>
           );
@@ -47,7 +47,7 @@ export function BarList({ items }: BarListProps) {
             <Link
               href={item.href}
               aria-label={item.ariaLabel}
-              className="flex min-h-11 flex-col justify-center gap-1 rounded-rs-sm outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong"
+              className="flex min-h-11 flex-col justify-center gap-1 rounded-rs-sm px-4 outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong"
             >
               {bar}
             </Link>

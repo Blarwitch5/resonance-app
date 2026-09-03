@@ -1,5 +1,5 @@
 export function keptCloseCoverRevealClass(isFavorite: boolean): string {
-  const base = "absolute top-1 right-1 z-10";
+  const base = "absolute top-2 right-2 z-10";
 
   if (isFavorite) {
     return base;

@@ -1,3 +1,5 @@
+"use client";
+
 import { CircleDot, MapPin, Music } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -6,7 +8,10 @@ import { ChipLink } from "@/components/ui/chip";
 import { CopyPressingButton } from "@/components/ui/copy-pressing-button";
 import { FormatIcon } from "@/components/ui/format-icon";
 import { PressingLinks } from "@/components/ui/pressing-links";
+import { displayTitleClass } from "@/components/ui/type";
+import { useT } from "@/components/locale-provider";
 import type { PressingThreadView } from "@/lib/collection/pressing-threads";
+import type { Locale } from "@/lib/settings/types";
 
 interface PressingArtistProps {
   name: string;
@@ -14,6 +19,8 @@ interface PressingArtistProps {
 }
 
 export function PressingArtist({ name, href }: PressingArtistProps) {
+  const t = useT();
+
   if (!href) {
     return <p className="text-base leading-6 text-text-secondary">{name}</p>;
   }
@@ -21,7 +28,7 @@ export function PressingArtist({ name, href }: PressingArtistProps) {
   return (
     <Link
       href={href}
-      aria-label={`Hear ${name} on your shelf`}
+      aria-label={t("thread.hearOnShelf", { name })}
       className="inline-flex min-h-11 items-center text-base leading-6 text-text-secondary outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
     >
       {name}
@@ -35,15 +42,18 @@ interface PressingThreadsProps {
   titleClassName?: string;
   showArtist?: boolean;
   showLinks?: boolean;
+  locale?: Locale;
 }
 
 export function PressingThreads({
   threads,
   title,
-  titleClassName = "text-3xl font-semibold tracking-tight text-text",
+  titleClassName = displayTitleClass,
   showArtist = false,
   showLinks = false,
+  locale,
 }: PressingThreadsProps) {
+  const t = useT();
   const hasChips = threads.genres.length > 0 || threads.condition !== null;
 
   return (
@@ -63,7 +73,7 @@ export function PressingThreads({
             </ThreadLink>
           ) : (
             <span className="inline-flex min-h-11 items-center">
-              {threads.year ? `${threads.year}` : "Year unknown"}
+              {threads.year ? `${threads.year}` : t("thread.yearUnknown")}
             </span>
           )}
           {threads.decade ? (
@@ -78,7 +88,7 @@ export function PressingThreads({
             <>
               <Dot />
               {threads.labelHref ? (
-                <ThreadLink href={threads.labelHref} ariaLabel={`Hear ${threads.label} on your shelf`}>
+                <ThreadLink href={threads.labelHref} ariaLabel={t("thread.hearOnShelf", { name: threads.label })}>
                   {threads.label}
                 </ThreadLink>
               ) : (
@@ -131,7 +141,7 @@ export function PressingThreads({
             {threads.found.href ? (
               <ThreadLink
                 href={threads.found.href}
-                ariaLabel={`Hear the records that found you in ${threads.found.where}`}
+                ariaLabel={t("thread.hearFound", { place: threads.found.where })}
               >
                 {threads.found.where}
               </ThreadLink>
@@ -144,7 +154,7 @@ export function PressingThreads({
                   <span aria-hidden>·</span>
                   <ThreadLink
                     href={threads.found.whenHref}
-                    ariaLabel={`Hear the records that found you in ${threads.found.when.slice(0, 4)}`}
+                    ariaLabel={t("thread.hearFound", { place: threads.found.when.slice(0, 4) })}
                   >
                     {threads.found.when}
                   </ThreadLink>
@@ -161,6 +171,7 @@ export function PressingThreads({
             title={threads.title}
             artist={threads.artist}
             elsewhereHref={threads.elsewhereHref}
+            locale={locale}
           />
         ) : null}
       </div>
@@ -172,16 +183,22 @@ export function ThreadLink({
   href,
   ariaLabel,
   children,
+  compact = false,
 }: {
   href: string;
   ariaLabel: string;
   children: ReactNode;
+  compact?: boolean;
 }) {
   return (
     <Link
       href={href}
       aria-label={ariaLabel}
-      className="inline-flex min-h-11 items-center outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
+      className={
+        compact
+          ? "inline outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
+          : "inline-flex min-h-11 items-center outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
+      }
     >
       {children}
     </Link>

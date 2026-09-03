@@ -10,6 +10,7 @@ import { fieldsetClass, legendClass } from "@/components/ui/control";
 import { TextAreaField } from "@/components/ui/field";
 import { formatIcons } from "@/components/ui/format-icon";
 import { Notice } from "@/components/ui/notice";
+import { useT } from "@/components/locale-provider";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
 
 const initialState: AddReleaseState = { error: null };
@@ -21,6 +22,7 @@ interface AddReleaseFormProps {
 }
 
 export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddReleaseFormProps) {
+  const t = useT();
   const [state, formAction, isPending] = useActionState(addReleaseAction, initialState);
   const available = formats.length > 0 ? formats : [...MEDIA_FORMATS];
   const selected = available.includes(defaultFormat) ? defaultFormat : (available[0] ?? "vinyl");
@@ -30,7 +32,7 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
       <input type="hidden" name="discogsId" value={discogsId} />
 
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Format</legend>
+        <legend className={legendClass}>{t("format.legend")}</legend>
         <div className="flex flex-wrap gap-2">
           {available.map((format) => {
             const Icon = formatIcons[format];
@@ -45,7 +47,7 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
                   className="sr-only"
                 />
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {format}
+                {t(`format.${format}`)}
               </label>
             );
           })}
@@ -53,17 +55,17 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
       </fieldset>
 
       <fieldset className={fieldsetClass}>
-        <legend className={legendClass}>Shelf</legend>
+        <legend className={legendClass}>{t("explorer.shelf")}</legend>
         <div className="flex flex-wrap gap-2">
           <label className={choiceChipClass}>
             <input type="radio" name="kind" value="owned" defaultChecked className="sr-only" />
             <Library className="size-4 shrink-0" aria-hidden />
-            Collection
+            {t("nav.collection")}
           </label>
           <label className={choiceChipClass}>
             <input type="radio" name="kind" value="wishlist" className="sr-only" />
             <BookmarkPlus className="size-4 shrink-0" aria-hidden />
-            Wishlist
+            {t("explorer.wishlist")}
           </label>
         </div>
       </fieldset>
@@ -71,20 +73,20 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
       <TextAreaField
         id="notes"
         name="notes"
-        label="A memory (optional)"
+        label={t("explorer.memoryOptional")}
         rows={4}
-        placeholder="Where it found you."
+        placeholder={t("explorer.memoryPlaceholder")}
       />
 
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
       <Button type="submit" disabled={isPending}>
         {isPending ? (
-          "Adding…"
+          t("explorer.adding")
         ) : (
           <>
             <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-            Add this record to your resonance
+            {t("explorer.addRecord")}
           </>
         )}
       </Button>

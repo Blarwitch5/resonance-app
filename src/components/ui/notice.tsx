@@ -13,7 +13,7 @@ export function Notice({ tone, children }: NoticeProps) {
     return (
       <p
         role="alert"
-        className="flex items-start gap-2 rounded-rs-sm bg-error-soft px-4 py-3 text-sm text-error"
+        className="flex items-start gap-2 rounded-rs-sm bg-error-soft px-4 py-3 text-sm leading-6 text-error"
       >
         <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
         {children}
@@ -22,7 +22,7 @@ export function Notice({ tone, children }: NoticeProps) {
   }
 
   return (
-    <p role="status" className="flex items-start gap-2 text-sm text-success">
+    <p role="status" className="flex items-start gap-2 text-sm leading-6 text-success">
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
       {children}
     </p>

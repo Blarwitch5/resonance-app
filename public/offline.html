@@ -124,13 +124,73 @@
     <main>
       <img src="/logo-resonance.svg" alt="" width="72" height="70" />
       <p class="mark">Resonance</p>
-      <h1>The signal faded.</h1>
-      <p class="story">Your shelf is still here. It will wait until the air clears.</p>
+      <h1 id="waiting-title">The signal faded.</h1>
+      <p class="story" id="waiting-story">Your shelf is still here. It will wait until the air clears.</p>
       <button type="button" id="retry">Try again</button>
     </main>
     <script>
+      // Keep COPY aligned with src/lib/i18n/messages.ts offlinePage
+      // Keep cookie parsing aligned with src/lib/i18n/cookie.ts
+      var COPY = {
+        en: {
+          document: "Waiting · Resonance",
+          title: "The signal faded.",
+          body: "Your shelf is still here. It will wait until the air clears.",
+          retry: "Try again",
+        },
+        fr: {
+          document: "En attente · Resonance",
+          title: "Le signal s’est éteint.",
+          body: "Ton étagère est toujours là. Elle attendra que l’air se dégage.",
+          retry: "Réessayer",
+        },
+      };
+
+      function localeFromCookie(cookieHeader) {
+        if (!cookieHeader) {
+          return "en";
+        }
+
+        var parts = cookieHeader.split(";");
+        var prefix = "resonance-locale=";
+
+        for (var i = 0; i < parts.length; i += 1) {
+          var trimmed = parts[i].trim();
+
+          if (trimmed.indexOf(prefix) !== 0) {
+            continue;
+          }
+
+          try {
+            var value = decodeURIComponent(trimmed.slice(prefix.length));
+            return value === "fr" ? "fr" : "en";
+          } catch (error) {
+            return "en";
+          }
+        }
+
+        return "en";
+      }
+
+      var locale = localeFromCookie(document.cookie);
+      var copy = COPY[locale] || COPY.en;
+      var title = document.getElementById("waiting-title");
+      var story = document.getElementById("waiting-story");
       var retry = document.getElementById("retry");
+
+      document.documentElement.lang = locale;
+      document.title = copy.document;
+
+      if (title) {
+        title.textContent = copy.title;
+      }
+
+      if (story) {
+        story.textContent = copy.body;
+      }
+
       if (retry) {
+        retry.textContent = copy.retry;
         retry.addEventListener("click", function () {
           location.reload();
         });

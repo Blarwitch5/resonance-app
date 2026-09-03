@@ -5,7 +5,11 @@ import { useCallback, useEffect, useState, useTransition, type FormEvent } from 
 
 import { SHELF_SEARCH_DEBOUNCE_MS } from "@/lib/collection/search";
 
-export function useInstantSearch(committedQuery: string, hrefFor: (value: string) => string) {
+export function useInstantSearch(
+  committedQuery: string,
+  hrefFor: (value: string) => string,
+  debounceMs = SHELF_SEARCH_DEBOUNCE_MS,
+) {
   const router = useRouter();
   const [value, setValue] = useState(committedQuery);
   const [requested, setRequested] = useState(committedQuery);
@@ -46,10 +50,10 @@ export function useInstantSearch(committedQuery: string, hrefFor: (value: string
 
     const timeout = window.setTimeout(() => {
       go(value);
-    }, SHELF_SEARCH_DEBOUNCE_MS);
+    }, debounceMs);
 
     return () => window.clearTimeout(timeout);
-  }, [committedQuery, go, value]);
+  }, [committedQuery, debounceMs, go, value]);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

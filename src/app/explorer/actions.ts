@@ -4,13 +4,36 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import type { FeedLoadResult } from "@/lib/collection/feed";
 import { journalHref } from "@/lib/collection/href";
-import { addCollectionItem, updateCollectionItem } from "@/lib/collection/repository";
-import { MEDIA_FORMATS, parseMediaFormat, type CollectionKind, type MediaFormat } from "@/lib/collection/types";
-import { toReleaseDraft } from "@/lib/discogs/adapter";
-import { getDiscogsRelease } from "@/lib/discogs/client";
-import { AppError, DatabaseError, toErrorMessage, ValidationError } from "@/lib/errors";
-import { requireSession } from "@/lib/session";
+import { addCollectionItem, listShelfPresence, updateCollectionItem } from "@/lib/collection/repository";
+import {
+  MEDIA_FORMATS,
+  parseGenreFilter,
+  parseLabelFilter,
+  parseMediaFormat,
+  type CollectionKind,
+  type ExplorerFeedHit,
+  type MediaFormat,
+  type ShelfPresence,
+} from "@/lib/collection/types";
+import { toReleaseDraft, toReleaseDraftFromSearch } from "@/lib/discogs/adapter";
+import { getDiscogsRelease, searchDiscogs } from "@/lib/discogs/client";
+import {
+  explorerWhenFromParams,
+  hasExplorerListen,
+  MAX_SEARCH_PAGE,
+  parseSearchPage,
+  resolveExplorerFormat,
+  type ExplorerFormatParam,
+  type ExplorerQuery,
+} from "@/lib/discogs/href";
+import { AppError, DatabaseError, ValidationError } from "@/lib/errors";
+import { localizedError } from "@/lib/i18n/action-error";
+import { getLocale } from "@/lib/i18n/locale";
+import { getSession, requireSession } from "@/lib/session";
+import { getUserSettings, loadUserSettings } from "@/lib/settings/repository";
+import { enabledFormats, preferredFormat } from "@/lib/settings/types";
 
 export interface AddReleaseState {
   error: string | null;
@@ -60,7 +83,7 @@ export async function addReleaseAction(
     createdId = created.id;
     isOwned = kind === "owned";
   } catch (error) {
-    return { error: toErrorMessage(error) };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error) };
   }
 
   redirect(journalHref(createdId, isOwned));
@@ -86,7 +109,7 @@ export async function addWishlistAction(
   });
 
   if (!parsed.success) {
-    return { error: "This pressing could not be kept waiting." };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, new ValidationError("This pressing could not be kept waiting.")) };
   }
 
   try {
@@ -100,7 +123,7 @@ export async function addWishlistAction(
       "wishlist",
     );
   } catch (error) {
-    return { error: toErrorMessage(error) };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error) };
   }
 
   revalidatePath("/explorer");
@@ -130,4 +153,62 @@ export async function moveWishlistToShelfAction(formData: FormData) {
   }
 
   redirect(journalHref(movedId, true));
+}
+
+export async function loadMoreExplorerAction(params: {
+  q?: string;
+  page?: string;
+  format?: string;
+  genre?: string;
+  label?: string;
+  decade?: string;
+  year?: string;
+}): Promise<FeedLoadResult<ExplorerFeedHit>> {
+  const session = await getSession();
+  const settings = session ? await getUserSettings(session.user.id) : null;
+  const locale = settings?.locale ?? (await getLocale());
+  const query = (params.q ?? "").trim();
+  const genre = parseGenreFilter(params.genre);
+  const label = parseLabelFilter(params.label);
+  const { year, decade } = explorerWhenFromParams(params.year, params.decade);
+  const enabled = settings ? enabledFormats(settings) : MEDIA_FORMATS.slice();
+  const preferred = preferredFormat(enabled, settings?.defaultFormat);
+  const format = resolveExplorerFormat(params.format, enabled, preferred);
+  const formatParam: ExplorerFormatParam = params.format === "all" ? "all" : (format ?? "all");
+  const listen: ExplorerQuery = {
+    query: query.length > 0 ? query : undefined,
+    page: parseSearchPage(params.page),
+    format: formatParam,
+    genre,
+    label,
+    decade,
+    year,
+  };
+
+  if (!hasExplorerListen(listen)) {
+    return { items: [], pages: 1 };
+  }
+
+  try {
+    const outcome = await searchDiscogs({
+      ...listen,
+      format: listen.format === "all" ? undefined : listen.format,
+    });
+    const drafts = outcome.hits.map(toReleaseDraftFromSearch);
+    const discogsIds = drafts.flatMap((draft) => (draft.discogsId ? [draft.discogsId] : []));
+    const presence =
+      session && discogsIds.length > 0
+        ? await listShelfPresence(session.user.id, discogsIds)
+        : new Map<number, Exclude<ShelfPresence, { status: "absent" }>>();
+
+    return {
+      items: drafts.map((draft) => ({
+        draft,
+        presence: draft.discogsId ? (presence.get(draft.discogsId) ?? { status: "absent" }) : { status: "absent" },
+      })),
+      pages: Math.min(outcome.pages, MAX_SEARCH_PAGE),
+    };
+  } catch (error) {
+    return { error: localizedError(locale, error) };
+  }
 }

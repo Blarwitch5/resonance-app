@@ -6,17 +6,21 @@ import { BarList } from "@/components/ui/bar-list";
 import { DonutChart } from "@/components/ui/donut-chart";
 import {
   formatFillClasses,
-  formatLabels,
   formatSwatchClasses,
-} from "@/components/ui/format-icon";
+} from "@/components/ui/format-tokens";
+import { kickerClass, sectionTitleClass } from "@/components/ui/type";
 import { collectionHref } from "@/lib/collection/href";
 import type { CollectionInsight } from "@/lib/collection/stats";
-import { decadeLabel, decadeStory } from "@/lib/collection/stats";
+import { decadeStory } from "@/lib/collection/stats";
+import { decadeName, formatLabel, hearDecadeOnShelf, hearOnShelf } from "@/lib/i18n/labels";
+import { t } from "@/lib/i18n/translate";
 import type { ProfileEngagementCard } from "@/lib/profile/types";
+import type { Locale } from "@/lib/settings/types";
 
 interface CollectionStatsProps {
   insight: CollectionInsight;
   engagement?: ProfileEngagementCard[];
+  locale?: Locale;
 }
 
 const ENGAGEMENT_ICONS: Record<ProfileEngagementCard["id"], LucideIcon> = {
@@ -24,15 +28,15 @@ const ENGAGEMENT_ICONS: Record<ProfileEngagementCard["id"], LucideIcon> = {
   waiting: Bookmark,
 };
 
-export function CollectionStats({ insight, engagement = [] }: CollectionStatsProps) {
+export function CollectionStats({ insight, engagement = [], locale = "en" }: CollectionStatsProps) {
   if (insight.total === 0 && engagement.length === 0) {
     return null;
   }
 
-  const story = decadeStory(insight);
+  const story = decadeStory(insight, locale);
   const hasFormatMix = insight.formats.length >= 2;
   const formatLine = insight.formats
-    .map((entry) => `${entry.count} ${formatLabels[entry.format]}`)
+    .map((entry) => `${entry.count} ${formatLabel(locale, entry.format)}`)
     .join(" · ");
   const artistsWhoStay = insight.topArtists.filter((artist) => artist.count >= 2);
   const labelsWhoStay = insight.topLabels.filter((entry) => entry.count >= 2);
@@ -42,59 +46,63 @@ export function CollectionStats({ insight, engagement = [] }: CollectionStatsPro
   const hasArrivedTimeline =
     arrivedYears.length >= 2 || (arrivedYears[0] !== undefined && arrivedYears[0].count >= 2);
   const hasGenreMix = insight.topGenres.length >= 2;
-  const formatCaption = `Format mix: ${insight.formats
-    .map((entry) => `${entry.count} ${formatLabels[entry.format]}`)
-    .join(", ")}.`;
+  const formatCaption = t(locale, "format.mixCaption", {
+    line: insight.formats.map((entry) => `${entry.count} ${formatLabel(locale, entry.format)}`).join(", "),
+  });
 
   return (
     <section className="flex flex-col gap-6" aria-labelledby="collection-stats-heading">
       <div className="flex flex-col gap-4">
-        <h2 id="collection-stats-heading" className="flex items-center gap-2 text-lg font-semibold text-text">
+        <h2 id="collection-stats-heading" className={`flex items-center gap-2 ${sectionTitleClass}`}>
           <Library className="size-5 shrink-0 text-text-secondary" aria-hidden />
-          Your resonance
+          {t(locale, "stats.heading")}
         </h2>
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {insight.total > 0 ? (
             <>
               <StatCard
                 icon={Disc3}
-                label="On the shelf"
-                value={`${insight.total} ${insight.total === 1 ? "record" : "records"}`}
+                label={t(locale, "stats.onShelf")}
+                value={insight.total === 1 ? t(locale, "profile.recordOne") : t(locale, "profile.records", { count: insight.total })}
               />
               <StatCard
                 icon={UserRound}
-                label="Diversity"
-                value={`${insight.artistCount} artists · ${insight.total} albums · ${insight.labelCount} labels`}
+                label={t(locale, "stats.diversity")}
+                value={t(locale, "stats.diversityValue", {
+                  artists: insight.artistCount,
+                  albums: insight.total,
+                  labels: insight.labelCount,
+                })}
               />
             </>
           ) : null}
-          {!hasFormatMix && formatLine ? <StatCard icon={Layers} label="Formats" value={formatLine} /> : null}
-          {!insight.decades.length && story ? <StatCard icon={Hourglass} label="Time" value={story} /> : null}
+          {!hasFormatMix && formatLine ? <StatCard icon={Layers} label={t(locale, "stats.formats")} value={formatLine} /> : null}
+          {!insight.decades.length && story ? <StatCard icon={Hourglass} label={t(locale, "stats.time")} value={story} /> : null}
           {insight.oldestYear !== null ? (
             <StatCard
               icon={Hourglass}
-              label={insight.newestYear === insight.oldestYear ? "Pressed in" : "Oldest pressing"}
+              label={insight.newestYear === insight.oldestYear ? t(locale, "stats.pressedIn") : t(locale, "stats.oldest")}
               value={String(insight.oldestYear)}
               href={collectionHref({ year: insight.oldestYear })}
-              ariaLabel={`Hear ${insight.oldestYear} on your shelf`}
+              ariaLabel={hearOnShelf(locale, String(insight.oldestYear))}
             />
           ) : null}
           {insight.newestYear !== null && insight.newestYear !== insight.oldestYear ? (
             <StatCard
               icon={Calendar}
-              label="Newest pressing"
+              label={t(locale, "stats.newest")}
               value={String(insight.newestYear)}
               href={collectionHref({ year: insight.newestYear })}
-              ariaLabel={`Hear ${insight.newestYear} on your shelf`}
+              ariaLabel={hearOnShelf(locale, String(insight.newestYear))}
             />
           ) : null}
           {artistsWhoStay.length === 0 && insight.mostPresentArtist ? (
             <StatCard
               icon={Heart}
-              label="Most present"
+              label={t(locale, "stats.mostPresent")}
               value={`${insight.mostPresentArtist.name} · ${insight.mostPresentArtist.count}`}
               href={collectionHref({ artist: insight.mostPresentArtist.name })}
-              ariaLabel={`Hear ${insight.mostPresentArtist.name} on your shelf`}
+              ariaLabel={hearOnShelf(locale, insight.mostPresentArtist.name)}
             />
           ) : null}
           {engagement.map((card) => (
@@ -111,18 +119,18 @@ export function CollectionStats({ insight, engagement = [] }: CollectionStatsPro
       </div>
 
       {hasFormatMix ? (
-        <ChartPanel icon={Layers} title="Format mix">
+        <ChartPanel icon={Layers} title={t(locale, "format.mix")}>
           <DonutChart
             total={insight.total}
             caption={formatCaption}
             segments={insight.formats.map((entry) => ({
               key: entry.format,
-              label: formatLabels[entry.format],
+              label: formatLabel(locale, entry.format),
               count: entry.count,
               fillClass: formatFillClasses[entry.format],
               swatchClass: formatSwatchClasses[entry.format],
               href: collectionHref({ format: entry.format }),
-              ariaLabel: `Hear ${formatLabels[entry.format]} on your shelf`,
+              ariaLabel: hearOnShelf(locale, formatLabel(locale, entry.format)),
             }))}
           />
         </ChartPanel>
@@ -137,27 +145,27 @@ export function CollectionStats({ insight, engagement = [] }: CollectionStatsPro
           }
         >
           {insight.decades.length > 0 ? (
-            <ChartPanel icon={Hourglass} title="Across the years">
+            <ChartPanel icon={Hourglass} title={t(locale, "stats.acrossYears")}>
               {story ? <p className="text-sm leading-6 text-text-secondary">{story}</p> : null}
               <BarList
                 items={insight.decades.map((entry) => ({
-                  label: decadeLabel(entry.decade),
+                  label: decadeName(locale, entry.decade),
                   count: entry.count,
                   href: collectionHref({ decade: entry.decade }),
-                  ariaLabel: `Hear the ${decadeLabel(entry.decade)} on your shelf`,
+                  ariaLabel: hearDecadeOnShelf(locale, decadeName(locale, entry.decade)),
                 }))}
               />
             </ChartPanel>
           ) : null}
 
           {artistsWhoStay.length > 0 ? (
-            <ChartPanel icon={Heart} title="Artists who stay">
+            <ChartPanel icon={Heart} title={t(locale, "stats.artistsStay")}>
               <BarList
                 items={artistsWhoStay.map((artist) => ({
                   label: artist.name,
                   count: artist.count,
                   href: collectionHref({ artist: artist.name }),
-                  ariaLabel: `Hear ${artist.name} on your shelf`,
+                  ariaLabel: hearOnShelf(locale, artist.name),
                 }))}
               />
             </ChartPanel>
@@ -172,26 +180,26 @@ export function CollectionStats({ insight, engagement = [] }: CollectionStatsPro
           }
         >
           {hasGenreMix ? (
-            <ChartPanel icon={Music} title="Sounds you keep">
+            <ChartPanel icon={Music} title={t(locale, "stats.soundsKeep")}>
               <BarList
                 items={insight.topGenres.map((genre) => ({
                   label: genre.name,
                   count: genre.count,
                   href: collectionHref({ genre: genre.name }),
-                  ariaLabel: `Hear ${genre.name} on your shelf`,
+                  ariaLabel: hearOnShelf(locale, genre.name),
                 }))}
               />
             </ChartPanel>
           ) : null}
 
           {labelsWhoStay.length > 0 ? (
-            <ChartPanel icon={Tag} title="Labels you return to">
+            <ChartPanel icon={Tag} title={t(locale, "stats.labelsReturn")}>
               <BarList
                 items={labelsWhoStay.map((entry) => ({
                   label: entry.name,
                   count: entry.count,
                   href: collectionHref({ label: entry.name }),
-                  ariaLabel: `Hear ${entry.name} on your shelf`,
+                  ariaLabel: hearOnShelf(locale, entry.name),
                 }))}
               />
             </ChartPanel>
@@ -208,25 +216,25 @@ export function CollectionStats({ insight, engagement = [] }: CollectionStatsPro
           }
         >
           {placesWhoStay.length > 0 ? (
-            <ChartPanel icon={MapPin} title="Where they found you">
+            <ChartPanel icon={MapPin} title={t(locale, "stats.whereFound")}>
               <BarList
                 items={placesWhoStay.map((entry) => ({
                   label: entry.name,
                   count: entry.count,
                   href: collectionHref({ found: entry.name }),
-                  ariaLabel: `Hear the records that found you in ${entry.name}`,
+                  ariaLabel: t(locale, "thread.hearFound", { place: entry.name }),
                 }))}
               />
             </ChartPanel>
           ) : null}
           {yearsWhoStay.length > 0 ? (
-            <ChartPanel icon={Calendar} title="When they found you">
+            <ChartPanel icon={Calendar} title={t(locale, "stats.whenFound")}>
               <BarList
                 items={yearsWhoStay.map((entry) => ({
                   label: String(entry.year),
                   count: entry.count,
                   href: collectionHref({ when: entry.year }),
-                  ariaLabel: `Hear the records that found you in ${entry.year}`,
+                  ariaLabel: t(locale, "thread.hearFound", { place: String(entry.year) }),
                 }))}
               />
             </ChartPanel>
@@ -235,13 +243,13 @@ export function CollectionStats({ insight, engagement = [] }: CollectionStatsPro
       ) : null}
 
       {hasArrivedTimeline ? (
-        <ChartPanel icon={CalendarPlus} title="When they arrived">
+        <ChartPanel icon={CalendarPlus} title={t(locale, "stats.whenArrived")}>
           <BarList
             items={arrivedYears.map((entry) => ({
               label: String(entry.year),
               count: entry.count,
               href: collectionHref({ arrived: entry.year }),
-              ariaLabel: `Hear the records that arrived in ${entry.year}`,
+              ariaLabel: t(locale, "thread.hearArrived", { year: entry.year }),
             }))}
           />
         </ChartPanel>
@@ -265,7 +273,7 @@ function StatCard({
 }) {
   const body = (
     <>
-      <p className="flex items-center gap-2 text-xs font-medium tracking-wide text-text-tertiary uppercase">
+      <p className={`flex items-center gap-2 ${kickerClass}`}>
         <Icon className="size-3.5 shrink-0" aria-hidden />
         {label}
       </p>
@@ -301,7 +309,7 @@ function ChartPanel({
 }) {
   return (
     <div className="flex flex-col gap-4 rounded-rs-md border border-border bg-surface px-4 py-4">
-      <h3 className="flex items-center gap-2 text-xs font-medium tracking-wide text-text-tertiary uppercase">
+      <h3 className={`flex items-center gap-2 ${kickerClass}`}>
         <Icon className="size-3.5 shrink-0" aria-hidden />
         {title}
       </h3>

@@ -1,3 +1,6 @@
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
+
 export const SHARE_PRESSING_ERROR = "This pressing could not travel just now.";
 
 export interface SharePressingPayload {
@@ -27,11 +30,11 @@ export function sharePressingPayload(href: string, title: string, artist: string
   };
 }
 
-export function sharePressingVoice(title: string, copied: boolean): SharePressingVoice {
+export function sharePressingVoice(title: string, copied: boolean, locale: Locale = "en"): SharePressingVoice {
   return {
-    ariaLabel: `Share ${title}`,
-    label: copied ? "Link copied" : "Share this pressing",
-    error: SHARE_PRESSING_ERROR,
+    ariaLabel: t(locale, "share.aria", { title }),
+    label: copied ? t(locale, "share.copied") : t(locale, "share.label"),
+    error: t(locale, "share.error"),
   };
 }
 

@@ -19,6 +19,7 @@ import { createPortal } from "react-dom";
 
 import { Notice } from "@/components/ui/notice";
 import { trapFocus } from "@/components/ui/trap-focus";
+import { useLocale, useT } from "@/components/locale-provider";
 import { pressingCopyVoice, type PressingCopyKind } from "@/lib/collection/copy-pressing";
 import { LONG_PRESS_MS, pointerLeftPressZone, shouldArmLongPress } from "@/lib/collection/long-press";
 import {
@@ -27,13 +28,25 @@ import {
   recordMenuActions,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
+  recordSwipeActions,
   type RecordMenuActionId,
 } from "@/lib/collection/record-menu";
-import { browserShareHost, offerPressingShare, SHARE_PRESSING_ERROR } from "@/lib/collection/share-pressing";
+import { browserShareHost, offerPressingShare } from "@/lib/collection/share-pressing";
 import type { ShelfPresence } from "@/lib/collection/types";
+import {
+  clampSwipeOffset,
+  shouldArmSwipe,
+  snapSwipeOffset,
+  SWIPE_ACTION_WIDTH,
+  swipeAxis,
+  swipeOffsetFromPointer,
+  swipeRevealWidth,
+  type SwipeAxis,
+} from "@/lib/motion/swipe";
 
 const DESKTOP_QUERY = "(min-width: 1024px)";
 const CLOSE_EVENT = "resonance:close-record-menu";
+const CLOSE_SWIPE_EVENT = "resonance:close-record-swipe";
 
 const ACTION_ICONS: Record<RecordMenuActionId, LucideIcon> = {
   open: BookOpen,
@@ -62,6 +75,18 @@ const COPY_KIND: Partial<Record<RecordMenuActionId, PressingCopyKind>> = {
   "copy-catalog": "catalog",
 };
 
+function swipeActionClass(id: RecordMenuActionId): string {
+  if (id === "release" || id === "confirm-release") {
+    return "bg-error-soft text-error";
+  }
+
+  if (id === "keep" || id === "keep-shelf") {
+    return "bg-primary-soft text-on-primary-soft";
+  }
+
+  return "bg-surface-elevated text-text";
+}
+
 function subscribeToClient(): () => void {
   return () => undefined;
 }
@@ -84,6 +109,7 @@ interface RecordMenuProps {
   presence?: ShelfPresence;
   addHref?: string | null;
   canHold?: boolean;
+  canSwipe?: boolean;
   children: ReactNode;
 }
 
@@ -101,8 +127,11 @@ export function RecordMenu({
   presence,
   addHref = null,
   canHold = false,
+  canSwipe = false,
   children,
 }: RecordMenuProps) {
+  const t = useT();
+  const locale = useLocale();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const ignoreClose = useRef(false);
@@ -116,6 +145,14 @@ export function RecordMenu({
   const [copiedKind, setCopiedKind] = useState<"share" | PressingCopyKind | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isConfirmingRelease, setIsConfirmingRelease] = useState(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isSwipeDragging, setIsSwipeDragging] = useState(false);
+  const swipeSheetRef = useRef<HTMLDivElement>(null);
+  const swipeOrigin = useRef<{ x: number; y: number } | null>(null);
+  const swipeStartOffset = useRef(0);
+  const swipeAxisRef = useRef<SwipeAxis>("undecided");
+  const swipeOffsetRef = useRef(0);
+  const ignoreSwipeClose = useRef(false);
   const actions = presence
     ? explorerMenuActions({
         title,
@@ -126,6 +163,7 @@ export function RecordMenu({
         elsewhereHref,
         barcode,
         catalogNumber,
+        locale,
       })
     : recordMenuActions({
         title,
@@ -136,8 +174,33 @@ export function RecordMenu({
         barcode,
         catalogNumber,
         canRelease,
+        locale,
       });
-  const visibleActions = isConfirmingRelease ? recordMenuReleaseConfirm() : actions;
+  const visibleActions = isConfirmingRelease ? recordMenuReleaseConfirm(locale) : actions;
+  const swipeActions = recordSwipeActions(visibleActions);
+  const reveal = swipeRevealWidth(swipeActions.length);
+  const showSwipe = canSwipe && swipeActions.length > 0;
+
+  function applySwipeOffset(next: number) {
+    const offset = clampSwipeOffset(next, reveal);
+    swipeOffsetRef.current = offset;
+    if (swipeSheetRef.current) {
+      swipeSheetRef.current.style.transform = `translate3d(${-offset}px, 0, 0)`;
+    }
+  }
+
+  function restSwipe() {
+    applySwipeOffset(0);
+    setSwipeOffset(0);
+    setIsSwipeDragging(false);
+    setIsConfirmingRelease(false);
+  }
+
+  const restSwipeRef = useRef(restSwipe);
+
+  useEffect(() => {
+    restSwipeRef.current = restSwipe;
+  });
 
   const close = useCallback(() => {
     setAnchor(null);
@@ -151,6 +214,7 @@ export function RecordMenu({
     setCopiedKind(null);
     setNotice(null);
     setIsConfirmingRelease(false);
+    restSwipeRef.current();
     setAnchor({ x, y });
     setPosition({ left: x, top: y });
   }, []);
@@ -181,6 +245,32 @@ export function RecordMenu({
     window.addEventListener(CLOSE_EVENT, onCloseOthers);
     return () => window.removeEventListener(CLOSE_EVENT, onCloseOthers);
   }, [close]);
+
+  useEffect(() => {
+    function onCloseOtherSwipes() {
+      if (ignoreSwipeClose.current) {
+        return;
+      }
+
+      restSwipeRef.current();
+    }
+
+    window.addEventListener(CLOSE_SWIPE_EVENT, onCloseOtherSwipes);
+    return () => window.removeEventListener(CLOSE_SWIPE_EVENT, onCloseOtherSwipes);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (swipeOffsetRef.current === 0) {
+      return;
+    }
+
+    const offset = clampSwipeOffset(reveal, reveal);
+    swipeOffsetRef.current = offset;
+    if (swipeSheetRef.current) {
+      swipeSheetRef.current.style.transform = `translate3d(${-offset}px, 0, 0)`;
+    }
+    setSwipeOffset(offset);
+  }, [reveal]);
 
   useLayoutEffect(() => {
     if (!anchor || !menuRef.current) {
@@ -265,6 +355,32 @@ export function RecordMenu({
     };
   }, []);
 
+  useEffect(() => {
+    if (swipeOffset === 0 && !isSwipeDragging) {
+      return;
+    }
+
+    function onScroll() {
+      restSwipeRef.current();
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      event.preventDefault();
+      restSwipeRef.current();
+    }
+
+    window.addEventListener("scroll", onScroll, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isSwipeDragging, swipeOffset]);
+
   function clearPress() {
     if (pressTimer.current) {
       window.clearTimeout(pressTimer.current);
@@ -289,6 +405,20 @@ export function RecordMenu({
   }
 
   function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.target instanceof Element && event.target.closest("[data-swipe-action]")) {
+      return;
+    }
+
+    ignoreSwipeClose.current = true;
+    window.dispatchEvent(new Event(CLOSE_SWIPE_EVENT));
+    ignoreSwipeClose.current = false;
+
+    if (showSwipe && shouldArmSwipe({ isDesktop: isDesktopViewport(), button: event.button })) {
+      swipeOrigin.current = { x: event.clientX, y: event.clientY };
+      swipeStartOffset.current = swipeOffsetRef.current;
+      swipeAxisRef.current = "undecided";
+    }
+
     if (!shouldArmLongPress({ isDesktop: isDesktopViewport(), button: event.button }) || actions.length === 0) {
       return;
     }
@@ -310,17 +440,83 @@ export function RecordMenu({
   function onPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const origin = pressOrigin.current;
 
-    if (!origin || pressTimer.current === 0) {
+    if (origin && pressTimer.current !== 0 && pointerLeftPressZone(origin, { x: event.clientX, y: event.clientY })) {
+      clearPress();
+    }
+
+    const swipeFrom = swipeOrigin.current;
+
+    if (!swipeFrom || !showSwipe) {
       return;
     }
 
-    if (pointerLeftPressZone(origin, { x: event.clientX, y: event.clientY })) {
+    const dx = event.clientX - swipeFrom.x;
+    const dy = event.clientY - swipeFrom.y;
+
+    if (swipeAxisRef.current === "undecided") {
+      const axis = swipeAxis(dx, dy);
+
+      if (axis === "undecided") {
+        return;
+      }
+
+      if (axis === "vertical") {
+        swipeOrigin.current = null;
+        swipeAxisRef.current = "vertical";
+        return;
+      }
+
+      swipeAxisRef.current = "horizontal";
       clearPress();
+      close();
+      suppressClick.current = true;
+      setIsSwipeDragging(true);
+
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Pointer capture is best-effort; the row still follows the finger.
+      }
     }
+
+    if (swipeAxisRef.current !== "horizontal") {
+      return;
+    }
+
+    applySwipeOffset(swipeOffsetFromPointer(swipeFrom.x, event.clientX, swipeStartOffset.current, reveal));
   }
 
-  function onPointerUp() {
+  function onPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
     clearPress();
+
+    const wasDragging = swipeAxisRef.current === "horizontal";
+    const tappedClosed =
+      !wasDragging &&
+      swipeOffsetRef.current > 0 &&
+      !(event.target instanceof Element && event.target.closest("[data-swipe-action]"));
+
+    if (wasDragging || tappedClosed) {
+      const snapped = tappedClosed
+        ? 0
+        : snapSwipeOffset(swipeOffsetRef.current, reveal, swipeStartOffset.current > 0);
+      applySwipeOffset(snapped);
+      setSwipeOffset(snapped);
+      setIsSwipeDragging(false);
+      suppressClick.current = true;
+
+      if (snapped === 0) {
+        setIsConfirmingRelease(false);
+      }
+
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch {
+        // The capture may already have been released with the pointer.
+      }
+    }
+
+    swipeOrigin.current = null;
+    swipeAxisRef.current = "undecided";
   }
 
   function onClickCapture(event: ReactMouseEvent<HTMLDivElement>) {
@@ -355,6 +551,7 @@ export function RecordMenu({
     }
 
     close();
+    restSwipe();
   }
 
   async function onShare(): Promise<void> {
@@ -376,12 +573,12 @@ export function RecordMenu({
         close();
       }
     } catch {
-      setNotice(SHARE_PRESSING_ERROR);
+      setNotice(t("share.error"));
     }
   }
 
   async function onCopy(kind: PressingCopyKind, value: string): Promise<void> {
-    const failure = pressingCopyVoice(kind, value, false).error;
+    const failure = pressingCopyVoice(kind, value, false, locale).error;
     setNotice(null);
 
     try {
@@ -404,6 +601,7 @@ export function RecordMenu({
 
     if (id === "keep-shelf") {
       setIsConfirmingRelease(false);
+      restSwipe();
       return;
     }
 
@@ -428,22 +626,108 @@ export function RecordMenu({
 
   function actionLabel(id: RecordMenuActionId, label: string): string {
     if (id === "share" && copiedKind === "share") {
-      return "Link copied";
+      return t("menu.copiedLink");
     }
 
     const copyKind = COPY_KIND[id];
 
     if (copyKind && copiedKind === copyKind) {
-      return pressingCopyVoice(copyKind, "", true).ariaLabel;
+      return pressingCopyVoice(copyKind, "", true, locale).ariaLabel;
     }
 
     return label;
   }
 
+  const swipeFrame = showSwipe ? (
+    <div className="relative overflow-hidden lg:overflow-visible">
+      <div
+        className="absolute inset-y-0 right-0 flex lg:hidden"
+        role="group"
+        aria-label={t("menu.actionsFor", { title })}
+        inert={isSwipeDragging || swipeOffset === 0}
+      >
+        {isConfirmingRelease ? (
+          <p role="status" className="sr-only">
+            {recordMenuReleasePrompt(title, locale)}
+          </p>
+        ) : null}
+        {swipeActions.map((action) => {
+          const Icon = ACTION_ICONS[action.id];
+          const formAttr = FORM_ACTIONS[action.id];
+          const className = `flex h-full min-h-12 flex-col items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-strong ${swipeActionClass(action.id)}`;
+          const style = { width: SWIPE_ACTION_WIDTH };
+
+          if (action.id === "release" || action.id === "keep-shelf") {
+            return (
+              <button
+                key={action.id}
+                type="button"
+                data-swipe-action=""
+                aria-label={action.label}
+                onClick={() => onAction(action.id)}
+                className={className}
+                style={style}
+              >
+                <Icon className="size-4" aria-hidden />
+              </button>
+            );
+          }
+
+          if (formAttr) {
+            return (
+              <button
+                key={action.id}
+                type="button"
+                data-swipe-action=""
+                aria-label={action.label}
+                onClick={() => submitNamedForm(formAttr)}
+                className={className}
+                style={style}
+              >
+                <Icon className={`size-4 ${action.id === "keep" && isFavorite ? "fill-current" : ""}`} aria-hidden />
+              </button>
+            );
+          }
+
+          return (
+            <Link
+              key={action.id}
+              href={actionHref(action.id)}
+              data-swipe-action=""
+              aria-label={action.label}
+              onClick={() => {
+                close();
+                restSwipe();
+              }}
+              className={className}
+              style={style}
+            >
+              <Icon className="size-4" aria-hidden />
+            </Link>
+          );
+        })}
+      </div>
+      <div
+        ref={swipeSheetRef}
+        className={`relative bg-background ${isSwipeDragging ? "" : "transition-transform duration-200 ease-out"}`}
+        style={{ transform: `translate3d(${-swipeOffset}px, 0, 0)` }}
+      >
+        {children}
+      </div>
+    </div>
+  ) : (
+    children
+  );
+
   return (
     <div
       ref={wrapperRef}
-      className="touch-callout-none touch-manipulation select-none lg:select-text"
+      data-record-swipe={
+        showSwipe ? (isSwipeDragging ? "dragging" : swipeOffset > 0 ? "open" : "rest") : undefined
+      }
+      className={`touch-callout-none touch-manipulation select-none lg:select-text${
+        showSwipe ? " touch-pan-y lg:touch-auto" : ""
+      }`}
       onContextMenu={onContextMenu}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -452,20 +736,20 @@ export function RecordMenu({
       onClickCapture={onClickCapture}
       onKeyDown={onKeyDownCapture}
     >
-      {children}
+      {swipeFrame}
       {isClient && anchor
         ? createPortal(
             <div
               ref={menuRef}
               id={menuId}
               role="menu"
-              aria-label={isConfirmingRelease ? `Release ${title}` : `Actions for ${title}`}
+              aria-label={isConfirmingRelease ? t("menu.releaseFor", { title }) : t("menu.actionsFor", { title })}
               className="fixed z-50 min-w-56 rounded-rs-md border border-border bg-surface-elevated p-1"
               style={{ left: position.left, top: position.top }}
             >
               {isConfirmingRelease ? (
                 <p role="status" className="px-3 py-2 text-sm leading-6 text-text-secondary">
-                  {recordMenuReleasePrompt(title)}
+                  {recordMenuReleasePrompt(title, locale)}
                 </p>
               ) : null}
               {visibleActions.map((action) => {
@@ -495,7 +779,7 @@ export function RecordMenu({
                   const copyKind = COPY_KIND[action.id];
                   const copyVoice =
                     copyKind && action.value
-                      ? pressingCopyVoice(copyKind, action.value, copiedKind === copyKind)
+                      ? pressingCopyVoice(copyKind, action.value, copiedKind === copyKind, locale)
                       : null;
 
                   return (

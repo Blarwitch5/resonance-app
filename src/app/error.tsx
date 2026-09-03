@@ -2,6 +2,8 @@
 
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ResonanceMark } from "@/components/ui/resonance-mark";
+import { bodyClass, displayTitleClass, eyebrowClass } from "@/components/ui/type";
+import { useT } from "@/components/locale-provider";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -9,21 +11,23 @@ interface ErrorPageProps {
 }
 
 export default function ErrorPage({ retry }: ErrorPageProps) {
+  const t = useT();
+
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-6">
       <div className="max-w-md text-center">
         <ResonanceMark size="md" className="mx-auto" />
-        <p className="mt-4 text-sm font-medium tracking-[0.28em] text-primary uppercase">Resonance</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-text">The signal wavered.</h1>
-        <p className="mt-3 text-sm leading-6 text-text-secondary">
-          Something quiet went wrong. Your shelf is still here.
+        <p className={`mt-4 ${eyebrowClass}`}>Resonance</p>
+        <h1 className={`mt-3 ${displayTitleClass}`}>{t("errorPage.title")}</h1>
+        <p className={`mt-2 ${bodyClass}`}>
+          {t("errorPage.body")}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button type="button" onClick={() => retry()}>
-            Try again
+            {t("errorPage.retry")}
           </Button>
           <ButtonLink href="/collection" variant="ghost">
-            Back to Collection
+            {t("back.collection")}
           </ButtonLink>
         </div>
       </div>

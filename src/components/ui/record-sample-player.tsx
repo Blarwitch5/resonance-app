@@ -4,8 +4,10 @@ import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { CoverArt } from "@/components/ui/cover-art";
+import { glassPanelClass } from "@/components/ui/chrome";
 import { Notice } from "@/components/ui/notice";
 import { RecordSideHeading } from "@/components/ui/record-side-heading";
+import { useT, useLocale } from "@/components/locale-provider";
 import type { RecordSide } from "@/lib/collection/types";
 import {
   adjacentSample,
@@ -27,6 +29,8 @@ interface RecordSamplePlayerProps {
 }
 
 export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSamplePlayerProps) {
+  const t = useT();
+  const locale = useLocale();
   const audioRef = useRef<HTMLAudioElement>(null);
   const seekRef = useRef<HTMLDivElement>(null);
   const headingId = useId();
@@ -83,7 +87,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
       setIsPlaying(true);
     } catch (cause) {
       setIsPlaying(false);
-      setError(sampleErrorMessage(cause));
+      setError(sampleErrorMessage(cause, t));
     }
   }, []);
 
@@ -106,7 +110,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
       setError(null);
     } catch (cause) {
       setIsPlaying(false);
-      setError(sampleErrorMessage(cause));
+      setError(sampleErrorMessage(cause, t));
     }
   }, [isPlaying, queued]);
 
@@ -265,15 +269,15 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm leading-6 text-text-secondary">
-        Hear a few seconds of this pressing.{" "}
-        <span className="text-text-tertiary">30-second sample from Deezer</span>
+        {t("sample.intro")}{" "}
+        <span className="text-text-tertiary">{t("sample.fromDeezer")}</span>
       </p>
 
       <div className="flex flex-col gap-6">
         {sides.map((side, sideIndex) => (
           <div key={`${side.heading ?? "side"}-${sideIndex}`} className="flex flex-col gap-3">
-            <RecordSideHeading side={side} showRuntime={sides.length > 1} />
-            <ol className="flex flex-col" aria-label={side.heading ?? "Tracks"}>
+            <RecordSideHeading side={side} showRuntime={sides.length > 1} locale={locale} />
+            <ol className="flex flex-col" aria-label={side.heading ?? t("sample.tracks")}>
               {side.tracks.map((track, trackIndex) => {
                 const key = `${sideIndex}-${trackIndex}`;
                 const isCurrent = queued?.key === key;
@@ -293,8 +297,8 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
                         }`}
                         aria-label={
                           isCurrent && isPlaying
-                            ? `Pause ${track.title}`
-                            : `Hear a sample of ${track.title}`
+                            ? t("sample.pauseTitle", { title: track.title })
+                            : t("sample.hear", { title: track.title })
                         }
                         aria-pressed={isCurrent && isPlaying}
                         onClick={() => {
@@ -327,7 +331,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
 
       {queued && nowPlaying ? (
         <div
-          className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-surface/95 px-4 py-2 backdrop-blur-md lg:bottom-0 lg:left-60"
+          className={`fixed inset-x-3 bottom-[calc(4.5rem+max(0.75rem,env(safe-area-inset-bottom)))] z-30 rounded-rs-lg px-4 py-2 lg:inset-x-auto lg:right-3 lg:bottom-3 lg:left-60 ${glassPanelClass}`}
           role="region"
           aria-labelledby={headingId}
         >
@@ -337,7 +341,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
               <button
                 type="button"
                 className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong disabled:text-text-disabled"
-                aria-label={previous ? `Hear a sample of ${previous.title}` : "No previous sample"}
+                aria-label={previous ? t("sample.hear", { title: previous.title }) : t("sample.noPrevious")}
                 disabled={!canSkip}
                 onClick={() => {
                   void hearCue(previous);
@@ -348,7 +352,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
               <button
                 type="button"
                 className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary outline-none hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-border-strong"
-                aria-label={isPlaying ? "Pause sample" : `Play ${sampleCueLabel(queued)}`}
+                aria-label={isPlaying ? t("sample.pause") : t("sample.play", { title: sampleCueLabel(queued) })}
                 aria-pressed={isPlaying}
                 onClick={() => {
                   void togglePlayback();
@@ -359,7 +363,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
               <button
                 type="button"
                 className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong disabled:text-text-disabled"
-                aria-label={next ? `Hear a sample of ${next.title}` : "No next sample"}
+                aria-label={next ? t("sample.hear", { title: next.title }) : t("sample.noNext")}
                 disabled={!canSkip}
                 onClick={() => {
                   void hearCue(next);
@@ -372,7 +376,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
                   {nowPlaying.title}
                 </p>
                 <p className="truncate text-xs leading-5 text-text-tertiary">
-                  {nowPlaying.artist} · sample from Deezer
+                  {nowPlaying.artist} · {t("sample.fromDeezerLine")}
                 </p>
               </div>
             </div>
@@ -380,14 +384,17 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
               ref={seekRef}
               role="slider"
               tabIndex={0}
-              aria-label="Sample position"
+              aria-label={t("sample.position")}
               aria-valuemin={0}
               aria-valuemax={duration > 0 ? Math.round(duration) : 0}
               aria-valuenow={duration > 0 ? Math.round(progress * duration) : 0}
               aria-valuetext={
                 duration > 0
-                  ? `${Math.round(progress * duration)} seconds into a ${Math.round(duration)}-second sample`
-                  : "Sample position"
+                  ? t("sample.positionValue", {
+                      now: Math.round(progress * duration),
+                      duration: Math.round(duration),
+                    })
+                  : t("sample.position")
               }
               className="flex min-h-11 cursor-pointer items-center outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
               onPointerDown={(event) => {
@@ -468,7 +475,7 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl }: RecordSam
         }}
         onError={() => {
           setIsPlaying(false);
-          setError("This sample could not be heard just now.");
+          setError(t("sample.couldNotHear"));
         }}
       />
     </div>
@@ -498,10 +505,13 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return false;
 }
 
-function sampleErrorMessage(cause: unknown): string {
+function sampleErrorMessage(
+  cause: unknown,
+  t: (path: string) => string,
+): string {
   if (cause instanceof Error && cause.name === "NotAllowedError") {
-    return "This sample could not start playing. Try again from the play button.";
+    return t("sample.couldNotStart");
   }
 
-  return "This sample could not be heard just now.";
+  return t("sample.couldNotHear");
 }

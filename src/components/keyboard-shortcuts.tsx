@@ -9,6 +9,7 @@ import { detailBackHref, readStoredReturns } from "@/components/return-path";
 import { focusListenField } from "@/components/ui/focus-listen";
 import { FOCUS_SEARCH_KEY, focusSearchField } from "@/components/ui/focus-search";
 import { trapFocus } from "@/components/ui/trap-focus";
+import { useT } from "@/components/locale-provider";
 import { KEYS_HELP_EVENT, paletteGoHref, type PaletteNavContext } from "@/lib/collection/palette";
 import type { MediaFormat } from "@/lib/collection/types";
 
@@ -164,6 +165,7 @@ interface KeyboardShortcutsProps {
 }
 
 export function KeyboardShortcuts({ formats = [] }: KeyboardShortcutsProps) {
+  const t = useT();
   const router = useRouter();
   const pathname = usePathname();
   const titleId = useId();
@@ -425,7 +427,7 @@ export function KeyboardShortcuts({ formats = [] }: KeyboardShortcutsProps) {
       <button
         type="button"
         className="absolute inset-0 cursor-default"
-        aria-label="Close keys"
+        aria-label={t("keys.close")}
         onClick={closeHelp}
       />
       <div
@@ -438,15 +440,15 @@ export function KeyboardShortcuts({ formats = [] }: KeyboardShortcutsProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
             <h2 id={titleId} className="text-lg font-semibold text-text">
-              Keys
+              {t("keys.title")}
             </h2>
-            <p className="text-sm leading-6 text-text-secondary">Quiet paths through the shelf.</p>
+            <p className="text-sm leading-6 text-text-secondary">{t("keys.body")}</p>
           </div>
           <button
             ref={closeRef}
             type="button"
             onClick={closeHelp}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
           >
             <X className="size-5" aria-hidden />
@@ -454,31 +456,31 @@ export function KeyboardShortcuts({ formats = [] }: KeyboardShortcutsProps) {
         </div>
 
         <ul className="mt-5 flex flex-col gap-3">
-          <ShortcutRow keys={modifierSearchLabel()} action="Jump" />
-          <ShortcutRow keys="/" action="Search" />
-          <ShortcutRow keys="l" action="Shape this listen" />
-          <ShortcutRow keys="g c" action="Collection" />
+          <ShortcutRow keys={modifierSearchLabel()} action={t("keys.jump")} />
+          <ShortcutRow keys="/" action={t("keys.search")} />
+          <ShortcutRow keys="l" action={t("keys.listen")} />
+          <ShortcutRow keys="g c" action={t("nav.collection")} />
           {formats.length > 1 && formats.includes("vinyl") ? (
-            <ShortcutRow keys="g v" action="Vinyl" />
+            <ShortcutRow keys="g v" action={t("format.vinyl")} />
           ) : null}
           {formats.length > 1 && formats.includes("cassette") ? (
-            <ShortcutRow keys="g a" action="Cassette" />
+            <ShortcutRow keys="g a" action={t("format.cassette")} />
           ) : null}
           {formats.length > 1 && formats.includes("cd") ? (
-            <ShortcutRow keys="g d" action="CD" />
+            <ShortcutRow keys="g d" action={t("format.cd")} />
           ) : null}
-          <ShortcutRow keys="g t" action="Tonight" />
-          <ShortcutRow keys="g e" action="Explorer" />
-          <ShortcutRow keys="g p" action="Profile" />
-          <ShortcutRow keys="g k" action="Kept close" />
-          <ShortcutRow keys="g w" action="Waiting" />
-          <ShortcutRow keys="g s" action="Settings" />
-          <ShortcutRow keys="Space" action="Hear a sample" />
-          <ShortcutRow keys="n" action="Add a record" />
-          <ShortcutRow keys="f" action="Keep this close" />
-          <ShortcutRow keys="↑ ↓ ← →" action="Through the shelf" />
-          <ShortcutRow keys="?" action="These keys" />
-          <ShortcutRow keys="Esc" action="Close or back" />
+          <ShortcutRow keys="g t" action={t("keys.tonight")} />
+          <ShortcutRow keys="g e" action={t("nav.explorer")} />
+          <ShortcutRow keys="g p" action={t("nav.profile")} />
+          <ShortcutRow keys="g k" action={t("collection.keptClose")} />
+          <ShortcutRow keys="g w" action={t("profile.waiting")} />
+          <ShortcutRow keys="g s" action={t("settings.title")} />
+          <ShortcutRow keys="Space" action={t("keys.sample")} />
+          <ShortcutRow keys="n" action={t("keys.add")} />
+          <ShortcutRow keys="f" action={t("keys.keep")} />
+          <ShortcutRow keys="↑ ↓ ← →" action={t("keys.through")} />
+          <ShortcutRow keys="?" action={t("keys.these")} />
+          <ShortcutRow keys="Esc" action={t("keys.closeOrBack")} />
         </ul>
       </div>
     </div>,

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { AppError, toErrorMessage, ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/lib/errors";
+import { localizedError } from "@/lib/i18n/action-error";
 import { requireSession } from "@/lib/session";
 import { getUserSettings, upsertUserSettings } from "@/lib/settings/repository";
 import { enabledFormats, preferredFormat, type UserSettings } from "@/lib/settings/types";
@@ -17,9 +18,9 @@ export async function completeOnboardingAction(
   formData: FormData,
 ): Promise<WelcomeState> {
   const session = await requireSession();
+  const current = await getUserSettings(session.user.id);
 
   try {
-    const current = await getUserSettings(session.user.id);
     const intent = String(formData.get("intent") ?? "");
 
     if (intent !== "start" && intent !== "skip") {
@@ -31,11 +32,7 @@ export async function completeOnboardingAction(
 
     await upsertUserSettings(session.user.id, patch);
   } catch (error) {
-    if (error instanceof AppError) {
-      return { error: error.message };
-    }
-
-    return { error: toErrorMessage(error) };
+    return { error: localizedError(current.locale, error) };
   }
 
   revalidatePath("/collection");

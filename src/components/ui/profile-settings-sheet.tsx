@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useId, type ReactNode } from "react";
 
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { useT } from "@/components/locale-provider";
 
 interface ProfileSettingsSheetProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface ProfileSettingsSheetProps {
 }
 
 export function ProfileSettingsSheet({ isOpen, href, closeHref, children }: ProfileSettingsSheetProps) {
+  const t = useT();
   const router = useRouter();
   const dialogId = useId();
 
@@ -40,7 +42,7 @@ export function ProfileSettingsSheet({ isOpen, href, closeHref, children }: Prof
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={isOpen ? dialogId : undefined}
-        aria-label="Settings"
+        aria-label={t("settings.title")}
         onClick={toggle}
         className="group inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
       >
@@ -49,8 +51,8 @@ export function ProfileSettingsSheet({ isOpen, href, closeHref, children }: Prof
       {isOpen ? (
         <BottomSheet
           id={dialogId}
-          title="Your resonance"
-          description="Theme, formats, password, and a copy to take with you."
+          title={t("settings.sheetTitle")}
+          description={t("settings.sheetDescription")}
           onClose={close}
         >
           <div className="flex flex-col gap-8">{children}</div>

@@ -6,13 +6,14 @@ import type { ShelfCardThread } from "@/lib/collection/shelf-threads";
 interface ShelfThreadProps {
   thread: ShelfCardThread;
   className: string;
+  compact?: boolean;
 }
 
-export function ShelfThread({ thread, className }: ShelfThreadProps) {
+export function ShelfThread({ thread, className, compact = false }: ShelfThreadProps) {
   if (thread.href && thread.ariaLabel) {
     return (
       <span className={className}>
-        <ThreadLink href={thread.href} ariaLabel={thread.ariaLabel}>
+        <ThreadLink href={thread.href} ariaLabel={thread.ariaLabel} compact={compact}>
           {thread.label}
         </ThreadLink>
       </span>
@@ -25,9 +26,11 @@ export function ShelfThread({ thread, className }: ShelfThreadProps) {
 export function ShelfThreadLine({
   threads,
   className,
+  compact = false,
 }: {
   threads: Array<ShelfCardThread | null | undefined>;
   className: string;
+  compact?: boolean;
 }) {
   const visible = threads.filter((thread): thread is ShelfCardThread => thread != null);
 
@@ -36,11 +39,21 @@ export function ShelfThreadLine({
   }
 
   return (
-    <p className={`flex min-w-0 flex-wrap items-center gap-x-2 ${className}`}>
+    <p
+      className={
+        compact
+          ? `min-w-0 truncate ${className}`
+          : `flex min-w-0 flex-wrap items-center gap-x-2 ${className}`
+      }
+    >
       {visible.map((thread, index) => (
         <Fragment key={`${thread.label}:${index}`}>
-          {index > 0 ? <span aria-hidden>·</span> : null}
-          <ShelfThread thread={thread} className={index === 0 ? "truncate" : "text-text-tertiary"} />
+          {index > 0 ? <span aria-hidden> · </span> : null}
+          <ShelfThread
+            thread={thread}
+            compact={compact}
+            className={index === 0 ? "truncate" : "text-text-tertiary"}
+          />
         </Fragment>
       ))}
     </p>

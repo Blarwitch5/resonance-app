@@ -7,6 +7,8 @@ import { toggleKeptCloseAction, type ToggleKeptCloseState } from "@/app/collecti
 import { ChipButton } from "@/components/ui/chip";
 import { keptCloseCoverRevealClass } from "@/components/ui/kept-close";
 import { Notice } from "@/components/ui/notice";
+import { useT } from "@/components/locale-provider";
+import { shelfListHitClass } from "@/lib/collection/layout";
 
 const initialState: ToggleKeptCloseState = { error: null };
 
@@ -17,8 +19,9 @@ interface KeptCloseFormProps {
 }
 
 export function KeptCloseForm({ id, isFavorite, variant = "chip" }: KeptCloseFormProps) {
+  const t = useT();
   const [state, formAction, isPending] = useActionState(toggleKeptCloseAction, initialState);
-  const label = isFavorite ? "Stop keeping this close" : "Keep this close";
+  const label = isFavorite ? t("journal.stopKeep") : t("journal.keepClose");
 
   return (
     <form action={formAction} data-keep-close="" className={variant === "chip" ? "flex flex-col gap-2" : undefined}>
@@ -27,7 +30,7 @@ export function KeptCloseForm({ id, isFavorite, variant = "chip" }: KeptCloseFor
       {variant === "chip" ? (
         <ChipButton isActive={isFavorite} disabled={isPending} aria-label={label}>
           <Heart className={`size-4 shrink-0 ${isFavorite ? "fill-current" : ""}`} aria-hidden />
-          Keep this close
+          {t("journal.keepClose")}
         </ChipButton>
       ) : (
         <button
@@ -69,7 +72,7 @@ export function KeptCloseSlot({ id, isFavorite, layout, children }: KeptCloseSlo
 
   if (layout === "row") {
     return (
-      <div className="flex items-center gap-1 rounded-rs-md hover:bg-surface-pressed">
+      <div className={`flex items-center gap-1 ${shelfListHitClass}`}>
         <div className="min-w-0 flex-1">{children}</div>
         {toggle}
       </div>

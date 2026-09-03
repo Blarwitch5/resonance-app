@@ -4,6 +4,7 @@ import {
   PULL_REFRESH_THRESHOLD,
   pullProgress,
   resistedPull,
+  shouldContinuePull,
   shouldReleaseRefresh,
 } from "@/lib/motion/pull";
 
@@ -31,5 +32,17 @@ describe("shouldReleaseRefresh", () => {
   it("listens only once the wave is full", () => {
     expect(shouldReleaseRefresh(80)).toBe(false);
     expect(shouldReleaseRefresh(PULL_REFRESH_THRESHOLD / 0.45)).toBe(true);
+  });
+});
+
+describe("shouldContinuePull", () => {
+  it("lets a sideways swipe keep the shelf still", () => {
+    expect(shouldContinuePull(40, 6)).toBe(false);
+    expect(shouldContinuePull(32, 20)).toBe(false);
+  });
+
+  it("keeps listening when the finger travels down", () => {
+    expect(shouldContinuePull(4, 24)).toBe(true);
+    expect(shouldContinuePull(0, 8)).toBe(false);
   });
 });

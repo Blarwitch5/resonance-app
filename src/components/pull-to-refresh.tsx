@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 
 import { ListeningWave } from "@/components/ui/listening-wave";
-import { PULL_REFRESH_THRESHOLD, pullProgress, resistedPull, shouldReleaseRefresh } from "@/lib/motion/pull";
+import { useT } from "@/components/locale-provider";
+import { PULL_REFRESH_THRESHOLD, pullProgress, resistedPull, shouldContinuePull, shouldReleaseRefresh } from "@/lib/motion/pull";
 
 const DESKTOP_QUERY = "(min-width: 1024px)";
 
@@ -13,11 +14,13 @@ interface PullToRefreshProps {
 }
 
 export function PullToRefresh({ children }: PullToRefreshProps) {
+  const t = useT();
   const router = useRouter();
   const isDesktop = useSyncExternalStore(subscribeDesktop, desktopSnapshot, serverSnapshot);
   const [distance, setDistance] = useState(0);
   const [isRefreshing, startTransition] = useTransition();
   const startY = useRef(0);
+  const startX = useRef(0);
   const isPulling = useRef(false);
   const distanceRef = useRef(0);
 
@@ -45,6 +48,7 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
         return;
       }
 
+      startX.current = touch.clientX;
       startY.current = touch.clientY;
       isPulling.current = true;
     }
@@ -60,12 +64,17 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
         return;
       }
 
-      const delta = touch.clientY - startY.current;
+      const dx = touch.clientX - startX.current;
+      const dy = touch.clientY - startY.current;
 
-      if (delta <= 8 || window.scrollY > 0) {
+      if (!shouldContinuePull(dx, dy) || window.scrollY > 0) {
         if (distanceRef.current !== 0) {
           distanceRef.current = 0;
           setDistance(0);
+        }
+
+        if (Math.abs(dx) > dy) {
+          isPulling.current = false;
         }
 
         return;
@@ -75,8 +84,8 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
         event.preventDefault();
       }
 
-      distanceRef.current = delta;
-      setDistance(delta);
+      distanceRef.current = dy;
+      setDistance(dy);
     }
 
     function onEnd() {
@@ -115,13 +124,13 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
   const progress = isRefreshing ? 1 : pullProgress(distance);
   const isVisible = offset > 4 || isRefreshing;
   const label = isRefreshing
-    ? "Listening again…"
+    ? t("refresh.listening")
     : progress >= 1
-      ? "Release to listen again"
-      : "Pull to listen again";
+      ? t("refresh.release")
+      : t("refresh.pull");
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {!isDesktop && isVisible ? (
         <div
           className="flex items-end justify-center overflow-hidden"
@@ -159,5 +168,8 @@ function isBlockedTarget(target: EventTarget | null): boolean {
     return false;
   }
 
-  return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+  return Boolean(
+    target.closest("input, textarea, select, [contenteditable='true']") ||
+      target.closest("[data-record-swipe='dragging'], [data-record-swipe='open']"),
+  );
 }

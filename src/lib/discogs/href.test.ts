@@ -4,6 +4,7 @@ import {
   discogsReleaseHref,
   discogsYearParam,
   discogsYearRange,
+  EXPLORER_SEARCH_DEBOUNCE_MS,
   explorerAddHref,
   explorerBackHref,
   explorerCardHref,
@@ -13,10 +14,12 @@ import {
   explorerListenFromShelf,
   explorerQueryFromPressing,
   explorerSearchHref,
+  explorerWhenFromParams,
   hasExplorerListen,
+  listenFromExplorerSearchInput,
+  parseSearchPage,
   resolveExplorerFormat,
   resolveExplorerWhen,
-  explorerWhenFromParams,
 } from "@/lib/discogs/href";
 
 describe("explorerSearchHref", () => {
@@ -47,6 +50,31 @@ describe("explorerSearchHref", () => {
     expect(explorerSearchHref({ year: 1993, decade: 1990, format: "vinyl" })).toBe(
       "/explorer?format=vinyl&year=1993",
     );
+  });
+});
+
+describe("listenFromExplorerSearchInput", () => {
+  it("starts the typed listen from the first pressings", () => {
+    expect(
+      explorerSearchHref(
+        listenFromExplorerSearchInput(
+          { format: "vinyl", page: 2, query: "old", genre: "Rock" },
+          "  Kind of Blue  ",
+        ),
+      ),
+    ).toBe("/explorer?q=Kind+of+Blue&format=vinyl&genre=Rock");
+  });
+
+  it("clears the typed listen and keeps the other threads", () => {
+    expect(
+      explorerSearchHref(listenFromExplorerSearchInput({ query: "Blue", format: "vinyl", label: "ECM" }, "   ")),
+    ).toBe("/explorer?format=vinyl&label=ECM");
+  });
+});
+
+describe("EXPLORER_SEARCH_DEBOUNCE_MS", () => {
+  it("waits so Discogs can breathe", () => {
+    expect(EXPLORER_SEARCH_DEBOUNCE_MS).toBe(800);
   });
 });
 
@@ -238,6 +266,16 @@ describe("explorerClearHref", () => {
         page: 2,
       }),
     ).toBe("/explorer?q=Miles&format=vinyl");
+  });
+});
+
+describe("parseSearchPage", () => {
+  it("defaults invalid values to 1 and caps at 50", () => {
+    expect(parseSearchPage(undefined)).toBe(1);
+    expect(parseSearchPage("0")).toBe(1);
+    expect(parseSearchPage("abc")).toBe(1);
+    expect(parseSearchPage("12")).toBe(12);
+    expect(parseSearchPage("99")).toBe(50);
   });
 });
 

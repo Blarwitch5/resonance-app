@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { shelfCardThreads } from "@/lib/collection/shelf-threads";
+import { shelfCardDetails, shelfCardThreads } from "@/lib/collection/shelf-threads";
 
 describe("shelfCardThreads", () => {
   it("follows the artist and year on the shelf", () => {
@@ -223,5 +223,23 @@ describe("shelfCardThreads", () => {
       href: null,
       ariaLabel: null,
     });
+  });
+});
+
+describe("shelfCardDetails", () => {
+  it("names the pressing without repeating the decade", () => {
+    const threads = shelfCardThreads(
+      { artist: "Nirvana", year: 1993, label: "Geffen Records" },
+      { format: "vinyl" },
+    );
+
+    expect(shelfCardDetails(threads).map((thread) => thread?.label)).toEqual(["1993", "Geffen Records"]);
+    expect(shelfCardDetails(threads).some((thread) => thread?.label === "1990s")).toBe(false);
+  });
+
+  it("keeps a fallback year when the thread is quiet", () => {
+    expect(
+      shelfCardDetails(null, { label: "12 Mar 2024", href: null, ariaLabel: null }).map((thread) => thread?.label),
+    ).toEqual(["12 Mar 2024"]);
   });
 });

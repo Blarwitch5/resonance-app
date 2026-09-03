@@ -40,21 +40,28 @@ interface ChipButtonProps {
   isActive: boolean;
   children: ReactNode;
   disabled?: boolean;
+  className?: string;
   "aria-label"?: string;
 }
 
-export function ChipButton({ isActive, children, disabled = false, "aria-label": ariaLabel }: ChipButtonProps) {
+export function ChipButton({
+  isActive,
+  children,
+  disabled = false,
+  className = "",
+  "aria-label": ariaLabel,
+}: ChipButtonProps) {
   return (
     <button
       type="submit"
       aria-pressed={isActive}
       aria-label={ariaLabel}
       disabled={disabled}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong disabled:pointer-events-none ${
+      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong disabled:pointer-events-none lg:px-4 ${
         isActive
           ? "border-transparent bg-primary-soft text-on-primary-soft"
           : "border-border text-text-secondary"
-      }`}
+      } ${className}`}
     >
       {children}
     </button>

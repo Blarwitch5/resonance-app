@@ -1,12 +1,14 @@
-import { CircleDot, Music } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
-import { ChipLink } from "@/components/ui/chip";
 import { CoverArt } from "@/components/ui/cover-art";
-import { FormatIcon } from "@/components/ui/format-icon";
+import { formatIcons } from "@/components/ui/format-tokens";
 import { ShelfThread, ShelfThreadLine } from "@/components/ui/shelf-thread";
-import type { ShelfCardThreadView } from "@/lib/collection/shelf-threads";
+import { hintClass, metaClass, recordTitleClass } from "@/components/ui/type";
+import { shelfCardDetails, type ShelfCardThread, type ShelfCardThreadView } from "@/lib/collection/shelf-threads";
 import type { MediaFormat } from "@/lib/collection/types";
+import { coverAlt, formatLabel } from "@/lib/i18n/labels";
+import type { Locale } from "@/lib/settings/types";
 
 interface RecordTileProps {
   href: string;
@@ -17,6 +19,7 @@ interface RecordTileProps {
   format?: MediaFormat | null;
   sizes?: string;
   threads?: ShelfCardThreadView | null;
+  locale?: Locale;
 }
 
 export function RecordTile({
@@ -28,51 +31,70 @@ export function RecordTile({
   format = null,
   sizes,
   threads = null,
+  locale = "en",
 }: RecordTileProps) {
   const artistThread = threads?.artist ?? { label: artist, href: null, ariaLabel: null };
   const yearThread = threads?.year ?? toYearThread(year);
-  const formatHref = threads?.format?.href ?? undefined;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <Link
         href={href}
         data-record-link=""
-        className="group flex flex-col gap-3 rounded-rs-md outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
+        className="group block rounded-rs-md outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
       >
-        <CoverArt url={coverUrl} alt={`Cover of ${title} by ${artist}`} sizes={sizes} isInteractive />
-        <p className="truncate text-sm leading-snug font-semibold text-text">{title}</p>
+        <CoverArt url={coverUrl} alt={coverAlt(locale, title, artist)} sizes={sizes} isInteractive />
       </Link>
-      {format ? <FormatIcon format={format} href={formatHref} /> : null}
-      {artistThread ? (
-        <ShelfThread thread={artistThread} className="truncate text-xs leading-5 text-text-secondary" />
+      <RecordTileCaption
+        heading={
+          <Link
+            href={href}
+            className={`line-clamp-2 w-fit max-w-full ${recordTitleClass} outline-none focus-visible:ring-2 focus-visible:ring-border-strong`}
+          >
+            {title}
+          </Link>
+        }
+        format={format}
+        formatName={format ? formatLabel(locale, format) : null}
+        artist={artistThread}
+        details={shelfCardDetails(threads, yearThread)}
+      />
+    </div>
+  );
+}
+
+interface RecordTileCaptionProps {
+  heading: ReactNode;
+  format?: MediaFormat | null;
+  formatName?: string | null;
+  artist: ShelfCardThread | null;
+  details: Array<ShelfCardThread | null | undefined>;
+}
+
+export function RecordTileCaption({
+  heading,
+  format = null,
+  formatName = null,
+  artist,
+  details,
+}: RecordTileCaptionProps) {
+  const FormatGlyph = format ? formatIcons[format] : null;
+
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <div className="flex items-start gap-2">
+        <div className="min-w-0">{heading}</div>
+        {FormatGlyph ? (
+          <span className="mt-0.5 inline-flex shrink-0 text-text-tertiary">
+            <FormatGlyph className="size-3.5" aria-hidden />
+            {formatName ? <span className="sr-only">{formatName}</span> : null}
+          </span>
+        ) : null}
+      </div>
+      {artist ? (
+        <ShelfThread thread={artist} compact className={`truncate ${metaClass}`} />
       ) : null}
-      {yearThread ||
-      threads?.decade ||
-      threads?.label ||
-      threads?.found ||
-      threads?.foundWhen ||
-      threads?.genre ||
-      threads?.condition ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <ShelfThreadLine
-            threads={[yearThread, threads?.decade, threads?.label, threads?.found, threads?.foundWhen]}
-            className="text-xs leading-5 text-text-tertiary"
-          />
-          {threads?.genre ? (
-            <ChipLink href={threads.genre.href} isActive={false} aria-label={threads.genre.ariaLabel}>
-              <Music className="size-4 shrink-0" aria-hidden />
-              {threads.genre.label}
-            </ChipLink>
-          ) : null}
-          {threads?.condition ? (
-            <ChipLink href={threads.condition.href} isActive={false} aria-label={threads.condition.ariaLabel}>
-              <CircleDot className="size-4 shrink-0" aria-hidden />
-              {threads.condition.label}
-            </ChipLink>
-          ) : null}
-        </div>
-      ) : null}
+      <ShelfThreadLine compact threads={details} className={hintClass} />
     </div>
   );
 }

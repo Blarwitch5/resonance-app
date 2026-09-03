@@ -8,9 +8,12 @@ import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { authClient } from "@/lib/auth-client";
-import { toErrorMessage } from "@/lib/errors";
+import { localizedError } from "@/lib/i18n/action-error";
+import { useLocale, useT } from "@/components/locale-provider";
 
 export function SignUpForm() {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,14 +35,14 @@ export function SignUpForm() {
       });
 
       if (result.error) {
-        setError(result.error.message || "This journal could not be opened.");
+        setError(result.error.message || t("auth.couldNotOpen"));
         return;
       }
 
       router.push("/welcome");
       router.refresh();
     } catch (caught) {
-      setError(toErrorMessage(caught));
+      setError(localizedError(locale, caught));
     } finally {
       setIsSubmitting(false);
     }
@@ -51,7 +54,7 @@ export function SignUpForm() {
         id="name"
         name="name"
         type="text"
-        label="Name"
+        label={t("common.name")}
         autoComplete="name"
         required
         value={name}
@@ -62,7 +65,7 @@ export function SignUpForm() {
         id="email"
         name="email"
         type="email"
-        label="Email"
+        label={t("common.email")}
         autoComplete="email"
         required
         value={email}
@@ -73,7 +76,7 @@ export function SignUpForm() {
         id="password"
         name="password"
         type="password"
-        label="Password"
+        label={t("common.password")}
         autoComplete="new-password"
         required
         minLength={8}
@@ -84,7 +87,7 @@ export function SignUpForm() {
       {error ? <Notice tone="error">{error}</Notice> : null}
       <Button type="submit" disabled={isSubmitting} className="w-full">
         <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-        {isSubmitting ? "Opening…" : "Create journal"}
+        {isSubmitting ? t("auth.opening") : t("auth.createJournal")}
       </Button>
     </form>
   );

@@ -1,14 +1,17 @@
 import { Layers } from "lucide-react";
 
 import { ChipLink } from "@/components/ui/chip";
-import { formatIcons } from "@/components/ui/format-icon";
-import { MEDIA_FORMATS, parseMediaFormat, type MediaFormat } from "@/lib/collection/types";
+import { formatIcons } from "@/components/ui/format-tokens";
+import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 interface FormatChipsProps {
   active?: MediaFormat;
   enabled?: MediaFormat[];
   buildHref: (format?: MediaFormat) => string;
   className?: string;
+  locale?: Locale;
 }
 
 const formatClass: Record<MediaFormat, string> = {
@@ -22,6 +25,7 @@ export function FormatChips({
   enabled = MEDIA_FORMATS.slice(),
   buildHref,
   className = "",
+  locale = "en",
 }: FormatChipsProps) {
   const formats = MEDIA_FORMATS.filter((format) => enabled.includes(format));
 
@@ -30,10 +34,10 @@ export function FormatChips({
   }
 
   return (
-    <nav aria-label="Format" className={`flex flex-wrap gap-2 ${className}`.trim()}>
+    <nav aria-label={t(locale, "format.legend")} className={`flex flex-wrap gap-2 ${className}`.trim()}>
       <ChipLink href={buildHref()} isActive={!active} className="group">
         <Layers className="size-4 shrink-0 motion-safe:group-hover:vibrato" aria-hidden />
-        All
+        {t(locale, "format.all")}
       </ChipLink>
       {formats.map((format) => {
         const Icon = formatIcons[format];
@@ -46,14 +50,10 @@ export function FormatChips({
             className={`group capitalize ${formatClass[format]}`}
           >
             <Icon className="size-4 shrink-0 motion-safe:group-hover:vibrato" aria-hidden />
-            {format}
+            {t(locale, `format.${format}`)}
           </ChipLink>
         );
       })}
     </nav>
   );
-}
-
-export function selectedFormat(value: string | undefined): MediaFormat | undefined {
-  return parseMediaFormat(value);
 }

@@ -25,7 +25,6 @@ import { collectionHref, parseWaveFlag } from "@/lib/collection/href";
 import { pickShelfKin, SHELF_KIN_LIMIT } from "@/lib/collection/kin";
 import { toPressingThreads } from "@/lib/collection/pressing-threads";
 import { getCollectionItem, listCollectionItems, listShelfNeighbors, updateCollectionItem } from "@/lib/collection/repository";
-import { decadeLabel } from "@/lib/collection/stats";
 import { decadeFromYear } from "@/lib/collection/types";
 import { loadDeezerPreviews } from "@/lib/deezer/client";
 import { attachDeezerPreviews } from "@/lib/deezer/preview";
@@ -33,6 +32,9 @@ import { getMarketplaceAsk, getReleaseListen } from "@/lib/discogs/client";
 import { marketplaceVoice } from "@/lib/discogs/market";
 import { journalDocumentTitle } from "@/lib/document-title";
 import { DiscogsError, NotFoundError } from "@/lib/errors";
+import { coverAlt, decadeName } from "@/lib/i18n/labels";
+import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
 
@@ -60,10 +62,11 @@ export async function generateMetadata({ params }: CollectionItemPageProps): Pro
   const item = await readJournalItem(id);
 
   if (!item) {
-    return { title: "Nothing here resonates" };
+    return { title: t(await getLocale(), "notFound.document") };
   }
 
-  return { title: journalDocumentTitle(item.title, item.artist) };
+  const locale = await getLocale();
+  return { title: journalDocumentTitle(item.title, item.artist, locale) };
 }
 
 export default async function CollectionItemPage({ params, searchParams }: CollectionItemPageProps) {
@@ -105,10 +108,11 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
     artist: item.artist,
     artistHref: collectionHref({ artist: item.artist }),
     artistRecords,
-    decadeLabel: decade !== undefined ? decadeLabel(decade) : null,
+    decadeLabel: decade !== undefined ? decadeName(settings.locale, decade) : null,
     decadeHref: decade !== undefined ? collectionHref({ decade }) : null,
     decadeRecords,
     isOnShelf: !item.isWishlist,
+    locale: settings.locale,
   });
   const threads = toPressingThreads({
     format: item.format,
@@ -126,7 +130,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
     catalogNumber: item.catalogNumber ?? pressing.catalogNumber,
     formatNames: pressing.formatNames,
     creditLine: pressing.creditLine,
-  });
+  }, settings.locale);
   const remembered = catalogToRemember(item.catalogNumber, pressing.catalogNumber);
 
   if (remembered) {
@@ -140,12 +144,12 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
   return (
     <AppShell>
       {isArrivalWave ? <ArrivalWave format={item.format} title={item.title} /> : null}
-      <BackLink href={backHref}>{listBackLabel(backHref)}</BackLink>
+      <BackLink href={backHref}>{listBackLabel(backHref, settings.locale)}</BackLink>
       <ShelfNeighbors before={neighbors.before} after={neighbors.after} from={query.from} />
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,20rem)_1fr]">
         <CoverArt
           url={item.coverUrl}
-          alt={`Cover of ${item.title} by ${item.artist}`}
+          alt={coverAlt(settings.locale, item.title, item.artist)}
           sizes="(max-width: 1024px) 80vw, 320px"
           className={isArrivalWave ? "motion-safe:ripple-in" : undefined}
           priority
@@ -159,7 +163,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
             {item.isWishlist ? (
               <div className="flex flex-wrap gap-2">
                 <StatusPill tone="secondary" icon={Bookmark}>
-                  Wishlisted
+                  {t(settings.locale, "journal.wishlisted")}
                 </StatusPill>
               </div>
             ) : null}
@@ -169,6 +173,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
               title={threads.title}
               artist={threads.artist}
               elsewhereHref={threads.elsewhereHref}
+              locale={settings.locale}
             />
           </div>
           {item.isWishlist ? (
@@ -176,7 +181,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
               <input type="hidden" name="itemId" value={item.id} />
               <Button type="submit">
                 <Library className="size-4 shrink-0" aria-hidden />
-                Move to shelf
+                {t(settings.locale, "journal.moveToShelf")}
               </Button>
             </form>
           ) : null}
@@ -185,9 +190,16 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
             artist={item.artist}
             title={item.title}
             coverUrl={item.coverUrl}
+            locale={settings.locale}
           />
           {kin ? (
-            <ShelfKin headline={kin.headline} href={kin.href} records={kin.records} from={query.from} />
+            <ShelfKin
+              headline={kin.headline}
+              href={kin.href}
+              records={kin.records}
+              from={query.from}
+              locale={settings.locale}
+            />
           ) : null}
           <ItemMemoryForm
             id={item.id}

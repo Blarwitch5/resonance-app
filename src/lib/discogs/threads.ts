@@ -1,6 +1,5 @@
-import { decadeLabel, type CollectionInsight } from "@/lib/collection/stats";
+import type { CollectionInsight } from "@/lib/collection/stats";
 import {
-  FORMAT_LABELS,
   decadeFromYear,
   parseArtistFilter,
   parseGenreFilter,
@@ -10,6 +9,9 @@ import {
   type ReleaseDraft,
 } from "@/lib/collection/types";
 import { explorerSearchHref, type ExplorerQuery } from "@/lib/discogs/href";
+import { decadeName, formatLabel } from "@/lib/i18n/labels";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 const SUGGESTION_MAX = 8;
 const GENRE_SUGGESTION_MAX = 3;
@@ -68,6 +70,7 @@ export interface ExplorerCardThreadView {
 export function explorerCardThreads(
   draft: Pick<ReleaseDraft, "artist" | "year" | "label" | "genres" | "format">,
   listen: ExplorerQuery,
+  locale: Locale = "en",
 ): ExplorerCardThreadView {
   const artist = parseArtistFilter(draft.artist);
   const year = parseWhenFilter(draft.year === null ? undefined : String(draft.year));
@@ -80,9 +83,9 @@ export function explorerCardThreads(
   const isHearingLabel =
     label !== undefined && (listen.label?.trim().toLowerCase() ?? "") === label.toLowerCase();
   const isHearingFormat = listen.format === draft.format;
-  const formatLabel = FORMAT_LABELS[draft.format];
+  const formatName = formatLabel(locale, draft.format);
   const decade = year === undefined ? undefined : decadeFromYear(year);
-  const decadeName = decade !== undefined ? decadeLabel(decade) : null;
+  const decadeTitle = decade !== undefined ? decadeName(locale, decade) : null;
   const isHearingDecade = decade !== undefined && listen.decade === decade;
 
   return {
@@ -90,7 +93,7 @@ export function explorerCardThreads(
       ? {
           label: artist,
           href: isHearingArtist ? null : explorerSearchHref({ ...listen, query: artist, page: 1 }),
-          ariaLabel: isHearingArtist ? null : `Hear ${artist}`,
+          ariaLabel: isHearingArtist ? null : t(locale, "thread.hear", { name: artist }),
         }
       : null,
     year:
@@ -102,36 +105,36 @@ export function explorerCardThreads(
               listen.year === year
                 ? null
                 : explorerSearchHref({ ...listen, year, decade: undefined, page: 1 }),
-            ariaLabel: listen.year === year ? null : `Hear ${year}`,
+            ariaLabel: listen.year === year ? null : t(locale, "thread.hear", { name: year }),
           },
     label: label
       ? {
           label,
           href: isHearingLabel ? null : explorerSearchHref({ ...listen, label, page: 1 }),
-          ariaLabel: isHearingLabel ? null : `Hear ${label}`,
+          ariaLabel: isHearingLabel ? null : t(locale, "thread.hear", { name: label }),
         }
       : null,
     genre: genre
       ? {
           label: genre,
           href: explorerSearchHref({ ...listen, genre, page: 1 }),
-          ariaLabel: `Hear ${genre}`,
+          ariaLabel: t(locale, "thread.hear", { name: genre }),
         }
       : null,
     format: {
-      label: formatLabel,
+      label: formatName,
       href: isHearingFormat ? null : explorerSearchHref({ ...listen, format: draft.format, page: 1 }),
-      ariaLabel: isHearingFormat ? null : `Hear ${formatLabel}`,
+      ariaLabel: isHearingFormat ? null : t(locale, "thread.hear", { name: formatName }),
     },
     decade:
-      decade === undefined || decadeName === null
+      decade === undefined || decadeTitle === null
         ? null
         : {
-            label: decadeName,
+            label: decadeTitle,
             href: isHearingDecade
               ? null
               : explorerSearchHref({ ...listen, decade, year: undefined, page: 1 }),
-            ariaLabel: isHearingDecade ? null : `Hear the ${decadeName}`,
+            ariaLabel: isHearingDecade ? null : t(locale, "thread.hearDecade", { name: decadeTitle }),
           },
   };
 }
@@ -140,12 +143,14 @@ export function explorerThreadSuggestions(input: {
   listen: ExplorerQuery;
   insight?: CollectionInsight | null;
   drafts?: readonly ReleaseDraft[];
+  locale?: Locale;
 }): ExplorerThreadChip[] {
   const chips: ExplorerThreadChip[] = [];
   const seen = new Set<string>();
+  const locale = input.locale ?? "en";
 
   if (input.insight) {
-    pushShelfSuggestions(chips, seen, input.insight, input.listen);
+    pushShelfSuggestions(chips, seen, input.insight, input.listen, locale);
   }
 
   if (input.drafts && input.drafts.length > 0) {
@@ -159,6 +164,7 @@ export function explorerThreadGroups(input: {
   listen: ExplorerQuery;
   insight?: CollectionInsight | null;
   drafts?: readonly ReleaseDraft[];
+  locale?: Locale;
 }): { shelf: ExplorerThreadChip[]; results: ExplorerThreadChip[] } {
   const chips = explorerThreadSuggestions(input);
 
@@ -173,6 +179,7 @@ function pushShelfSuggestions(
   seen: Set<string>,
   insight: CollectionInsight,
   listen: ExplorerQuery,
+  locale: Locale,
 ): void {
   if (!listen.genre) {
     for (const genre of insight.topGenres.slice(0, GENRE_SUGGESTION_MAX)) {
@@ -202,7 +209,7 @@ function pushShelfSuggestions(
     for (const entry of insight.decades.slice(0, DECADE_SUGGESTION_MAX)) {
       pushChip(chips, seen, {
         key: `decade:${entry.decade}`,
-        label: decadeLabel(entry.decade),
+        label: decadeName(locale, entry.decade),
         kind: "decade",
         source: "shelf",
         listen: { decade: entry.decade },

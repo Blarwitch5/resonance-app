@@ -1,16 +1,18 @@
 import Link from "next/link";
 
 import {
-  LISTENING_TRAIL,
-  LISTENING_TRAIL_LEFT,
+  LISTENING_SIDES,
   LISTENING_TRAIL_TOP,
   listeningTrailDelayMs,
+  listeningTrailFill,
+  listeningTrailIndexes,
+  listeningTrailLeft,
 } from "@/lib/brand/listen";
 
 const MARK_SRC = "/logo-resonance.svg";
 
 const MARK_SIZE = {
-  sm: "size-9",
+  sm: "size-9 standalone:size-8",
   md: "size-14",
   lg: "size-28",
 } as const;
@@ -26,26 +28,28 @@ interface ResonanceMarkProps {
 export function ResonanceMark({ size = "sm", isListening = false, className = "" }: ResonanceMarkProps) {
   return (
     <div
-      className={`relative shrink-0 ${MARK_SIZE[size]} ${isListening ? "mr-[22%]" : ""} ${className}`.trim()}
+      className={`relative shrink-0 ${MARK_SIZE[size]} ${isListening ? "mx-[22%]" : ""} ${className}`.trim()}
       aria-hidden
     >
       <img src={MARK_SRC} alt="" className="size-full object-contain" />
       {isListening
-        ? LISTENING_TRAIL.map((index) => (
-            <span
-              key={index}
-              className={
-                index === 0
-                  ? "absolute size-[7.15%] rounded-full bg-secondary motion-reduce:hidden motion-safe:listen-dot"
-                  : "absolute size-[7.15%] rounded-full bg-secondary motion-reduce:opacity-60 motion-safe:listen-dot"
-              }
-              style={{
-                left: LISTENING_TRAIL_LEFT[index],
-                top: LISTENING_TRAIL_TOP,
-                animationDelay: `${listeningTrailDelayMs(index)}ms`,
-              }}
-            />
-          ))
+        ? LISTENING_SIDES.flatMap((side) =>
+            listeningTrailIndexes(side).map((index) => (
+              <span
+                key={`${side}-${index}`}
+                className={`absolute size-[7.15%] rounded-full ${listeningTrailFill(side)} ${
+                  index === 0
+                    ? "motion-reduce:hidden motion-safe:listen-dot"
+                    : "motion-reduce:opacity-60 motion-safe:listen-dot"
+                }`}
+                style={{
+                  left: listeningTrailLeft(side, index),
+                  top: LISTENING_TRAIL_TOP,
+                  animationDelay: `${listeningTrailDelayMs(index)}ms`,
+                }}
+              />
+            )),
+          )
         : null}
     </div>
   );

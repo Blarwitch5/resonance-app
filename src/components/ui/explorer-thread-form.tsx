@@ -6,10 +6,11 @@ import { type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
-import { decadeLabel } from "@/lib/collection/stats";
+import { useLocale, useT } from "@/components/locale-provider";
 import { MAX_GENRE_FILTER, MAX_LABEL_FILTER } from "@/lib/collection/types";
 import { explorerSearchHref, type ExplorerQuery } from "@/lib/discogs/href";
 import { explorerThreadFromFields } from "@/lib/discogs/threads";
+import { decadeName } from "@/lib/i18n/labels";
 
 interface ExplorerThreadFormProps {
   listen: ExplorerQuery;
@@ -18,6 +19,8 @@ interface ExplorerThreadFormProps {
 }
 
 export function ExplorerThreadForm({ listen, idPrefix, dense = false }: ExplorerThreadFormProps) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
@@ -54,41 +57,41 @@ export function ExplorerThreadForm({ listen, idPrefix, dense = false }: Explorer
       <TextField
         id={`${idPrefix}-genre`}
         name="genre"
-        label="Genre"
+        label={t("thread.genre")}
         defaultValue={listen.genre ?? ""}
         maxLength={MAX_GENRE_FILTER}
-        placeholder="Jazz, Dub…"
+        placeholder={t("thread.genrePlaceholder")}
         autoComplete="off"
         icon={Music}
       />
       <TextField
         id={`${idPrefix}-label`}
         name="label"
-        label="Label"
+        label={t("thread.label")}
         defaultValue={listen.label ?? ""}
         maxLength={MAX_LABEL_FILTER}
-        placeholder="ECM, Blue Note…"
+        placeholder={t("thread.labelPlaceholder")}
         autoComplete="off"
         icon={Tag}
       />
       <TextField
         id={`${idPrefix}-year`}
         name="year"
-        label="Year"
+        label={t("thread.year")}
         defaultValue={
           listen.year !== undefined
             ? String(listen.year)
             : listen.decade !== undefined
-              ? decadeLabel(listen.decade)
+              ? decadeName(locale, listen.decade)
               : ""
         }
-        maxLength={6}
-        placeholder="1993, 1990s…"
+        maxLength={16}
+        placeholder={t("thread.yearPlaceholder")}
         autoComplete="off"
         icon={Calendar}
       />
       <Button type="submit" className={dense ? "col-span-3 self-start" : "self-start"}>
-        Follow this thread
+        {t("thread.follow")}
       </Button>
     </form>
   );

@@ -6,8 +6,10 @@ import { z } from "zod";
 
 import { deleteCollectionItem, updateCollectionItem } from "@/lib/collection/repository";
 import { MEDIA_CONDITIONS } from "@/lib/collection/types";
-import { toErrorMessage, ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/lib/errors";
+import { localizedError } from "@/lib/i18n/action-error";
 import { requireSession } from "@/lib/session";
+import { loadUserSettings } from "@/lib/settings/repository";
 
 export interface UpdateItemState {
   error: string | null;
@@ -67,7 +69,7 @@ export async function updateItemAction(
 
     return { error: null, saved: true };
   } catch (error) {
-    return { error: toErrorMessage(error), saved: false };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error), saved: false };
   }
 }
 
@@ -83,7 +85,7 @@ export async function toggleKeptCloseAction(
   const parsed = z.string().uuid().safeParse(String(formData.get("id") ?? ""));
 
   if (!parsed.success) {
-    return { error: "This record could not be kept close." };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, new ValidationError("This record could not be kept close.")) };
   }
 
   try {
@@ -91,7 +93,7 @@ export async function toggleKeptCloseAction(
       isFavorite: String(formData.get("keep") ?? "") === "1",
     });
   } catch (error) {
-    return { error: toErrorMessage(error) };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error) };
   }
 
   revalidatePath("/collection");
@@ -112,13 +114,13 @@ export async function releaseItemAction(
   const parsed = z.string().uuid().safeParse(String(formData.get("id") ?? ""));
 
   if (!parsed.success) {
-    return { error: "This record could not be released." };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, new ValidationError("This record could not be released.")) };
   }
 
   try {
     await deleteCollectionItem(session.user.id, parsed.data);
   } catch (error) {
-    return { error: toErrorMessage(error) };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error) };
   }
 
   revalidatePath("/collection");

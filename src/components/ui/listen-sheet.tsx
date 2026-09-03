@@ -5,6 +5,7 @@ import { useCallback, useId, useState, type ReactNode } from "react";
 
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ButtonLink } from "@/components/ui/button";
+import { useT } from "@/components/locale-provider";
 
 interface ListenSheetProps {
   count: number;
@@ -26,9 +27,11 @@ export function ListenSheet({
   title,
   description,
   clearHref,
-  clearLabel = "Show the whole shelf",
+  clearLabel,
   children,
 }: ListenSheetProps) {
+  const t = useT();
+  const resolvedClear = clearLabel ?? t("common.showWholeShelf");
   const [isOpen, setIsOpen] = useState(false);
   const dialogId = useId();
   const close = useCallback(() => {
@@ -42,7 +45,7 @@ export function ListenSheet({
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-controls={isOpen ? dialogId : undefined}
-        aria-label={count > 0 ? `Shape this listen, ${count} active` : "Shape this listen"}
+        aria-label={count > 0 ? t("collection.listenActive", { count }) : t("collection.listenTitle")}
         onClick={() => setIsOpen(true)}
         className={`group inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong lg:hidden ${
           count > 0
@@ -51,7 +54,7 @@ export function ListenSheet({
         }`}
       >
         <SlidersHorizontal className="size-4 shrink-0 motion-safe:group-hover:vibrato" aria-hidden />
-        Listen
+        {t("common.listen")}
         {count > 0 ? (
           <span className="inline-flex min-h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-on-primary">
             {count}
@@ -64,7 +67,7 @@ export function ListenSheet({
             {children}
             {clearHref ? (
               <ButtonLink href={clearHref} variant="ghost" className="self-start">
-                {clearLabel}
+                {resolvedClear}
               </ButtonLink>
             ) : null}
           </div>
@@ -75,13 +78,15 @@ export function ListenSheet({
 }
 
 export function CollectionListenSheet({ count, clearHref, children }: CollectionListenSheetProps) {
+  const t = useT();
+
   return (
     <ListenSheet
       count={count}
-      title="Shape this listen"
-      description="Sort, layout, and the threads you keep close."
+      title={t("collection.listenTitle")}
+      description={t("collection.listenDescription")}
       clearHref={clearHref}
-      clearLabel="Show the whole shelf"
+      clearLabel={t("common.showWholeShelf")}
     >
       {children}
     </ListenSheet>

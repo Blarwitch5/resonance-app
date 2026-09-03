@@ -1,11 +1,12 @@
 "use client";
 
-import { ScanSearch, Search, SearchX } from "lucide-react";
+import { ScanSearch, Search } from "lucide-react";
 import { useCallback } from "react";
 
 import { Button, ButtonLink } from "@/components/ui/button";
 import { SearchField } from "@/components/ui/search-field";
 import { useInstantSearch } from "@/components/ui/use-instant-search";
+import { useT } from "@/components/locale-provider";
 import { profileFromSearchInput, profileHref, type ProfileTab } from "@/lib/profile/types";
 
 interface ProfileSearchProps {
@@ -16,6 +17,7 @@ interface ProfileSearchProps {
 }
 
 export function ProfileSearch({ tab, query, elsewhere, isQuiet }: ProfileSearchProps) {
+  const t = useT();
   const hrefFor = useCallback(
     (value: string) => profileHref(profileFromSearchInput(tab, value)),
     [tab],
@@ -27,7 +29,7 @@ export function ProfileSearch({ tab, query, elsewhere, isQuiet }: ProfileSearchP
     <form
       action="/profile"
       method="get"
-      className="flex flex-col gap-3 sm:flex-row"
+      className="flex flex-wrap gap-3"
       aria-busy={isPending}
       onSubmit={onSubmit}
     >
@@ -38,23 +40,18 @@ export function ProfileSearch({ tab, query, elsewhere, isQuiet }: ProfileSearchP
         value={value}
         onValueChange={setValue}
         isPending={isPending}
-        placeholder="Title, artist, label, barcode, memory…"
-        label="Search what you keep close, what is waiting, and the memories beside them"
+        placeholder={t("profile.searchPlaceholder")}
+        label={t("profile.searchLabel")}
+        clearLabel={t("common.clearSearch")}
       />
-      <Button type="submit">
+      <Button type="submit" className="shrink-0 px-4 sm:px-6" aria-label={t("common.search")}>
         <Search className="size-4 shrink-0" aria-hidden />
-        Search
+        <span className="hidden sm:inline">{t("common.search")}</span>
       </Button>
       {hasQuery && elsewhere ? (
         <ButtonLink href={elsewhere} variant={isQuiet ? "primary" : "ghost"}>
           <ScanSearch className="size-4 shrink-0" aria-hidden />
-          Hear it elsewhere
-        </ButtonLink>
-      ) : null}
-      {hasQuery ? (
-        <ButtonLink href={profileHref({ tab })} variant="ghost">
-          <SearchX className="size-4 shrink-0" aria-hidden />
-          Clear search
+          {t("common.hearElsewhere")}
         </ButtonLink>
       ) : null}
     </form>

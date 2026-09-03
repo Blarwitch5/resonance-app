@@ -1,6 +1,12 @@
+import type { MediaCondition, MediaFormat } from "@/lib/collection/types";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
+
 export const PROFILE_TABS = ["resonance", "close", "waiting"] as const;
 
 export type ProfileTab = (typeof PROFILE_TABS)[number];
+
+export const PROFILE_SHELF_SIZE = 8;
 
 export interface ProfileQuery {
   tab?: ProfileTab;
@@ -70,26 +76,29 @@ export interface ProfileEngagementCard {
   ariaLabel: string;
 }
 
-export function profileEngagement(input: { keptClose: number; waiting: number }): ProfileEngagementCard[] {
+export function profileEngagement(
+  input: { keptClose: number; waiting: number },
+  locale: Locale = "en",
+): ProfileEngagementCard[] {
   const cards: ProfileEngagementCard[] = [];
 
   if (input.keptClose > 0) {
     cards.push({
       id: "close",
-      label: "Kept close",
-      value: input.keptClose === 1 ? "1 record" : `${input.keptClose} records`,
+      label: t(locale, "profile.keptClose"),
+      value: input.keptClose === 1 ? t(locale, "profile.recordOne") : t(locale, "profile.records", { count: input.keptClose }),
       href: profileHref({ tab: "close" }),
-      ariaLabel: "Hear the records you keep close",
+      ariaLabel: t(locale, "profile.closeAria"),
     });
   }
 
   if (input.waiting > 0) {
     cards.push({
       id: "waiting",
-      label: "Waiting",
-      value: input.waiting === 1 ? "1 pressing" : `${input.waiting} pressings`,
+      label: t(locale, "profile.waiting"),
+      value: input.waiting === 1 ? t(locale, "profile.pressingOne") : t(locale, "profile.pressings", { count: input.waiting }),
       href: profileHref({ tab: "waiting" }),
-      ariaLabel: "Hear what is waiting",
+      ariaLabel: t(locale, "profile.waitAria"),
     });
   }
 
@@ -185,4 +194,42 @@ export function initialsFromName(name: string): string {
   const first = Array.from(parts[0] ?? "")[0] ?? "";
   const last = Array.from(parts[parts.length - 1] ?? "")[0] ?? "";
   return `${first}${last}`.toUpperCase();
+}
+
+export interface ProfileShelfItem {
+  id: string;
+  title: string;
+  artist: string;
+  year: number | null;
+  label: string | null;
+  genres: string[];
+  coverUrl: string | null;
+  isFavorite: boolean;
+  format: MediaFormat;
+  discogsId: number | null;
+  barcode: string | null;
+  catalogNumber: string | null;
+  condition: MediaCondition | null;
+  purchaseLocation: string | null;
+  purchaseDate: Date | string | null;
+}
+
+export function toProfileShelfItem(item: ProfileShelfItem): ProfileShelfItem {
+  return {
+    id: item.id,
+    title: item.title,
+    artist: item.artist,
+    year: item.year,
+    label: item.label,
+    genres: item.genres,
+    coverUrl: item.coverUrl,
+    isFavorite: item.isFavorite,
+    format: item.format,
+    discogsId: item.discogsId,
+    barcode: item.barcode,
+    catalogNumber: item.catalogNumber,
+    condition: item.condition,
+    purchaseLocation: item.purchaseLocation,
+    purchaseDate: item.purchaseDate,
+  };
 }

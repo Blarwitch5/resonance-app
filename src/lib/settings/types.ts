@@ -94,11 +94,3 @@ export function parseLocale(value: string | undefined): Locale | undefined {
 
   return undefined;
 }
-
-export function resolveShelfLayout(stored: ViewMode, isWide: boolean): ViewMode {
-  if (stored === "grid") {
-    return "grid";
-  }
-
-  return isWide ? "grid" : "list";
-}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useT } from "@/components/locale-provider";
 
 const DISMISS_KEY = "resonance-install-dismissed";
 const MOBILE_QUERY = "(max-width: 1023px)";
@@ -127,6 +128,7 @@ function isBeforeInstallPromptEvent(event: Event): event is BeforeInstallPromptE
 }
 
 export function InstallHint() {
+  const t = useT();
   const pathname = usePathname();
   const titleId = useId();
   const environment = useSyncExternalStore(
@@ -205,7 +207,7 @@ export function InstallHint() {
     <>
       <div className="h-28 shrink-0 lg:hidden" aria-hidden />
       <aside
-        className="fixed right-20 bottom-[calc(6rem+env(safe-area-inset-bottom))] left-4 z-30 rounded-rs-md border border-border bg-surface-elevated p-4 lg:hidden"
+        className="fixed right-20 bottom-[calc(var(--rs-bottom-chrome)+max(0.75rem,env(safe-area-inset-bottom)))] left-4 z-30 rounded-rs-md border border-border bg-surface-elevated p-4 lg:hidden"
         aria-labelledby={titleId}
       >
         <div className="flex items-start gap-3">
@@ -216,18 +218,16 @@ export function InstallHint() {
           )}
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <p id={titleId} className="text-sm font-semibold text-text">
-              Keep it close.
+              {t("install.title")}
             </p>
             <p className="text-sm leading-6 text-text-secondary">
-              {environment.isIos
-                ? "Share, then Add to Home Screen. The journal stays on your phone."
-                : "Add Resonance to your home screen. The journal stays with you."}
+              {environment.isIos ? t("install.ios") : t("install.android")}
             </p>
           </div>
           <button
             type="button"
             onClick={dismiss}
-            aria-label="Dismiss"
+            aria-label={t("common.dismiss")}
             className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
           >
             <X className="size-5" aria-hidden />
@@ -243,7 +243,7 @@ export function InstallHint() {
               void keepOnHomeScreen();
             }}
           >
-            Keep it here
+            {t("install.keepHere")}
           </Button>
         )}
       </aside>

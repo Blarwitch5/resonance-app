@@ -22,6 +22,18 @@ export interface ExplorerQuery {
   year?: number;
 }
 
+export const MAX_SEARCH_PAGE = 50;
+
+export function parseSearchPage(raw: string | undefined): number {
+  const parsed = Number.parseInt(raw ?? "1", 10);
+
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return 1;
+  }
+
+  return Math.min(parsed, MAX_SEARCH_PAGE);
+}
+
 export function resolveExplorerFormat(
   requested: string | undefined,
   enabled: readonly MediaFormat[],
@@ -80,6 +92,18 @@ export function explorerSearchHref(input: ExplorerQuery = {}): string {
 
   const search = params.toString();
   return search.length > 0 ? `/explorer?${search}` : "/explorer";
+}
+
+export const EXPLORER_SEARCH_DEBOUNCE_MS = 800;
+
+export function listenFromExplorerSearchInput(listen: ExplorerQuery, value: string): ExplorerQuery {
+  const query = value.trim();
+
+  return {
+    ...listen,
+    query: query.length > 0 ? query : undefined,
+    page: undefined,
+  };
 }
 
 export function hasExplorerListen(listen: ExplorerQuery): boolean {

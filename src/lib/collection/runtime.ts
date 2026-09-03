@@ -1,36 +1,39 @@
 import type { RecordSide, RecordTrack } from "@/lib/collection/types";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
-export function pressingListen(sides: readonly RecordSide[]): string | null {
+export function pressingListen(sides: readonly RecordSide[], locale: Locale = "en"): string | null {
   const tracks = sides.flatMap((side) => side.tracks);
 
   if (tracks.length === 0) {
     return null;
   }
 
-  const count = tracks.length === 1 ? "1 track" : `${tracks.length} tracks`;
-  const runtime = runtimeLabel(tracks);
+  const count =
+    tracks.length === 1 ? t(locale, "journal.trackOne") : t(locale, "journal.tracks", { count: tracks.length });
+  const runtime = runtimeLabel(tracks, locale);
 
   if (!runtime) {
-    return `This pressing holds ${count}.`;
+    return t(locale, "journal.holdsTracks", { count });
   }
 
-  return `This pressing holds ${count} and runs ${runtime}.`;
+  return t(locale, "journal.holdsAndRuns", { count, runtime });
 }
 
-export function pressingRuntime(sides: readonly RecordSide[]): string | null {
-  const label = runtimeLabel(sides.flatMap((side) => side.tracks));
-  return label ? `This pressing runs ${label}.` : null;
+export function pressingRuntime(sides: readonly RecordSide[], locale: Locale = "en"): string | null {
+  const label = runtimeLabel(sides.flatMap((side) => side.tracks), locale);
+  return label ? t(locale, "journal.runs", { runtime: label }) : null;
 }
 
-export function sideRuntime(side: RecordSide | undefined): string | null {
+export function sideRuntime(side: RecordSide | undefined, locale: Locale = "en"): string | null {
   if (!side) {
     return null;
   }
 
-  return runtimeLabel(side.tracks);
+  return runtimeLabel(side.tracks, locale);
 }
 
-function runtimeLabel(tracks: readonly RecordTrack[]): string | null {
+function runtimeLabel(tracks: readonly RecordTrack[], locale: Locale = "en"): string | null {
   if (tracks.length === 0) {
     return null;
   }
@@ -47,7 +50,7 @@ function runtimeLabel(tracks: readonly RecordTrack[]): string | null {
     totalSeconds += seconds;
   }
 
-  return formatRuntimeLabel(totalSeconds);
+  return formatRuntimeLabel(totalSeconds, locale);
 }
 
 function parseDurationSeconds(value: string | null): number | null {
@@ -76,26 +79,26 @@ function parseDurationSeconds(value: string | null): number | null {
   return (hours ?? 0) * 3600 + (minutes ?? 0) * 60 + (seconds ?? 0);
 }
 
-function formatRuntimeLabel(totalSeconds: number): string {
+function formatRuntimeLabel(totalSeconds: number, locale: Locale): string {
   if (totalSeconds < 60) {
     const seconds = Math.max(1, Math.round(totalSeconds));
-    return seconds === 1 ? "1 second" : `${seconds} seconds`;
+    return seconds === 1 ? t(locale, "journal.secondOne") : t(locale, "journal.seconds", { count: seconds });
   }
 
   const minutes = Math.round(totalSeconds / 60);
 
   if (minutes < 60) {
-    return minutes === 1 ? "1 minute" : `${minutes} minutes`;
+    return minutes === 1 ? t(locale, "journal.minuteOne") : t(locale, "journal.minutes", { count: minutes });
   }
 
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  const hourPart = hours === 1 ? "1 hour" : `${hours} hours`;
+  const hourPart = hours === 1 ? t(locale, "journal.hourOne") : t(locale, "journal.hours", { count: hours });
 
   if (rest === 0) {
     return hourPart;
   }
 
-  const minutePart = rest === 1 ? "1 minute" : `${rest} minutes`;
+  const minutePart = rest === 1 ? t(locale, "journal.minuteOne") : t(locale, "journal.minutes", { count: rest });
   return `${hourPart} ${minutePart}`;
 }

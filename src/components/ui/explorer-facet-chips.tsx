@@ -1,7 +1,11 @@
+"use client";
+
 import { Calendar, Hourglass, Music, Tag, type LucideIcon } from "lucide-react";
 
 import { ChipLink } from "@/components/ui/chip";
-import { decadeLabel, type CollectionInsight } from "@/lib/collection/stats";
+import { useLocale } from "@/components/locale-provider";
+import { decadeName } from "@/lib/i18n/labels";
+import type { CollectionInsight } from "@/lib/collection/stats";
 import type { ReleaseDraft } from "@/lib/collection/types";
 import { explorerSearchHref, type ExplorerQuery } from "@/lib/discogs/href";
 import {
@@ -32,8 +36,9 @@ export function ExplorerFacetChips({
   show = "all",
   source,
 }: ExplorerFacetChipsProps) {
+  const locale = useLocale();
   const suggestions =
-    show === "active" ? [] : explorerThreadSuggestions({ listen, insight, drafts });
+    show === "active" ? [] : explorerThreadSuggestions({ listen, insight, drafts, locale });
   const visible = source ? suggestions.filter((chip) => chip.source === source) : suggestions;
   const hasActive = Boolean(
     listen.genre || listen.label || listen.decade !== undefined || listen.year !== undefined,
@@ -70,7 +75,7 @@ export function ExplorerFacetChips({
       {showActive && listen.decade !== undefined ? (
         <ChipLink href={explorerSearchHref({ ...listen, decade: undefined, page: 1 })} isActive>
           <Hourglass className="size-4 shrink-0" aria-hidden />
-          {decadeLabel(listen.decade)}
+          {decadeName(locale, listen.decade)}
         </ChipLink>
       ) : null}
       {showActive && listen.year !== undefined ? (

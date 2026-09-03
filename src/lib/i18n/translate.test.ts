@@ -21,6 +21,16 @@ describe("t", () => {
     expect(t("fr", "nav.profile")).toBe("Profil");
     expect(t("en", "settings.language")).toBe("Language");
     expect(t("fr", "settings.language")).toBe("Langue");
+    expect(t("en", "collection.emptyShelf")).toBe("Your shelf is waiting.");
+    expect(t("fr", "collection.emptyShelf")).toBe("Ton étagère attend.");
+    expect(t("fr", "brand.tagline")).toBe("Là où ta musique résonne.");
+    expect(t("fr", "journal.onThisRecord")).toBe("Sur ce disque");
+    expect(t("fr", "journal.alsoOnShelf")).toBe("Aussi sur l’étagère");
+    expect(t("fr", "format.vinyl")).toBe("Vinyle");
+    expect(t("fr", "offlinePage.title")).toBe("Le signal s’est éteint.");
+    expect(t("fr", "offlinePage.quietShelf")).toBe(
+      "L’air est calme. Tu lis ce qui est déjà sur l’étagère.",
+    );
   });
 
   it("keeps the same keys in both tongues", () => {

@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Poppins } from "next/font/google";
 
+import { LocaleProvider } from "@/components/locale-provider";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { ThemeScript } from "@/components/theme-script";
-import { getSession } from "@/lib/session";
-import { getUserSettings } from "@/lib/settings/repository";
-import type { Locale } from "@/lib/settings/types";
+import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
 
 import "./globals.css";
 
@@ -23,27 +23,31 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Resonance",
-    template: "%s · Resonance",
-  },
-  description: "Where your music resonates. A modern sound journal for vinyl, cassettes, and CDs.",
-  applicationName: "Resonance",
-  manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: "/apple-touch-icon.png",
-  },
-  appleWebApp: {
-    capable: true,
-    title: "Resonance",
-    statusBarStyle: "black-translucent",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+
+  return {
+    title: {
+      default: "Resonance",
+      template: "%s · Resonance",
+    },
+    description: t(locale, "brand.meta"),
+    applicationName: "Resonance",
+    manifest: "/manifest.webmanifest",
+    icons: {
+      icon: [
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
+    appleWebApp: {
+      capable: true,
+      title: "Resonance",
+      statusBarStyle: "black-translucent",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [
@@ -56,7 +60,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const locale = await documentLocale();
+  const locale = await getLocale();
 
   return (
     <html
@@ -69,18 +73,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full bg-background font-sans text-text" suppressHydrationWarning>
         <ServiceWorkerRegister enabled={process.env.NODE_ENV === "production"} />
-        {children}
+        <LocaleProvider locale={locale}>{children}</LocaleProvider>
       </body>
     </html>
   );
-}
-
-async function documentLocale(): Promise<Locale> {
-  const session = await getSession();
-
-  if (!session) {
-    return "en";
-  }
-
-  return (await getUserSettings(session.user.id)).locale;
 }

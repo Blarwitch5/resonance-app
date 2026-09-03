@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { shelfListHitClass, shelfResultsClass } from "@/lib/collection/layout";
 import {
   DEFAULT_USER_SETTINGS,
   enabledFormats,
@@ -7,7 +8,6 @@ import {
   parseThemePreference,
   parseViewMode,
   preferredFormat,
-  resolveShelfLayout,
 } from "@/lib/settings/types";
 
 describe("enabledFormats", () => {
@@ -71,14 +71,23 @@ describe("DEFAULT_USER_SETTINGS", () => {
   });
 });
 
-describe("resolveShelfLayout", () => {
-  it("opens the covers on a wide desk", () => {
-    expect(resolveShelfLayout("list", false)).toBe("list");
-    expect(resolveShelfLayout("list", true)).toBe("grid");
+describe("shelfResultsClass", () => {
+  it("keeps a list a list, even on a wide desk", () => {
+    expect(shelfResultsClass("list")).toContain("flex-col");
+    expect(shelfResultsClass("list")).toContain("-mx-4");
+    expect(shelfResultsClass("list")).not.toContain("divide-y");
+    expect(shelfResultsClass("list")).not.toContain("grid-cols");
   });
 
-  it("keeps an explicit grid in the hand", () => {
-    expect(resolveShelfLayout("grid", false)).toBe("grid");
-    expect(resolveShelfLayout("grid", true)).toBe("grid");
+  it("opens covers in a grid when invited", () => {
+    expect(shelfResultsClass("grid")).toContain("grid");
+    expect(shelfResultsClass("grid")).toContain("grid-cols-2");
+  });
+});
+
+describe("shelfListHitClass", () => {
+  it("keeps list hover inset from the fill, aligned with the page", () => {
+    expect(shelfListHitClass).toContain("px-4");
+    expect(shelfListHitClass).toContain("hover:bg-surface-pressed");
   });
 });

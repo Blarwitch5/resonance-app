@@ -1,6 +1,6 @@
 "use client";
 
-import { Ear, Image, Languages, LayoutGrid, Monitor, Moon, Save, Sun, UserRound } from "lucide-react";
+import { Ear, Image, Languages, LayoutGrid, List, Monitor, Moon, Save, Sun, UserRound } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
 import { saveSettingsAction, type SaveSettingsState } from "@/app/profile/actions";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { choiceChipClass } from "@/components/ui/chip";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
 import { TextAreaField, TextField } from "@/components/ui/field";
-import { formatIcons, formatLabels } from "@/components/ui/format-icon";
+import { formatIcons } from "@/components/ui/format-icon";
 import { Notice } from "@/components/ui/notice";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
 import { t } from "@/lib/i18n/translate";
@@ -33,7 +33,7 @@ const themeIcons = {
 } as const;
 
 const viewIcons = {
-  list: Monitor,
+  list: List,
   grid: LayoutGrid,
 } as const;
 
@@ -100,12 +100,13 @@ export function ProfileSettingsForm({ name, image = null, settings }: ProfileSet
 
       <fieldset className={fieldsetClass}>
         <legend className={legendClass}>{t(locale, "settings.language")}</legend>
+        <input type="hidden" name="locale" value={locale} />
         <div className="flex flex-wrap gap-2">
           {LOCALES.map((option) => (
             <label key={option} className={choiceChipClass}>
               <input
                 type="radio"
-                name="locale"
+                name="localeChoice"
                 value={option}
                 checked={option === locale}
                 className="sr-only"
@@ -159,7 +160,7 @@ export function ProfileSettingsForm({ name, image = null, settings }: ProfileSet
                   className="sr-only"
                 />
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {t(locale, view === "list" ? "settings.layoutAuto" : "settings.layoutGrid")}
+                {t(locale, view === "list" ? "layout.list" : "layout.grid")}
               </label>
             );
           })}
@@ -181,7 +182,7 @@ export function ProfileSettingsForm({ name, image = null, settings }: ProfileSet
                   className="sr-only"
                 />
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {formatLabels[format]}
+                {t(locale, `format.${format}`)}
               </label>
             );
           })}
@@ -205,7 +206,7 @@ export function ProfileSettingsForm({ name, image = null, settings }: ProfileSet
                   className="sr-only"
                 />
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {formatLabels[format]}
+                {t(locale, `format.${format}`)}
               </label>
             );
           })}

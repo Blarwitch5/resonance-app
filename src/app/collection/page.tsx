@@ -1,38 +1,29 @@
-import { ChevronLeft, ChevronRight, Disc3, FaceSlightlySmilingPlus, Heart, MoonStar, ScanSearch, SearchX } from "lucide-react";
+import { ChevronLeft, Disc3, FaceSlightlySmilingPlus, Heart, MoonStar, ScanSearch, SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { KeptCloseSlot } from "@/app/collection/[id]/kept-close-form";
-import { ReleaseSlot } from "@/app/collection/[id]/release-record-form";
+import { CollectionFeed } from "@/app/collection/collection-feed";
 import { CollectionSearch } from "@/app/collection/collection-search";
 import { AppShell } from "@/components/layouts/app-shell";
 import { AddRecordFab } from "@/components/ui/add-record-fab";
 import { ButtonLink } from "@/components/ui/button";
 import { CollectionListenSheet } from "@/components/ui/listen-sheet";
 import { FacetChips } from "@/components/ui/facet-chips";
-import { FormatChips, selectedFormat } from "@/components/ui/format-chips";
+import { FormatChips } from "@/components/ui/format-chips";
 import { KeptChip } from "@/components/ui/kept-chip";
 import { PageHeader } from "@/components/ui/page-header";
-import { RecordMenu } from "@/components/ui/record-menu";
-import { RecordRow } from "@/components/ui/record-row";
-import { RecordTile } from "@/components/ui/record-tile";
 import { SortChips } from "@/components/ui/sort-chips";
+import { bodyClass, sectionTitleClass } from "@/components/ui/type";
 import { ViewChips } from "@/components/ui/view-chips";
-import { collectionHref, journalFromHref } from "@/lib/collection/href";
+import { feedPageCount } from "@/lib/collection/feed";
+import { collectionHref } from "@/lib/collection/href";
 import { collectionListenCount, collectionShelfHref } from "@/lib/collection/listen";
-import { memoryExcerpt } from "@/lib/collection/memory";
-import { recordMenuElsewhereHref } from "@/lib/collection/record-menu";
-import { shelfCardThreads } from "@/lib/collection/shelf-threads";
 import { countCollectionItems, hasShelfItems, listCollectionItems, SHELF_PAGE_SIZE } from "@/lib/collection/repository";
-import { decadeLabel } from "@/lib/collection/stats";
 import {
-  CONDITION_LABELS,
-  foundDateLabel,
+  collectionListenFromParams,
   isCanonicalWhenParams,
   MAX_COLLECTION_PAGE,
   parseArtistFilter,
-  parseCollectionPage,
-  parseCollectionSort,
   parseFoundFilter,
   parseGenreFilter,
   parseKeptClose,
@@ -40,20 +31,22 @@ import {
   parseMediaCondition,
   parseMediaFormat,
   parseWhenFilter,
+  toShelfCard,
   whenListenFromParams,
   type CollectionQuery,
-  type CollectionSort,
-  type MediaCondition,
-  type MediaFormat,
 } from "@/lib/collection/types";
-import { discogsReleaseHref, explorerListenFromShelf, explorerSearchHref, hasExplorerListen } from "@/lib/discogs/href";
+import { explorerListenFromShelf, explorerSearchHref, hasExplorerListen } from "@/lib/discogs/href";
 import { collectionDocumentTitle } from "@/lib/document-title";
+import { conditionLabel, decadeName } from "@/lib/i18n/labels";
+import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
-import { enabledFormats, type ViewMode } from "@/lib/settings/types";
+import { enabledFormats, type Locale } from "@/lib/settings/types";
 
 export async function generateMetadata({ searchParams }: CollectionPageProps): Promise<Metadata> {
   const params = await searchParams;
+  const locale = await getLocale();
   const pressed = whenListenFromParams(params.year, params.decade);
   return {
     title: collectionDocumentTitle({
@@ -69,6 +62,7 @@ export async function generateMetadata({ searchParams }: CollectionPageProps): P
       genre: parseGenreFilter(params.genre),
       condition: parseMediaCondition(params.condition),
       format: parseMediaFormat(params.format),
+      locale,
     }),
   };
 }
@@ -105,35 +99,20 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   }
 
   const enabled = enabledFormats(settings);
-  const requestedFormat = selectedFormat(params.format);
-  const format = requestedFormat && enabled.includes(requestedFormat) ? requestedFormat : undefined;
-  const query = (params.q ?? "").trim();
-  const sort = parseCollectionSort(params.sort);
-  const page = parseCollectionPage(params.page);
-  const keptClose = parseKeptClose(params.kept);
-  const artist = parseArtistFilter(params.artist);
-  const genre = parseGenreFilter(params.genre);
-  const { year, decade } = whenListenFromParams(params.year, params.decade);
-  const label = parseLabelFilter(params.label);
-  const found = parseFoundFilter(params.found);
-  const condition = parseMediaCondition(params.condition);
-  const when = parseWhenFilter(params.when);
-  const arrived = parseWhenFilter(params.arrived);
-  const listen: CollectionQuery = {
-    format,
-    query: query.length > 0 ? query : undefined,
-    sort,
-    keptClose,
-    artist,
-    genre,
-    decade,
-    label,
-    found,
-    condition,
-    when,
-    arrived,
-    year,
-  };
+  const { listen, page } = collectionListenFromParams(params, enabled);
+  const query = listen.query ?? "";
+  const sort = listen.sort ?? "recent";
+  const keptClose = Boolean(listen.keptClose);
+  const format = listen.format;
+  const artist = listen.artist;
+  const genre = listen.genre;
+  const year = listen.year;
+  const decade = listen.decade;
+  const label = listen.label;
+  const found = listen.found;
+  const condition = listen.condition;
+  const when = listen.when;
+  const arrived = listen.arrived;
 
   if (!isCanonicalWhenParams(params.year, params.decade)) {
     redirect(collectionHref({ ...listen, page }));
@@ -155,7 +134,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
     kind: "owned" as const,
     ...listen,
   };
-  const [items, total] = await Promise.all([
+  const [rows, total] = await Promise.all([
     listCollectionItems(session.user.id, {
       ...filters,
       page,
@@ -163,7 +142,8 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
     }),
     countCollectionItems(session.user.id, filters),
   ]);
-  const pages = Math.max(1, Math.min(MAX_COLLECTION_PAGE, Math.ceil(total / SHELF_PAGE_SIZE)));
+  const items = rows.map(toShelfCard);
+  const pages = feedPageCount(total, SHELF_PAGE_SIZE, MAX_COLLECTION_PAGE);
   const elsewhereListen = explorerListenFromShelf({ ...listen, format });
   const hasElsewhere = hasExplorerListen(elsewhereListen);
   const elsewhere = explorerSearchHref(elsewhereListen);
@@ -173,60 +153,64 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   return (
     <AppShell>
       <PageHeader
-        title="Collection"
-        description={shelfDescription(listen)}
+        title={t(settings.locale, "collection.title")}
+        description={shelfDescription(listen, settings.locale)}
         action={
           <div className="flex shrink-0 items-center gap-2">
             {total > 0 || hasQuery || hasFacet || keptClose ? (
-              <ButtonLink href="/collection/tonight" variant="ghost" aria-label="Hear a record tonight">
+              <ButtonLink
+                href="/collection/tonight"
+                variant="ghost"
+                aria-label={t(settings.locale, "collection.tonightAria")}
+                className="px-3 lg:px-6"
+              >
                 <MoonStar className="size-4 shrink-0" aria-hidden />
-                Tonight
+                <span className="hidden lg:inline">{t(settings.locale, "collection.tonight")}</span>
               </ButtonLink>
             ) : null}
-            <ButtonLink href={elsewhere} className="hidden shrink-0 lg:inline-flex">
-              <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-              Add
-            </ButtonLink>
+            <div className="hidden lg:contents">
+              <ButtonLink href={elsewhere} className="shrink-0">
+                <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
+                {t(settings.locale, "common.add")}
+              </ButtonLink>
+            </div>
           </div>
         }
       />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <CollectionSearch listen={listen} query={query} />
 
         <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-2">
+          <div id="collection-listen" className="flex flex-wrap items-center gap-2">
             <FormatChips
               active={format}
               enabled={enabled}
               buildHref={(next) => collectionHref({ ...listen, format: next })}
               className="lg:hidden"
+              locale={settings.locale}
             />
             <div className="hidden lg:contents">
               <KeptChip listen={listen} />
-              <FacetChips listen={listen} />
+              <FacetChips listen={listen} locale={settings.locale} />
             </div>
             <CollectionListenSheet count={listenCount} clearHref={shelfHref}>
               <KeptChip listen={listen} />
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-text">Sort</p>
+                <p className="text-sm font-medium text-text">{t(settings.locale, "sort.nav")}</p>
                 <SortChips active={sort} listen={listen} />
               </div>
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-text">Layout</p>
-                <ViewChips active={settings.viewMode} listen={listen} page={page} />
-              </div>
             </CollectionListenSheet>
+            <div className="ms-auto lg:hidden">
+              <ViewChips active={settings.viewMode} next={collectionHref({ ...listen, page })} />
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 lg:hidden">
-            <FacetChips listen={listen} />
+            <FacetChips listen={listen} locale={settings.locale} />
           </div>
-          <div
-            id="collection-listen"
-            className="hidden gap-3 lg:flex lg:flex-wrap lg:items-center lg:justify-between"
-          >
+          <div className="hidden flex-wrap items-center justify-between gap-3 lg:flex">
             <SortChips active={sort} listen={listen} />
-            <ViewChips active={settings.viewMode} listen={listen} page={page} />
+            <ViewChips active={settings.viewMode} next={collectionHref({ ...listen, page })} />
           </div>
         </div>
       </div>
@@ -240,36 +224,36 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
           ) : (
             <Disc3 className="mx-auto size-8 text-text-tertiary" aria-hidden />
           )}
-          <p className="mt-4 text-lg font-medium text-text">
+          <p className={`mt-4 ${sectionTitleClass}`}>
             {hasQuery || hasFacet
-              ? "Nothing on the shelf matched that."
+              ? t(settings.locale, "collection.emptyMatch")
               : page > 1
-                ? "Nothing more on this shelf."
+                ? t(settings.locale, "collection.emptyPage")
                 : keptClose
-                  ? "Nothing marked yet."
-                  : "Your shelf is waiting."}
+                  ? t(settings.locale, "collection.emptyKept")
+                  : t(settings.locale, "collection.emptyShelf")}
           </p>
-          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-text-secondary">
+          <p className={`mx-auto mt-2 max-w-sm ${bodyClass}`}>
             {hasElsewhere
-              ? "These sounds may still be waiting beyond the shelf."
+              ? t(settings.locale, "collection.emptyElsewhere")
               : hasFacet
-                ? "Release this thread, or keep listening elsewhere."
+                ? t(settings.locale, "collection.emptyFacet")
                 : page > 1
-                  ? "The earlier records are still on the first rows."
+                  ? t(settings.locale, "collection.emptyEarlier")
                   : keptClose
-                    ? "Keep a record close from the shelf, or from its journal."
-                    : "Add this record to your resonance. Start with a vinyl, a cassette, or a CD that still lives in your memory."}
+                    ? t(settings.locale, "collection.emptyKeptHint")
+                    : t(settings.locale, "collection.emptyHint")}
           </p>
           {hasElsewhere ? (
             <div className="mt-6 flex flex-col items-center gap-3">
               <ButtonLink href={elsewhere}>
                 <ScanSearch className="size-4 shrink-0" aria-hidden />
-                Hear it elsewhere
+                {t(settings.locale, "common.hearElsewhere")}
               </ButtonLink>
               {hasQuery ? (
                 <ButtonLink href={collectionHref({ ...listen, query: undefined })} variant="ghost">
                   <SearchX className="size-4 shrink-0" aria-hidden />
-                  Clear search
+                  {t(settings.locale, "common.clearSearch")}
                 </ButtonLink>
               ) : (
                 <ButtonLink
@@ -277,7 +261,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
                   variant="ghost"
                 >
                   <SearchX className="size-4 shrink-0" aria-hidden />
-                  Show the whole shelf
+                  {t(settings.locale, "common.showWholeShelf")}
                 </ButtonLink>
               )}
             </div>
@@ -288,43 +272,46 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
               className="mt-6"
             >
               <SearchX className="size-4 shrink-0" aria-hidden />
-              Show the whole shelf
+              {t(settings.locale, "common.showWholeShelf")}
             </ButtonLink>
           ) : page > 1 ? (
             <ButtonLink href={collectionHref({ ...listen })} variant="ghost" className="mt-6">
               <ChevronLeft className="size-4 shrink-0" aria-hidden />
-              Back to the first records
+              {t(settings.locale, "back.firstRecords")}
             </ButtonLink>
           ) : keptClose ? (
             <ButtonLink href={collectionHref({ format, sort })} variant="ghost" className="mt-6">
               <Heart className="size-4 shrink-0" aria-hidden />
-              Show the whole shelf
+              {t(settings.locale, "common.showWholeShelf")}
             </ButtonLink>
           ) : (
             <ButtonLink href="/explorer" className="mt-6">
               <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-              Add your first record
+              {t(settings.locale, "collection.addFirst")}
             </ButtonLink>
           )}
         </section>
       ) : (
         <>
-          <CollectionRecords
+          <CollectionFeed
+            key={collectionHref(listen)}
             viewMode={settings.viewMode}
             items={items}
+            page={page}
+            pages={pages}
             listen={listen}
             sort={sort}
             arrived={arrived}
+            locale={settings.locale}
           />
-          <ShelfPager listen={listen} page={page} pages={pages} />
           {hasElsewhere ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm leading-6 text-text-secondary">
-                Other pressings of this may still be waiting.
+                {t(settings.locale, "collection.otherPressings")}
               </p>
               <ButtonLink href={elsewhere} variant="ghost" className="self-start">
                 <ScanSearch className="size-4 shrink-0" aria-hidden />
-                Hear it elsewhere
+                {t(settings.locale, "common.hearElsewhere")}
               </ButtonLink>
             </div>
           ) : null}
@@ -335,7 +322,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   );
 }
 
-function shelfDescription(listen: CollectionQuery): string {
+function shelfDescription(listen: CollectionQuery, locale: Locale): string {
   const thread: string[] = [];
 
   if (listen.artist) {
@@ -347,19 +334,19 @@ function shelfDescription(listen: CollectionQuery): string {
   }
 
   if (listen.found) {
-    thread.push(`found in ${listen.found}`);
+    thread.push(t(locale, "collection.foundIn", { place: listen.found }));
   }
 
   if (listen.when !== undefined) {
-    thread.push(listen.found ? String(listen.when) : `found in ${listen.when}`);
+    thread.push(listen.found ? String(listen.when) : t(locale, "collection.foundIn", { place: listen.when }));
   }
 
   if (listen.arrived !== undefined) {
-    thread.push(`arrived in ${listen.arrived}`);
+    thread.push(t(locale, "collection.arrivedIn", { year: listen.arrived }));
   }
 
   if (listen.condition) {
-    thread.push(CONDITION_LABELS[listen.condition].toLowerCase());
+    thread.push(conditionLabel(locale, listen.condition).toLowerCase());
   }
 
   if (listen.genre) {
@@ -367,7 +354,7 @@ function shelfDescription(listen: CollectionQuery): string {
   }
 
   if (listen.decade !== undefined) {
-    thread.push(`the ${decadeLabel(listen.decade)}`);
+    thread.push(t(locale, "collection.theDecade", { decade: decadeName(locale, listen.decade) }));
   }
 
   if (listen.year !== undefined) {
@@ -376,208 +363,11 @@ function shelfDescription(listen: CollectionQuery): string {
 
   if (thread.length > 0) {
     const line = thread.join(" · ");
-    return listen.keptClose ? `Kept close — ${line}.` : `Your shelf — ${line}.`;
+    return listen.keptClose
+      ? t(locale, "collection.keptCloseLine", { line })
+      : t(locale, "collection.shelfLine", { line });
   }
 
-  return listen.keptClose ? "The ones you keep closest." : "Your records, kept close.";
+  return listen.keptClose ? t(locale, "collection.keptClosest") : t(locale, "collection.recordsKeptClose");
 }
 
-interface ShelfRecord {
-  id: string;
-  title: string;
-  artist: string;
-  year: number | null;
-  label: string | null;
-  genres: string[];
-  barcode: string | null;
-  catalogNumber: string | null;
-  format: MediaFormat;
-  coverUrl: string | null;
-  notes: string | null;
-  isFavorite: boolean;
-  discogsId: number | null;
-  purchaseDate: Date | null;
-  purchaseLocation: string | null;
-  condition: MediaCondition | null;
-  createdAt: Date;
-}
-
-function CollectionRecords({
-  viewMode,
-  items,
-  listen,
-  sort,
-  arrived,
-}: {
-  viewMode: ViewMode;
-  items: ShelfRecord[];
-  listen: CollectionQuery;
-  sort: CollectionSort;
-  arrived: number | undefined;
-}) {
-  if (viewMode === "list") {
-    return (
-      <>
-        <ShelfRecordList
-          className="flex flex-col gap-2 lg:hidden"
-          layout="list"
-          items={items}
-          listen={listen}
-          sort={sort}
-          arrived={arrived}
-        />
-        <ShelfRecordList
-          className="hidden grid-cols-4 gap-x-4 gap-y-6 lg:grid"
-          layout="grid"
-          items={items}
-          listen={listen}
-          sort={sort}
-          arrived={arrived}
-        />
-      </>
-    );
-  }
-
-  return (
-    <ShelfRecordList
-      className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4"
-      layout="grid"
-      items={items}
-      listen={listen}
-      sort={sort}
-      arrived={arrived}
-    />
-  );
-}
-
-function ShelfRecordList({
-  className,
-  layout,
-  items,
-  listen,
-  sort,
-  arrived,
-}: {
-  className: string;
-  layout: "list" | "grid";
-  items: ShelfRecord[];
-  listen: CollectionQuery;
-  sort: CollectionSort;
-  arrived: number | undefined;
-}) {
-  return (
-    <ul className={className}>
-      {items.map((item) => {
-        const foundOn =
-          sort === "found"
-            ? foundDateLabel(item.purchaseDate)
-            : arrived !== undefined
-              ? foundDateLabel(item.createdAt)
-              : undefined;
-        const from = collectionHref(listen);
-        const href = journalFromHref(item.id, from);
-        const threads = shelfCardThreads(
-          {
-            artist: item.artist,
-            year: sort === "found" || arrived !== undefined ? null : item.year,
-            label: item.label,
-            genres: item.genres,
-            format: item.format,
-            condition: item.condition,
-            found: item.purchaseLocation,
-            foundWhen: item.purchaseDate,
-          },
-          listen,
-        );
-
-        return (
-          <li key={item.id}>
-            <RecordMenu
-              href={href}
-              title={item.title}
-              artist={item.artist}
-              elsewhereHref={recordMenuElsewhereHref(item.artist, item.title, item.format)}
-              shareHref={item.discogsId ? discogsReleaseHref(item.discogsId) : null}
-              barcode={item.barcode}
-              catalogNumber={item.catalogNumber}
-              canKeepClose
-              canRelease={true}
-              isFavorite={item.isFavorite}
-            >
-              <ReleaseSlot id={item.id}>
-                <KeptCloseSlot id={item.id} isFavorite={item.isFavorite} layout={layout === "list" ? "row" : "cover"}>
-                  {layout === "list" ? (
-                    <RecordRow
-                      href={href}
-                      coverUrl={item.coverUrl}
-                      title={item.title}
-                      artist={item.artist}
-                      year={sort === "found" || arrived !== undefined ? null : item.year}
-                      foundOn={foundOn}
-                      format={item.format}
-                      memory={memoryExcerpt(item.notes)}
-                      threads={threads}
-                    />
-                  ) : (
-                    <RecordTile
-                      href={href}
-                      coverUrl={item.coverUrl}
-                      title={item.title}
-                      artist={item.artist}
-                      year={sort === "found" || arrived !== undefined ? (foundOn ?? null) : item.year}
-                      format={item.format}
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                      threads={threads}
-                    />
-                  )}
-                </KeptCloseSlot>
-              </ReleaseSlot>
-            </RecordMenu>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function ShelfPager({
-  listen,
-  page,
-  pages,
-}: {
-  listen: CollectionQuery;
-  page: number;
-  pages: number;
-}) {
-  if (pages <= 1) {
-    return null;
-  }
-
-  const hasEarlier = page > 1;
-  const hasFurther = page < pages;
-
-  return (
-    <nav
-      aria-label="More records"
-      className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p className="text-sm leading-6 text-text-secondary">
-        {hasFurther ? "There are more records on the shelf." : "You have reached the end of the shelf."}
-      </p>
-      <div className="flex flex-wrap gap-3">
-        {hasEarlier ? (
-          <ButtonLink href={collectionHref({ ...listen, page: page - 1 })} variant="ghost">
-            <ChevronLeft className="size-4 shrink-0" aria-hidden />
-            The ones before
-          </ButtonLink>
-        ) : null}
-        {hasFurther ? (
-          <ButtonLink href={collectionHref({ ...listen, page: page + 1 })}>
-            Listen further
-            <ChevronRight className="size-4 shrink-0" aria-hidden />
-          </ButtonLink>
-        ) : null}
-      </div>
-    </nav>
-  );
-}

@@ -1,24 +1,20 @@
-import {
-  Bookmark,
-  BookOpen,
-  FaceSlightlySmilingPlus,
-  Library,
-  Music,
-  ScanSearch,
-} from "lucide-react";
+import { FaceSlightlySmilingPlus, Library } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { moveWishlistToShelfAction } from "@/app/explorer/actions";
-import { WishlistReleaseForm } from "@/app/explorer/wishlist-release-form";
+import { HoldWaitingSlot } from "@/app/explorer/wishlist-release-form";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { ChipLink, StatusPill } from "@/components/ui/chip";
+import { StatusPill } from "@/components/ui/chip";
 import { CoverArt } from "@/components/ui/cover-art";
-import { FormatIcon } from "@/components/ui/format-icon";
-import { ThreadLink } from "@/components/ui/pressing-threads";
+import { formatIcons } from "@/components/ui/format-tokens";
 import { RecordMenu } from "@/components/ui/record-menu";
+import { RecordTileCaption } from "@/components/ui/record-tile";
 import { ShelfThreadLine } from "@/components/ui/shelf-thread";
-import { journalFromHref } from "@/lib/collection/href";
+import { metaClass, recordTitleClass } from "@/components/ui/type";
+import { shelfListHitClass } from "@/lib/collection/layout";
 import { recordMenuElsewhereHref } from "@/lib/collection/record-menu";
+import { shelfCardDetails } from "@/lib/collection/shelf-threads";
 import type { ReleaseDraft, ShelfPresence } from "@/lib/collection/types";
 import {
   discogsReleaseHref,
@@ -27,6 +23,9 @@ import {
   type ExplorerQuery,
 } from "@/lib/discogs/href";
 import { explorerCardThreads } from "@/lib/discogs/threads";
+import { coverAlt, formatLabel } from "@/lib/i18n/labels";
+import { t } from "@/lib/i18n/translate";
+import type { Locale, ViewMode } from "@/lib/settings/types";
 
 interface ExplorerReleaseCardProps {
   draft: ReleaseDraft;
@@ -36,6 +35,8 @@ interface ExplorerReleaseCardProps {
   from?: string;
   canWishlist?: boolean;
   priority?: boolean;
+  locale?: Locale;
+  layout?: ViewMode;
 }
 
 export function ExplorerReleaseCard({
@@ -46,26 +47,105 @@ export function ExplorerReleaseCard({
   from,
   canWishlist = false,
   priority = false,
+  locale = "en",
+  layout = "grid",
 }: ExplorerReleaseCardProps) {
   const headingId = `release-${draft.discogsId ?? "unknown"}-title`;
   const href = explorerCardHref(presence, draft.discogsId, from);
   const addHref = draft.discogsId ? explorerAddHref(draft.discogsId, from) : null;
   const elsewhereHref = recordMenuElsewhereHref(draft.artist, draft.title, draft.format, searchQuery);
-  const threads = explorerCardThreads(draft, listen);
+  const threads = explorerCardThreads(draft, listen, locale);
+  const FormatGlyph = formatIcons[draft.format];
   const cover = (
     <CoverArt
       url={draft.coverUrl}
-      alt={href ? "" : `Cover of ${draft.title} by ${draft.artist}`}
-      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+      alt={href ? "" : coverAlt(locale, draft.title, draft.artist)}
+      sizes={layout === "list" ? "64px" : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"}
       priority={priority}
       isInteractive={Boolean(href)}
     />
   );
   const heading = (
-    <h2 id={headingId} className="line-clamp-2 text-sm leading-snug font-semibold text-text">
+    <h2
+      id={headingId}
+      className={
+        layout === "list"
+          ? `truncate ${recordTitleClass}`
+          : `line-clamp-2 w-fit max-w-full ${recordTitleClass}`
+      }
+    >
       {draft.title}
     </h2>
   );
+  const linkedHeading = href ? (
+    <Link
+      href={href}
+      className="rounded-rs-sm outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
+    >
+      {heading}
+    </Link>
+  ) : (
+    heading
+  );
+  const meta = (
+    <ShelfThreadLine
+      compact
+      threads={[threads.artist, ...shelfCardDetails(threads)]}
+      className={metaClass}
+    />
+  );
+  const action = <CardAction draft={draft} presence={presence} from={from} locale={locale} />;
+  const card =
+    layout === "list" ? (
+      <article className={`flex min-h-14 items-center gap-3 py-2 ${shelfListHitClass}`} aria-labelledby={headingId}>
+        {href ? (
+          <Link
+            href={href}
+            data-record-link=""
+            aria-label={explorerCardLabel(draft.title, presence, locale)}
+            className="w-16 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
+          >
+            {cover}
+          </Link>
+        ) : (
+          <div className="w-16 shrink-0">{cover}</div>
+        )}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex min-w-0 items-start gap-2">
+            <div className="min-w-0">{linkedHeading}</div>
+            <span className="mt-0.5 inline-flex shrink-0 text-text-tertiary">
+              <FormatGlyph className="size-3.5" aria-hidden />
+              <span className="sr-only">{formatLabel(locale, draft.format)}</span>
+            </span>
+          </div>
+          {meta}
+        </div>
+        <div className="shrink-0">{action}</div>
+      </article>
+    ) : (
+      <article className="flex h-full flex-col gap-2" aria-labelledby={headingId}>
+        {href ? (
+          <Link
+            href={href}
+            data-record-link=""
+            aria-label={explorerCardLabel(draft.title, presence, locale)}
+            className="group block rounded-rs-md outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
+          >
+            {cover}
+          </Link>
+        ) : (
+          cover
+        )}
+        <RecordTileCaption
+          heading={linkedHeading}
+          format={draft.format}
+          formatName={formatLabel(locale, draft.format)}
+          artist={threads.artist}
+          details={shelfCardDetails(threads)}
+        />
+        <div className="mt-auto">{action}</div>
+      </article>
+    );
 
   return (
     <RecordMenu
@@ -79,81 +159,27 @@ export function ExplorerReleaseCard({
       barcode={draft.barcode}
       catalogNumber={draft.catalogNumber}
       elsewhereHref={elsewhereHref}
+      canSwipe={layout === "list"}
     >
-      <article className="flex h-full flex-col gap-3" aria-labelledby={headingId}>
-        {href ? (
-          <Link
-            href={href}
-            data-record-link=""
-            aria-label={explorerCardLabel(draft.title, presence)}
-            className="group flex flex-col gap-3 rounded-rs-md outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
-          >
-            {cover}
-            {heading}
-          </Link>
-        ) : (
-          <>
-            {cover}
-            {heading}
-          </>
-        )}
-        <FormatIcon
-          format={draft.format}
-          href={threads.format.href ?? undefined}
-          aria-label={threads.format.ariaLabel ?? undefined}
-        />
-        <CardArtist artist={threads.artist} />
-        <CardThreads threads={threads} />
-        <div className="mt-auto">
-          <CardAction
-            draft={draft}
-            presence={presence}
-            from={from}
-            canWishlist={canWishlist}
-            elsewhereHref={elsewhereHref}
-          />
-        </div>
-      </article>
+      {withHoldWaiting(card, draft, presence, canWishlist)}
     </RecordMenu>
   );
 }
 
-function CardArtist({ artist }: { artist: ReturnType<typeof explorerCardThreads>["artist"] }) {
-  if (!artist) {
-    return null;
-  }
-
-  if (artist.href && artist.ariaLabel) {
-    return (
-      <p className="truncate text-xs leading-5 text-text-secondary">
-        <ThreadLink href={artist.href} ariaLabel={artist.ariaLabel}>
-          {artist.label}
-        </ThreadLink>
-      </p>
-    );
-  }
-
-  return <p className="truncate text-xs leading-5 text-text-secondary">{artist.label}</p>;
-}
-
-function CardThreads({ threads }: { threads: ReturnType<typeof explorerCardThreads> }) {
-  if (!threads.year && !threads.decade && !threads.label && !threads.genre) {
-    return null;
+function withHoldWaiting(
+  card: ReactNode,
+  draft: ReleaseDraft,
+  presence: ShelfPresence,
+  canWishlist: boolean,
+): ReactNode {
+  if (!canWishlist || presence.status !== "absent" || !draft.discogsId) {
+    return card;
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <ShelfThreadLine
-        threads={[threads.year, threads.decade, threads.label]}
-        className="text-xs leading-5 text-text-tertiary"
-      />
-      {threads.genre ? (
-        <ChipLink href={threads.genre.href} isActive={false} aria-label={threads.genre.ariaLabel}>
-          <Music className="size-4 shrink-0" aria-hidden />
-          {threads.genre.label}
-        </ChipLink>
-      ) : null}
-    </div>
+    <HoldWaitingSlot discogsId={draft.discogsId} format={draft.format}>
+      {card}
+    </HoldWaitingSlot>
   );
 }
 
@@ -161,47 +187,34 @@ function CardAction({
   draft,
   presence,
   from,
-  canWishlist,
-  elsewhereHref,
+  locale,
 }: {
   draft: ReleaseDraft;
   presence: ShelfPresence;
   from?: string;
-  canWishlist: boolean;
-  elsewhereHref: string | null;
+  locale: Locale;
 }) {
   if (presence.status === "owned") {
     return (
-      <div className="flex flex-col gap-2">
-        <StatusPill tone="primary" icon={Library}>
-          On your shelf
-        </StatusPill>
-        <OpenJournalLink itemId={presence.itemId} title={draft.title} from={from} />
-        <HearElsewhereLink title={draft.title} artist={draft.artist} href={elsewhereHref} />
-      </div>
+      <StatusPill tone="primary" icon={Library}>
+        {t(locale, "explorer.onYourShelf")}
+      </StatusPill>
     );
   }
 
   if (presence.status === "wishlist") {
     return (
-      <div className="flex flex-col gap-2">
-        <StatusPill tone="secondary" icon={Bookmark}>
-          Wishlisted
-        </StatusPill>
-        <form action={moveWishlistToShelfAction} data-move-shelf="">
-          <input type="hidden" name="itemId" value={presence.itemId} />
-          <Button
-            type="submit"
-            className="w-full min-h-11 px-3 text-xs"
-            aria-label={`Move ${draft.title} to your shelf`}
-          >
-            <Library className="size-4 shrink-0" aria-hidden />
-            Move to shelf
-          </Button>
-        </form>
-        <OpenJournalLink itemId={presence.itemId} title={draft.title} from={from} />
-        <HearElsewhereLink title={draft.title} artist={draft.artist} href={elsewhereHref} />
-      </div>
+      <form action={moveWishlistToShelfAction} data-move-shelf="">
+        <input type="hidden" name="itemId" value={presence.itemId} />
+        <Button
+          type="submit"
+          className="min-h-11 px-4"
+          aria-label={t(locale, "explorer.moveToShelfAria", { title: draft.title })}
+        >
+          <Library className="size-4 shrink-0" aria-hidden />
+          {t(locale, "explorer.moveToShelf")}
+        </Button>
+      </form>
     );
   }
 
@@ -216,66 +229,21 @@ function CardAction({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <ButtonLink
-        href={addHref}
-        className="w-full min-h-11 px-3 text-xs"
-        aria-label={`Add ${draft.title} to your resonance`}
-      >
-        <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-        Add
-      </ButtonLink>
-      {canWishlist ? (
-        <WishlistReleaseForm discogsId={draft.discogsId} format={draft.format} title={draft.title} />
-      ) : null}
-    </div>
+    <ButtonLink
+      href={addHref}
+      className="min-h-11 px-4"
+      aria-label={t(locale, "explorer.addAria", { title: draft.title })}
+    >
+      <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
+      {t(locale, "common.add")}
+    </ButtonLink>
   );
 }
 
-function explorerCardLabel(title: string, presence: ShelfPresence): string {
+function explorerCardLabel(title: string, presence: ShelfPresence, locale: Locale): string {
   if (presence.status === "owned" || presence.status === "wishlist") {
-    return `Open ${title} in your journal`;
+    return t(locale, "explorer.openJournalAria", { title });
   }
 
-  return `Hear more of ${title}`;
-}
-
-function OpenJournalLink({ itemId, title, from }: { itemId: string; title: string; from?: string }) {
-  return (
-    <ButtonLink
-      href={journalFromHref(itemId, from)}
-      variant="ghost"
-      className="w-full min-h-11 px-3 text-xs"
-      aria-label={`Open ${title} in your journal`}
-    >
-      <BookOpen className="size-4 shrink-0" aria-hidden />
-      Open journal
-    </ButtonLink>
-  );
-}
-
-function HearElsewhereLink({
-  title,
-  artist,
-  href,
-}: {
-  title: string;
-  artist: string;
-  href: string | null;
-}) {
-  if (!href) {
-    return null;
-  }
-
-  return (
-    <ButtonLink
-      href={href}
-      variant="ghost"
-      className="w-full min-h-11 px-3 text-xs"
-      aria-label={`Hear other pressings of ${title} by ${artist}`}
-    >
-      <ScanSearch className="size-4 shrink-0" aria-hidden />
-      Hear it elsewhere
-    </ButtonLink>
-  );
+  return t(locale, "thread.hearMoreOf", { title });
 }

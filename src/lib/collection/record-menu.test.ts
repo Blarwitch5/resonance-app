@@ -7,6 +7,7 @@ import {
   recordMenuElsewhereHref,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
+  recordSwipeActions,
 } from "@/lib/collection/record-menu";
 
 describe("recordMenuActions", () => {
@@ -248,6 +249,57 @@ describe("explorerMenuActions", () => {
         presence: { status: "absent" },
       }),
     ).toEqual([]);
+  });
+});
+
+describe("recordSwipeActions", () => {
+  it("keeps the shelf gestures and leaves copy and open in the menu", () => {
+    expect(
+      recordSwipeActions(
+        recordMenuActions({
+          title: "In Utero",
+          isFavorite: true,
+          canKeepClose: true,
+          shareHref: "https://www.discogs.com/release/2313422",
+          elsewhereHref: "/explorer?q=Nirvana+In+Utero",
+          barcode: "07464405791",
+          canRelease: true,
+        }),
+      ).map((action) => action.id),
+    ).toEqual(["keep", "elsewhere", "release"]);
+  });
+
+  it("asks to keep the pressing before a swipe lets it go", () => {
+    expect(recordSwipeActions(recordMenuReleaseConfirm()).map((action) => action.id)).toEqual([
+      "keep-shelf",
+      "confirm-release",
+    ]);
+  });
+
+  it("moves a waiting pressing or hears it elsewhere", () => {
+    expect(
+      recordSwipeActions(
+        explorerMenuActions({
+          title: "OK Computer",
+          presence: { status: "wishlist", itemId: "rec-2" },
+          elsewhereHref: "/explorer?q=Radiohead+OK+Computer",
+        }),
+      ).map((action) => action.id),
+    ).toEqual(["shelf", "elsewhere"]);
+  });
+
+  it("holds a pressing still beyond the shelf", () => {
+    expect(
+      recordSwipeActions(
+        explorerMenuActions({
+          title: "In Utero",
+          presence: { status: "absent" },
+          addHref: "/explorer/add/2313422",
+          canHold: true,
+          elsewhereHref: "/explorer?q=Nirvana+In+Utero",
+        }),
+      ).map((action) => action.id),
+    ).toEqual(["add", "hold", "elsewhere"]);
   });
 });
 

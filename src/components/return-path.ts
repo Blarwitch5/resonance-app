@@ -1,3 +1,6 @@
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
+
 export type MainNavPath = "/collection" | "/explorer" | "/profile";
 
 export function isReturnPath(pathname: string): pathname is MainNavPath {
@@ -87,6 +90,10 @@ export function resolvedBackHref(href: string, stored: string | null): string {
   return parseStoredReturn(pathname, stored) ?? href;
 }
 
+export function viewModeReturnHref(raw: string | undefined): string {
+  return parseListReturn(raw) ?? "/collection";
+}
+
 export function parseListReturn(from: string | null | undefined): string | null {
   if (!from) {
     return null;
@@ -114,18 +121,18 @@ export function listBackHref(from: string | undefined, fallback: string): string
   return parseListReturn(from) ?? fallback;
 }
 
-export function listBackLabel(href: string): string {
+export function listBackLabel(href: string, locale: Locale = "en"): string {
   const path = hrefPathname(href);
 
   if (path === "/explorer") {
-    return "Back to Explorer";
+    return t(locale, "back.explorer");
   }
 
   if (path === "/profile") {
-    return "Back to Profile";
+    return t(locale, "back.profile");
   }
 
-  return "Back to Collection";
+  return t(locale, "back.collection");
 }
 
 export function detailBackHref(pathname: string, search: string): string | null {

@@ -3,13 +3,16 @@ import { redirect } from "next/navigation";
 
 import { WelcomeForm } from "@/app/welcome/welcome-form";
 import { ResonanceMark } from "@/components/ui/resonance-mark";
+import { bodyClass, displayTitleClass, eyebrowClass } from "@/components/ui/type";
 import { hasShelfItems } from "@/lib/collection/repository";
+import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
 
-export const metadata: Metadata = {
-  title: "Welcome",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: t(await getLocale(), "document.welcome") };
+}
 
 export default async function WelcomePage() {
   const session = await requireSession();
@@ -22,14 +25,16 @@ export default async function WelcomePage() {
     redirect("/collection");
   }
 
+  const locale = settings.locale;
+
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-6">
       <div className="ripple-in w-full max-w-sm">
         <ResonanceMark size="md" />
-        <p className="mt-4 text-sm font-medium tracking-[0.28em] text-primary uppercase">Resonance</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-text">Your shelf is waiting.</h1>
-        <p className="mt-3 text-sm leading-6 text-text-secondary">
-          This is not a catalogue. It is a quiet place for the records that stay with you.
+        <p className={`mt-4 ${eyebrowClass}`}>Resonance</p>
+        <h1 className={`mt-3 ${displayTitleClass}`}>{t(locale, "welcome.heading")}</h1>
+        <p className={`mt-2 ${bodyClass}`}>
+          {t(locale, "welcome.body")}
         </p>
         <div className="mt-8">
           <WelcomeForm />

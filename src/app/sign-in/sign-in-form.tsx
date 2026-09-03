@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { authClient } from "@/lib/auth-client";
-import { toErrorMessage } from "@/lib/errors";
+import { localizedError } from "@/lib/i18n/action-error";
+import { useLocale, useT } from "@/components/locale-provider";
 
 interface SignInFormProps {
   nextPath: string;
 }
 
 export function SignInForm({ nextPath }: SignInFormProps) {
+  const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,14 +37,14 @@ export function SignInForm({ nextPath }: SignInFormProps) {
       });
 
       if (result.error) {
-        setError(result.error.message || "Those credentials did not match.");
+        setError(result.error.message || t("auth.credentials"));
         return;
       }
 
       router.push(nextPath);
       router.refresh();
     } catch (caught) {
-      setError(toErrorMessage(caught));
+      setError(localizedError(locale, caught));
     } finally {
       setIsSubmitting(false);
     }
@@ -53,7 +56,7 @@ export function SignInForm({ nextPath }: SignInFormProps) {
         id="email"
         name="email"
         type="email"
-        label="Email"
+        label={t("common.email")}
         autoComplete="email"
         required
         value={email}
@@ -64,7 +67,7 @@ export function SignInForm({ nextPath }: SignInFormProps) {
         id="password"
         name="password"
         type="password"
-        label="Password"
+        label={t("common.password")}
         autoComplete="current-password"
         required
         minLength={8}
@@ -75,7 +78,7 @@ export function SignInForm({ nextPath }: SignInFormProps) {
       {error ? <Notice tone="error">{error}</Notice> : null}
       <Button type="submit" disabled={isSubmitting} className="w-full">
         <LogIn className="size-4 shrink-0" aria-hidden />
-        {isSubmitting ? "Listening…" : "Enter"}
+        {isSubmitting ? t("auth.listening") : t("auth.enter")}
       </Button>
     </form>
   );

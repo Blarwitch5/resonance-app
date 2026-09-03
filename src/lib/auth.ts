@@ -6,6 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 
 import { getDb } from "@/db";
 import { account, session, user, verification } from "@/db/schema";
+import { developmentAuthOrigins } from "@/lib/auth-origins";
 import { getEnv } from "@/lib/env";
 
 const env = getEnv();
@@ -15,9 +16,7 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: [
     env.BETTER_AUTH_URL,
-    ...(env.NODE_ENV === "development"
-      ? ["http://localhost:3000", "http://127.0.0.1:3000"]
-      : []),
+    ...(env.NODE_ENV === "development" ? developmentAuthOrigins() : []),
   ],
   database: drizzleAdapter(getDb(), {
     provider: "pg",

@@ -11,15 +11,10 @@ import {
   profileNavHrefForPath,
   type ProfileNavId,
 } from "@/lib/profile/types";
-
-const ITEMS: Array<{ id: ProfileNavId; label: string; icon: LucideIcon }> = [
-  { id: "resonance", label: "Resonance", icon: Library },
-  { id: "close", label: "Kept close", icon: Heart },
-  { id: "waiting", label: "Waiting", icon: Bookmark },
-  { id: "settings", label: "Settings", icon: Settings },
-];
+import { useT } from "@/components/locale-provider";
 
 export function ProfileNav() {
+  const t = useT();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isOnProfile = pathname === "/profile";
@@ -29,10 +24,16 @@ export function ProfileNav() {
     ? parseSettingsFlag(searchParams.get("settings") ?? undefined, searchParams.get("tab") ?? undefined)
     : false;
   const listen = { tab, query };
+  const items: Array<{ id: ProfileNavId; label: string; icon: LucideIcon }> = [
+    { id: "resonance", label: t("profile.resonance"), icon: Library },
+    { id: "close", label: t("profile.keptClose"), icon: Heart },
+    { id: "waiting", label: t("profile.waiting"), icon: Bookmark },
+    { id: "settings", label: t("settings.title"), icon: Settings },
+  ];
 
   return (
-    <SidebarSubNav label="Profile">
-      {ITEMS.map((item) => (
+    <SidebarSubNav label={t("nav.profile")}>
+      {items.map((item) => (
         <SidebarSubLink
           key={item.id}
           href={profileNavHrefForPath(item.id, pathname, listen)}

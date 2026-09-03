@@ -3,55 +3,65 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { collectionHref } from "@/lib/collection/href";
+import { viewModeReturnHref } from "@/components/return-path";
+import { feedPageCount, type FeedLoadResult } from "@/lib/collection/feed";
+import { countCollectionItems, listCollectionItems, SHELF_PAGE_SIZE } from "@/lib/collection/repository";
 import {
-  parseArtistFilter,
-  parseCollectionPage,
-  parseCollectionSort,
-  parseFoundFilter,
-  parseGenreFilter,
-  parseKeptClose,
-  parseLabelFilter,
-  parseMediaCondition,
-  parseMediaFormat,
-  parseWhenFilter,
-  whenListenFromParams,
+  collectionListenFromParams,
+  MAX_COLLECTION_PAGE,
+  toShelfCard,
+  type CollectionSearchParams,
+  type ShelfCard,
 } from "@/lib/collection/types";
 import { ValidationError } from "@/lib/errors";
+import { localizedError } from "@/lib/i18n/action-error";
+import { t } from "@/lib/i18n/translate";
 import { requireSession } from "@/lib/session";
 import { getUserSettings, upsertUserSettings } from "@/lib/settings/repository";
-import { parseViewMode } from "@/lib/settings/types";
+import { enabledFormats, parseViewMode } from "@/lib/settings/types";
 
 export async function saveViewModeAction(formData: FormData) {
   const session = await requireSession();
+  const current = await getUserSettings(session.user.id);
   const view = parseViewMode(String(formData.get("view") ?? ""));
 
   if (!view) {
-    throw new ValidationError("Choose a shelf layout.");
+    throw new ValidationError(t(current.locale, "error.layout"));
   }
 
-  const current = await getUserSettings(session.user.id);
   await upsertUserSettings(session.user.id, { ...current, viewMode: view });
   revalidatePath("/collection");
+  revalidatePath("/explorer");
   revalidatePath("/profile");
-  redirect(
-    collectionHref({
-      format: parseMediaFormat(String(formData.get("format") ?? "") || undefined),
-      query: String(formData.get("q") ?? "").trim() || undefined,
-      sort: parseCollectionSort(String(formData.get("sort") ?? "") || undefined),
-      keptClose: parseKeptClose(String(formData.get("kept") ?? "")),
-      artist: parseArtistFilter(String(formData.get("artist") ?? "") || undefined),
-      genre: parseGenreFilter(String(formData.get("genre") ?? "") || undefined),
-      label: parseLabelFilter(String(formData.get("label") ?? "") || undefined),
-      found: parseFoundFilter(String(formData.get("found") ?? "") || undefined),
-      condition: parseMediaCondition(String(formData.get("condition") ?? "") || undefined),
-      when: parseWhenFilter(String(formData.get("when") ?? "") || undefined),
-      arrived: parseWhenFilter(String(formData.get("arrived") ?? "") || undefined),
-      ...whenListenFromParams(
-        String(formData.get("year") ?? "") || undefined,
-        String(formData.get("decade") ?? "") || undefined,
-      ),
-      page: parseCollectionPage(String(formData.get("page") ?? "")),
-    }),
-  );
+  redirect(viewModeReturnHref(String(formData.get("next") ?? "")));
+}
+
+export async function loadMoreCollectionAction(
+  params: CollectionSearchParams,
+): Promise<FeedLoadResult<ShelfCard>> {
+  const session = await requireSession();
+  const settings = await getUserSettings(session.user.id);
+  const { listen, page } = collectionListenFromParams(params, enabledFormats(settings));
+  const filters = {
+    kind: "owned" as const,
+    ...listen,
+  };
+
+  try {
+    const [items, total] = await Promise.all([
+      listCollectionItems(session.user.id, {
+        ...filters,
+        page,
+        pageSize: SHELF_PAGE_SIZE,
+      }),
+      countCollectionItems(session.user.id, filters),
+    ]);
+
+    return {
+      items: items.map(toShelfCard),
+      pages: feedPageCount(total, SHELF_PAGE_SIZE, MAX_COLLECTION_PAGE),
+    };
+  } catch (error) {
+    return { error: localizedError(settings.locale, error) };
+  }
 }

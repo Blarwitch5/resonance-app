@@ -13,6 +13,7 @@ import {
   withListReturn,
   detailBackHref,
   mainNavHref,
+  viewModeReturnHref,
 } from "@/components/return-path";
 
 describe("return path", () => {
@@ -143,5 +144,19 @@ describe("mainNavHref", () => {
   it("falls back to the tab root without a stored listen", () => {
     expect(mainNavHref("/collection", { pathname: "/explorer", search: "" }, null)).toBe("/collection");
     expect(mainNavHref("/collection", { pathname: "/explorer", search: "" }, "/explorer?q=Blue")).toBe("/collection");
+  });
+});
+
+describe("viewModeReturnHref", () => {
+  it("returns to the listen you were shaping", () => {
+    expect(viewModeReturnHref("/explorer?q=Nirvana")).toBe("/explorer?q=Nirvana");
+    expect(viewModeReturnHref("/collection?format=vinyl")).toBe("/collection?format=vinyl");
+    expect(viewModeReturnHref("/profile?tab=waiting")).toBe("/profile?tab=waiting");
+  });
+
+  it("falls back to the shelf when the path is not a listen", () => {
+    expect(viewModeReturnHref(undefined)).toBe("/collection");
+    expect(viewModeReturnHref("https://evil.example/explorer")).toBe("/collection");
+    expect(viewModeReturnHref("/sign-in")).toBe("/collection");
   });
 });

@@ -1,5 +1,7 @@
 import type { CollectionInsight } from "@/lib/collection/stats";
 import type { ReleaseDraft } from "@/lib/collection/types";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 export const ECHO_LIMIT = 8;
 
@@ -33,14 +35,14 @@ export function echoSeedFromInsight(insight: CollectionInsight): EchoSeed | null
   return null;
 }
 
-export function echoHeadline(seed: EchoSeed, found: number): string {
-  const count = found === 1 ? "1 new album" : `${found} new albums`;
+export function echoHeadline(seed: EchoSeed, found: number, locale: Locale = "en"): string {
+  const count = found === 1 ? t(locale, "explorer.echoAlbumOne") : t(locale, "explorer.echoAlbums", { count: found });
 
   if (seed.kind === "artist") {
-    return `${count} found in your echo range — more from ${seed.name}.`;
+    return t(locale, "explorer.echoArtist", { count, name: seed.name });
   }
 
-  return `${count} found in your echo range — more ${seed.name}.`;
+  return t(locale, "explorer.echoGenre", { count, name: seed.name });
 }
 
 export function echoDiscoveries(drafts: ReleaseDraft[], ownedIds: Set<number>): ReleaseDraft[] {

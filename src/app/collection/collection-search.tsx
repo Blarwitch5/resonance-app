@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchField } from "@/components/ui/search-field";
 import { useInstantSearch } from "@/components/ui/use-instant-search";
+import { useT } from "@/components/locale-provider";
 import { collectionHref } from "@/lib/collection/href";
 import { listenFromSearchInput } from "@/lib/collection/search";
 import type { CollectionQuery } from "@/lib/collection/types";
@@ -16,6 +17,7 @@ interface CollectionSearchProps {
 }
 
 export function CollectionSearch({ listen, query }: CollectionSearchProps) {
+  const t = useT();
   const hrefFor = useCallback(
     (value: string) => collectionHref(listenFromSearchInput(listen, value)),
     [listen],
@@ -26,7 +28,7 @@ export function CollectionSearch({ listen, query }: CollectionSearchProps) {
     <form
       action="/collection"
       method="get"
-      className="flex flex-col gap-3 sm:flex-row"
+      className="flex gap-3"
       aria-busy={isPending}
       onSubmit={onSubmit}
     >
@@ -58,12 +60,13 @@ export function CollectionSearch({ listen, query }: CollectionSearchProps) {
         value={value}
         onValueChange={setValue}
         isPending={isPending}
-        placeholder="Title, artist, label, barcode, memory…"
-        label="Search your shelf and memories"
+        placeholder={t("collection.searchPlaceholder")}
+        label={t("collection.searchLabel")}
+        clearLabel={t("common.clearSearch")}
       />
-      <Button type="submit">
+      <Button type="submit" className="shrink-0 px-4 sm:px-6" aria-label={t("common.search")}>
         <Search className="size-4 shrink-0" aria-hidden />
-        Search
+        <span className="hidden sm:inline">{t("common.search")}</span>
       </Button>
     </form>
   );

@@ -6,10 +6,12 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
+import { useT } from "@/components/locale-provider";
 import { authClient } from "@/lib/auth-client";
 import { toErrorMessage } from "@/lib/errors";
 
 export function SignOutButton() {
+  const t = useT();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -37,7 +39,7 @@ export function SignOutButton() {
         disabled={isSigningOut}
       >
         <LogOut className="size-4 shrink-0" aria-hidden />
-        {isSigningOut ? "Leaving…" : "Sign out"}
+        {isSigningOut ? t("profile.leaving") : t("profile.signOut")}
       </Button>
       {error ? <Notice tone="error">{error}</Notice> : null}
     </div>

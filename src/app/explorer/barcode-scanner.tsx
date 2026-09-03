@@ -14,6 +14,7 @@ import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
+import { useT } from "@/components/locale-provider";
 
 type CameraIssue = "unsupported" | "permission" | "missing" | "unknown";
 
@@ -58,14 +59,24 @@ function cameraIssueFromError(error: unknown): CameraIssue {
   return "unknown";
 }
 
-const issueCopy: Record<CameraIssue, string> = {
-  unsupported: "This browser cannot read a barcode from the camera. Type it instead.",
-  permission: "The camera stayed closed. You can still type the barcode.",
-  missing: "No camera was found on this device.",
-  unknown: "The camera could not be opened.",
-};
+function cameraIssueCopy(issue: CameraIssue, t: (path: string) => string): string {
+  if (issue === "unsupported") {
+    return t("explorer.scanUnsupported");
+  }
+
+  if (issue === "permission") {
+    return t("explorer.scanPermission");
+  }
+
+  if (issue === "missing") {
+    return t("explorer.scanMissing");
+  }
+
+  return t("explorer.scanUnknown");
+}
 
 export function BarcodeScanner() {
+  const t = useT();
   const router = useRouter();
   const titleId = useId();
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -282,7 +293,7 @@ export function BarcodeScanner() {
             <button
               type="button"
               className="absolute inset-0 cursor-default"
-              aria-label="Close barcode scanner"
+              aria-label={t("explorer.scanClose")}
               onClick={close}
             />
             <div
@@ -295,13 +306,13 @@ export function BarcodeScanner() {
               <div className="flex items-start justify-between gap-3">
                 <h2 id={titleId} className="flex items-center gap-2 text-lg font-semibold text-text">
                   <ScanBarcode className="size-5 shrink-0 text-text-secondary" aria-hidden />
-                  Scan a barcode
+                  {t("explorer.scanTitle")}
                 </h2>
                 <button
                   ref={closeRef}
                   type="button"
                   onClick={close}
-                  aria-label="Close"
+                  aria-label={t("common.close")}
                   className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
                 >
                   <X className="size-5" aria-hidden />
@@ -319,7 +330,7 @@ export function BarcodeScanner() {
               ) : null}
 
               <p className="mt-3 text-sm leading-6 text-text-secondary">
-                {issue ? issueCopy[issue] : "Hold the barcode in the light."}
+                {issue ? cameraIssueCopy(issue, t) : t("explorer.scanHold")}
               </p>
 
               <form onSubmit={onManualSubmit} className="mt-4 flex flex-col gap-3">
@@ -329,14 +340,14 @@ export function BarcodeScanner() {
                   type="text"
                   inputMode="numeric"
                   autoComplete="off"
-                  label="Or type the barcode"
+                  label={t("explorer.scanType")}
                   value={typedCode}
                   onChange={(event) => setTypedCode(event.target.value)}
                   placeholder="0123456789012"
                 />
                 <Button type="submit">
                   <Search className="size-4 shrink-0" aria-hidden />
-                  Look it up
+                  {t("explorer.scanLookup")}
                 </Button>
               </form>
             </div>
@@ -351,11 +362,11 @@ export function BarcodeScanner() {
         type="button"
         variant="ghost"
         className="min-w-12 shrink-0 gap-2 px-4"
-        aria-label="Scan a barcode"
+        aria-label={t("explorer.scanAria")}
         onClick={() => setIsOpen(true)}
       >
         <ScanBarcode className="size-4 shrink-0" aria-hidden />
-        <span className="hidden sm:inline">Scan</span>
+        <span className="hidden sm:inline">{t("explorer.scan")}</span>
       </Button>
       {dialog}
     </>

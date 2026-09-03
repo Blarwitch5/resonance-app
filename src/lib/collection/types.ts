@@ -66,6 +66,69 @@ export function parseKeptClose(value: string | undefined): boolean {
   return value === "1";
 }
 
+export interface CollectionSearchParams {
+  format?: string;
+  q?: string;
+  sort?: string;
+  page?: string;
+  kept?: string;
+  artist?: string;
+  genre?: string;
+  decade?: string;
+  label?: string;
+  found?: string;
+  condition?: string;
+  when?: string;
+  arrived?: string;
+  year?: string;
+}
+
+export function collectionListenFromParams(
+  params: CollectionSearchParams,
+  enabled: readonly MediaFormat[],
+): { listen: CollectionQuery; page: number } {
+  const requestedFormat = parseMediaFormat(params.format);
+  const format = requestedFormat && enabled.includes(requestedFormat) ? requestedFormat : undefined;
+  const query = (params.q ?? "").trim();
+  const { year, decade } = whenListenFromParams(params.year, params.decade);
+  const listen: CollectionQuery = {
+    format,
+    query: query.length > 0 ? query : undefined,
+    sort: parseCollectionSort(params.sort),
+    keptClose: parseKeptClose(params.kept),
+    artist: parseArtistFilter(params.artist),
+    genre: parseGenreFilter(params.genre),
+    decade,
+    label: parseLabelFilter(params.label),
+    found: parseFoundFilter(params.found),
+    condition: parseMediaCondition(params.condition),
+    when: parseWhenFilter(params.when),
+    arrived: parseWhenFilter(params.arrived),
+    year,
+  };
+
+  return { listen, page: parseCollectionPage(params.page) };
+}
+
+export function collectionSearchFromListen(listen: CollectionQuery, page?: number): CollectionSearchParams {
+  return {
+    format: listen.format,
+    q: listen.query,
+    sort: listen.sort && listen.sort !== "recent" ? listen.sort : undefined,
+    page: page !== undefined ? String(page) : undefined,
+    kept: listen.keptClose ? "1" : undefined,
+    artist: listen.artist,
+    genre: listen.genre,
+    decade: listen.decade !== undefined ? String(listen.decade) : undefined,
+    label: listen.label,
+    found: listen.found,
+    condition: listen.condition,
+    when: listen.when !== undefined ? String(listen.when) : undefined,
+    arrived: listen.arrived !== undefined ? String(listen.arrived) : undefined,
+    year: listen.year !== undefined ? String(listen.year) : undefined,
+  };
+}
+
 export interface CollectionQuery {
   format?: MediaFormat;
   query?: string;
@@ -143,6 +206,13 @@ export function parseWhenThread(value: string | undefined): { year?: number; dec
 
   if (/^\d{4}s$/i.test(trimmed)) {
     const decade = parseDecadeFilter(trimmed.slice(0, 4));
+    return decade !== undefined ? { decade } : {};
+  }
+
+  const frenchDecade = trimmed.match(/^années\s+(\d{4})$/i);
+
+  if (frenchDecade?.[1]) {
+    const decade = parseDecadeFilter(frenchDecade[1]);
     return decade !== undefined ? { decade } : {};
   }
 
@@ -260,4 +330,51 @@ export interface RecordSide {
 export interface ShelfNeighbor {
   id: string;
   title: string;
+}
+
+export interface ShelfCard {
+  id: string;
+  title: string;
+  artist: string;
+  year: number | null;
+  label: string | null;
+  genres: string[];
+  barcode: string | null;
+  catalogNumber: string | null;
+  format: MediaFormat;
+  coverUrl: string | null;
+  notes: string | null;
+  isFavorite: boolean;
+  discogsId: number | null;
+  purchaseDate: Date | string | null;
+  purchaseLocation: string | null;
+  condition: MediaCondition | null;
+  createdAt: Date | string;
+}
+
+export function toShelfCard(item: ShelfCard): ShelfCard {
+  return {
+    id: item.id,
+    title: item.title,
+    artist: item.artist,
+    year: item.year,
+    label: item.label,
+    genres: item.genres,
+    barcode: item.barcode,
+    catalogNumber: item.catalogNumber,
+    format: item.format,
+    coverUrl: item.coverUrl,
+    notes: item.notes,
+    isFavorite: item.isFavorite,
+    discogsId: item.discogsId,
+    purchaseDate: item.purchaseDate,
+    purchaseLocation: item.purchaseLocation,
+    condition: item.condition,
+    createdAt: item.createdAt,
+  };
+}
+
+export interface ExplorerFeedHit {
+  draft: ReleaseDraft;
+  presence: ShelfPresence;
 }

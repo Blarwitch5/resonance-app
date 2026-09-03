@@ -74,6 +74,18 @@ export default function DesignTokensPage() {
 
       <SwatchGrid title="Identité format" items={identity} />
       <SwatchGrid title="Surfaces" items={surfacesLight} />
+      <section className="mt-10">
+        <h2 className="text-lg font-semibold text-text">Glass chrome</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-text-secondary">
+          Sidebar and the PWA tabs. Inset from the screen edge. Cards stay matte.
+        </p>
+        <div className="relative mt-4 overflow-hidden rounded-rs-lg bg-background p-8">
+          <div className="rounded-rs-lg border border-glass-border bg-glass px-6 py-8 text-text backdrop-blur-xl backdrop-saturate-150">
+            <p className="font-medium">glass + glass-border</p>
+            <p className="mt-1 text-sm text-text-secondary">backdrop-blur-xl · saturate-150</p>
+          </div>
+        </div>
+      </section>
       <SwatchGrid title="Texte sur background" items={textOnBg} />
       <SwatchGrid title="Paires contrastées (AA)" items={pairs} />
 

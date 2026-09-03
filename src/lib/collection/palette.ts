@@ -2,6 +2,9 @@ import { mainNavHref, type MainNavPath } from "@/components/return-path";
 import { collectionHref, journalFromHref } from "@/lib/collection/href";
 import type { MediaFormat } from "@/lib/collection/types";
 import { explorerSearchHref } from "@/lib/discogs/href";
+import { formatLabel } from "@/lib/i18n/labels";
+import { t } from "@/lib/i18n/translate";
+import type { Locale } from "@/lib/settings/types";
 
 export const PALETTE_QUERY_MAX = 80;
 export const PALETTE_RECORD_MAX = 8;
@@ -21,12 +24,6 @@ const PALETTE_GO_FORMAT_KEYS: Record<string, MediaFormat> = {
   v: "vinyl",
   a: "cassette",
   d: "cd",
-};
-
-const FORMAT_PALETTE_LABEL: Record<MediaFormat, string> = {
-  vinyl: "Vinyl",
-  cassette: "Cassette",
-  cd: "CD",
 };
 
 const FORMAT_PALETTE_HINT: Record<MediaFormat, string> = {
@@ -183,14 +180,30 @@ export const PALETTE_COMMANDS: PaletteCommand[] = [
   },
 ];
 
-export function paletteFormatCommands(formats: readonly MediaFormat[]): PaletteCommand[] {
+const PALETTE_LABEL_KEY: Record<string, string> = {
+  search: "palette.search",
+  listen: "palette.listen",
+  collection: "palette.collection",
+  tonight: "palette.tonight",
+  explorer: "palette.explorer",
+  profile: "palette.profile",
+  close: "palette.close",
+  waiting: "palette.waiting",
+  settings: "palette.settings",
+  keys: "palette.keys",
+};
+
+export function paletteFormatCommands(
+  formats: readonly MediaFormat[],
+  locale: Locale = "en",
+): PaletteCommand[] {
   if (formats.length <= 1) {
     return [];
   }
 
   return formats.map((format) => ({
     id: `format:${format}`,
-    label: FORMAT_PALETTE_LABEL[format],
+    label: formatLabel(locale, format),
     hint: FORMAT_PALETTE_HINT[format],
     keywords: [format, "format"],
     href: collectionHref({ format }),
@@ -200,9 +213,14 @@ export function paletteFormatCommands(formats: readonly MediaFormat[]): PaletteC
 export function paletteCommands(
   formats: readonly MediaFormat[] = [],
   nav?: PaletteNavContext,
+  locale: Locale = "en",
 ): PaletteCommand[] {
-  const formatRows = paletteFormatCommands(formats);
-  const commands = PALETTE_COMMANDS.map((command) => withPaletteNav(command, nav));
+  const formatRows = paletteFormatCommands(formats, locale);
+  const commands = PALETTE_COMMANDS.map((command) => {
+    const key = PALETTE_LABEL_KEY[command.id];
+    const labeled = key ? { ...command, label: t(locale, key) } : command;
+    return withPaletteNav(labeled, nav);
+  });
 
   if (formatRows.length === 0) {
     return commands;
@@ -256,6 +274,7 @@ export function paletteRows(
   formats: readonly MediaFormat[] = [],
   from?: string | null,
   nav?: PaletteNavContext,
+  locale: Locale = "en",
 ): PaletteCommand[] {
   const typed = query.trim().slice(0, PALETTE_QUERY_MAX);
   const rows: PaletteCommand[] = [];
@@ -263,19 +282,19 @@ export function paletteRows(
   if (typed.length > 0) {
     rows.push({
       id: "hear-shelf",
-      label: `Hear “${typed}” on your shelf`,
+      label: t(locale, "palette.hearShelf", { query: typed }),
       keywords: [],
       href: collectionHref({ query: typed }),
     });
     rows.push({
       id: "hear-explorer",
-      label: `Listen for “${typed}” beyond the shelf`,
+      label: t(locale, "palette.hearExplorer", { query: typed }),
       keywords: [],
       href: explorerSearchHref({ query: typed }),
     });
   }
 
   rows.push(...paletteRecordRows(records, typed, from));
-  rows.push(...filterPaletteCommands(typed, paletteCommands(formats, nav)));
+  rows.push(...filterPaletteCommands(typed, paletteCommands(formats, nav, locale)));
   return rows;
 }

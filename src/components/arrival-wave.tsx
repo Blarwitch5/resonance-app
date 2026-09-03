@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { useT } from "@/components/locale-provider";
 import { formatRingClasses } from "@/components/ui/format-icon";
 import type { MediaFormat } from "@/lib/collection/types";
 
@@ -11,6 +12,7 @@ interface ArrivalWaveProps {
 }
 
 export function ArrivalWave({ format, title }: ArrivalWaveProps) {
+  const t = useT();
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export function ArrivalWave({ format, title }: ArrivalWaveProps) {
       className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
       aria-live="polite"
     >
-      <p className="sr-only">{`${title} joined your resonance.`}</p>
+      <p className="sr-only">{t("journal.joined", { title })}</p>
       <div className="relative size-44" aria-hidden>
         {[0, 150, 300].map((delayMs) => (
           <span

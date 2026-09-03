@@ -6,14 +6,23 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { MAX_BACKUP_BYTES, parseResonanceBackup } from "@/lib/collection/backup";
-import { addCollectionItems, restoreCollectionItems } from "@/lib/collection/repository";
-import type { CollectionKind, ReleaseDraft } from "@/lib/collection/types";
+import { feedPageCount, type FeedLoadResult } from "@/lib/collection/feed";
+import { addCollectionItems, countCollectionItems, listCollectionItems, restoreCollectionItems } from "@/lib/collection/repository";
+import { MAX_COLLECTION_PAGE, parseCollectionPage, type CollectionKind, type ReleaseDraft } from "@/lib/collection/types";
 import { listDiscogsUserShelves } from "@/lib/discogs/client";
-import { AppError, DatabaseError, toErrorMessage, ValidationError } from "@/lib/errors";
+import { DatabaseError, ValidationError } from "@/lib/errors";
+import { localizedError } from "@/lib/i18n/action-error";
+import { persistLocaleCookie } from "@/lib/i18n/locale";
 import { parsePasswordChange, passwordChangeFailure } from "@/lib/profile/password";
-import { parseDisplayName, parsePortraitUrl } from "@/lib/profile/types";
+import {
+  parseDisplayName,
+  parsePortraitUrl,
+  PROFILE_SHELF_SIZE,
+  toProfileShelfItem,
+  type ProfileShelfItem,
+} from "@/lib/profile/types";
 import { requireSession } from "@/lib/session";
-import { getUserSettings, upsertUserSettings } from "@/lib/settings/repository";
+import { getUserSettings, loadUserSettings, upsertUserSettings } from "@/lib/settings/repository";
 import { enabledFormats, parseDefaultFormat, parseLocale, parseThemePreference, parseViewMode, preferredFormat, type UserSettings } from "@/lib/settings/types";
 
 export interface SaveSettingsState {
@@ -62,7 +71,7 @@ export async function saveSettingsAction(
       throw new ValidationError("Keep at least one format on your shelf.");
     }
 
-    const current = await getUserSettings(session.user.id);
+    const current = await loadUserSettings(session.user.id);
     const viewMode = parseViewMode(String(formData.get("viewMode") ?? "")) ?? current.viewMode;
     const locale = parseLocale(String(formData.get("locale") ?? "")) ?? current.locale;
     const marketValueEnabled = formData.get("marketValueEnabled") === "on";
@@ -83,6 +92,7 @@ export async function saveSettingsAction(
     };
 
     await upsertUserSettings(session.user.id, patch);
+    await persistLocaleCookie(locale);
 
     const currentImage = session.user.image ?? null;
 
@@ -100,17 +110,12 @@ export async function saveSettingsAction(
       }
     }
 
-    revalidatePath("/", "layout");
     revalidatePath("/collection");
     revalidatePath("/explorer");
     revalidatePath("/profile");
     return { error: null, saved: true };
   } catch (error) {
-    if (error instanceof AppError) {
-      return { error: error.message, saved: false };
-    }
-
-    return { error: toErrorMessage(error), saved: false };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error), saved: false };
   }
 }
 
@@ -181,11 +186,7 @@ export async function importDiscogsAction(
       truncated: shelves.truncated,
     };
   } catch (error) {
-    if (error instanceof AppError) {
-      return { error: error.message, ...initialImportCounts };
-    }
-
-    return { error: toErrorMessage(error), ...initialImportCounts };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error), ...initialImportCounts };
   }
 }
 
@@ -251,11 +252,7 @@ export async function restoreResonanceAction(
 
     return { error: null, added: restored.added, skipped: restored.skipped };
   } catch (error) {
-    if (error instanceof AppError) {
-      return { error: error.message, ...initialRestoreCounts };
-    }
-
-    return { error: toErrorMessage(error), ...initialRestoreCounts };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error), ...initialRestoreCounts };
   }
 }
 
@@ -268,14 +265,18 @@ export async function changePasswordAction(
   _previous: ChangePasswordState,
   formData: FormData,
 ): Promise<ChangePasswordState> {
-  await requireSession();
+  const session = await requireSession();
+  const locale = (await loadUserSettings(session.user.id)).locale;
 
   try {
-    const parsed = parsePasswordChange({
-      current: String(formData.get("currentPassword") ?? ""),
-      next: String(formData.get("newPassword") ?? ""),
-      confirm: String(formData.get("confirmPassword") ?? ""),
-    });
+    const parsed = parsePasswordChange(
+      {
+        current: String(formData.get("currentPassword") ?? ""),
+        next: String(formData.get("newPassword") ?? ""),
+        confirm: String(formData.get("confirmPassword") ?? ""),
+      },
+      locale,
+    );
 
     if (!parsed.ok) {
       throw new ValidationError(parsed.message);
@@ -291,16 +292,46 @@ export async function changePasswordAction(
         headers: await headers(),
       });
     } catch (error) {
-      throw new ValidationError(passwordChangeFailure(error));
+      throw new ValidationError(passwordChangeFailure(error, locale));
     }
 
     revalidatePath("/profile");
     return { error: null, changed: true };
   } catch (error) {
-    if (error instanceof AppError) {
-      return { error: error.message, changed: false };
-    }
+    return { error: localizedError(locale, error), changed: false };
+  }
+}
 
-    return { error: passwordChangeFailure(error), changed: false };
+export async function loadMoreProfileAction(input: {
+  kind: "favorite" | "wishlist";
+  page?: string;
+  q?: string;
+}): Promise<FeedLoadResult<ProfileShelfItem>> {
+  const session = await requireSession();
+  const settings = await getUserSettings(session.user.id);
+  const kind: CollectionKind = input.kind === "wishlist" ? "wishlist" : "favorite";
+  const query = (input.q ?? "").trim();
+  const page = parseCollectionPage(input.page);
+  const filters = {
+    kind,
+    query: query.length > 0 ? query : undefined,
+  };
+
+  try {
+    const [items, total] = await Promise.all([
+      listCollectionItems(session.user.id, {
+        ...filters,
+        page,
+        pageSize: PROFILE_SHELF_SIZE,
+      }),
+      countCollectionItems(session.user.id, filters),
+    ]);
+
+    return {
+      items: items.map(toProfileShelfItem),
+      pages: feedPageCount(total, PROFILE_SHELF_SIZE, MAX_COLLECTION_PAGE),
+    };
+  } catch (error) {
+    return { error: localizedError(settings.locale, error) };
   }
 }

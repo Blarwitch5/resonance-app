@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  collectionListenFromParams,
+  collectionSearchFromListen,
   decadeFromYear,
   foundDateLabel,
   isCanonicalWhenParams,
@@ -87,6 +89,7 @@ describe("parseWhenThread", () => {
   it("hears a typed decade", () => {
     expect(parseWhenThread("1990s")).toEqual({ decade: 1990 });
     expect(parseWhenThread(" 1970S ")).toEqual({ decade: 1970 });
+    expect(parseWhenThread("années 1990")).toEqual({ decade: 1990 });
   });
 
   it("stays quiet about empty or impossible values", () => {
@@ -150,5 +153,48 @@ describe("parseMediaFormat and parseMediaCondition", () => {
     expect(parseMediaFormat("tape")).toBeUndefined();
     expect(parseMediaCondition("near_mint")).toBe("near_mint");
     expect(parseMediaCondition("NM")).toBeUndefined();
+  });
+});
+
+describe("collectionListenFromParams", () => {
+  it("round-trips a listen through the search shape", () => {
+    const listen = collectionListenFromParams(
+      collectionSearchFromListen(
+        {
+          format: "vinyl",
+          query: "Blue",
+          sort: "found",
+          keptClose: true,
+          artist: "Miles Davis",
+          genre: "Jazz",
+          label: "Columbia",
+          found: "Reckless",
+          condition: "near_mint",
+          decade: 1950,
+          year: 1959,
+          when: 2024,
+          arrived: 2025,
+        },
+        3,
+      ),
+      ["vinyl", "cassette", "cd"],
+    );
+
+    expect(listen.page).toBe(3);
+    expect(listen.listen).toMatchObject({
+      format: "vinyl",
+      query: "Blue",
+      sort: "found",
+      keptClose: true,
+      artist: "Miles Davis",
+      genre: "Jazz",
+      year: 1959,
+    });
+  });
+
+  it("drops a format that is not on the shelf", () => {
+    const { listen } = collectionListenFromParams({ format: "cd", q: "Blue" }, ["vinyl"]);
+    expect(listen.format).toBeUndefined();
+    expect(listen.query).toBe("Blue");
   });
 });

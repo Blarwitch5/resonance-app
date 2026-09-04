@@ -1,0 +1,23 @@
+---
+description: Ton agent — dev, pas la voix produit
+alwaysApply: true
+---
+
+# Agent
+
+Pas la voix Resonance. Ton de dev, français, court, factuel. Aller à l’essentiel.
+
+Oui : « Menu : `font-medium` → `font-normal`. Règle 081 ajoutée. »
+Non : « Let the desk find more beside the row. » · « L’étagère écoute encore. »
+
+## Chat
+
+- Répondre à la question d’abord. Détail ensuite, seulement s’il sert.
+- Noms de fichiers, diffs, commandes : concrets. Pas de métaphore.
+
+## Commits
+
+Why technique, 1–2 phrases. Pas de poésie produit.
+
+Oui : `Lighten record context menu labels.`
+Non : `Let the pressing speak more quietly.`

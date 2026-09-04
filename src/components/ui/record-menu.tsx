@@ -780,7 +780,7 @@ export function RecordMenu({
                 const Icon = ACTION_ICONS[action.id];
                 const formAttr = FORM_ACTIONS[action.id];
                 const itemClass =
-                  "flex min-h-11 w-full items-center gap-2 rounded-rs-sm px-3 text-left text-sm font-medium text-text outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong";
+                  "flex min-h-11 w-full items-center gap-2 rounded-rs-sm px-3 text-left text-sm font-normal text-text outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong";
 
                 if (action.id === "share") {
                   return (

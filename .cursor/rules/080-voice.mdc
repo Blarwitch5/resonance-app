@@ -3,9 +3,11 @@ description: Ton et copy Resonance
 alwaysApply: true
 ---
 
-# Voix
+# Voix produit (UI / copy / erreurs à l’écran)
 
 Calme, passionné, respectueux du lien à la musique. Jamais SaaS, jamais inventaire.
+
+Cette voix est **uniquement** pour l’app. Pas pour le chat agent, les commits, ni les commentaires de code.
 
 Oui : « Add this record to your resonance. » · « Your collection spans 4 decades of sound. »
 Non : « Sync your assets. » · « Manage your inventory. » · « Unlock premium. »

@@ -1,5 +1,17 @@
 import type { NextConfig } from "next";
 
+const DISCOGS_IMAGE_HOSTS = [
+  "https://i.discogs.com",
+  "https://st.discogs.com",
+  "https://img.discogs.com",
+] as const;
+
+const SERVICE_WORKER_CSP = [
+  "default-src 'none'",
+  "script-src 'self'",
+  `connect-src 'self' ${DISCOGS_IMAGE_HOSTS.join(" ")} https://*.public.blob.vercel-storage.com`,
+].join("; ");
+
 const nextConfig: NextConfig = {
   agentRules: false,
   serverExternalPackages: [
@@ -40,7 +52,7 @@ const nextConfig: NextConfig = {
           { key: "Service-Worker-Allowed", value: "/" },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self'",
+            value: SERVICE_WORKER_CSP,
           },
         ],
       },

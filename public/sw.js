@@ -1,7 +1,7 @@
 "use strict";
 
 // Keep path rules aligned with src/lib/offline/shelf-cache.ts
-const SHELL_CACHE = "resonance-shell-v6";
+const SHELL_CACHE = "resonance-shell-v7";
 const SHELF_CACHE = "resonance-shelf-v1";
 const STATIC_CACHE = "resonance-static-v1";
 const COVER_CACHE = "resonance-covers-v1";

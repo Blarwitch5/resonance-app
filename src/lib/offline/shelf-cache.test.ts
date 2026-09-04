@@ -24,6 +24,7 @@ describe("offlineFetchPlan", () => {
   it("leaves Explorer, auth, APIs, and Deezer samples on the wire", () => {
     expect(offlineFetchPlan("https://resonance.app/explorer?q=Nirvana").kind).toBe("network");
     expect(offlineFetchPlan("https://resonance.app/api/auth/ok").kind).toBe("bypass");
+    expect(offlineFetchPlan("https://resonance.app/collection?_rsc=1").kind).toBe("bypass");
     expect(offlineFetchPlan("https://resonance.app/sign-in").kind).toBe("network");
     expect(offlineFetchPlan("https://resonance.app/profile").kind).toBe("network");
     expect(offlineFetchPlan("https://resonance.app/collection/not-a-journal").kind).toBe("network");

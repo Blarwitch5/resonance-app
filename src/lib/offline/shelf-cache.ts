@@ -24,6 +24,10 @@ export function offlineFetchPlan(href: string, destination = ""): OfflineFetchPl
     return { kind: "bypass" };
   }
 
+  if (url.searchParams.has("_rsc")) {
+    return { kind: "bypass" };
+  }
+
   if (COVER_HOSTS.has(url.hostname)) {
     return { kind: "cover" };
   }

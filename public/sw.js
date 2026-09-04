@@ -1,7 +1,7 @@
 "use strict";
 
 // Keep path rules aligned with src/lib/offline/shelf-cache.ts
-const SHELL_CACHE = "resonance-shell-v5";
+const SHELL_CACHE = "resonance-shell-v6";
 const SHELF_CACHE = "resonance-shelf-v1";
 const STATIC_CACHE = "resonance-static-v1";
 const COVER_CACHE = "resonance-covers-v1";
@@ -42,7 +42,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const kind = offlineFetchKind(url, event.request.destination);
+  const kind = offlineFetchKind(url, event.request);
 
   if (kind === "bypass") {
     return;
@@ -66,8 +66,14 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkOnlyWithOfflinePage(event.request));
 });
 
-function offlineFetchKind(url, destination) {
+function offlineFetchKind(url, request) {
+  const destination = request.destination;
+
   if (destination === "audio" || destination === "video") {
+    return "bypass";
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
     return "bypass";
   }
 
@@ -76,6 +82,10 @@ function offlineFetchKind(url, destination) {
   }
 
   if (url.pathname.startsWith("/api/")) {
+    return "bypass";
+  }
+
+  if (isFlightRequest(request, url)) {
     return "bypass";
   }
 
@@ -144,13 +154,17 @@ async function networkFirst(cacheName, request) {
 
     return response;
   } catch (error) {
+    if (isAbortError(error)) {
+      return canceledResponse();
+    }
+
     const cached = await cache.match(request);
 
     if (cached) {
       return cached;
     }
 
-    return fallbackDocument(request, error);
+    return fallbackDocument(request);
   }
 }
 
@@ -171,13 +185,17 @@ async function cacheFirst(cacheName, request) {
 
     return response;
   } catch (error) {
+    if (isAbortError(error)) {
+      return canceledResponse();
+    }
+
     const fallback = await cache.match(request);
 
     if (fallback) {
       return fallback;
     }
 
-    throw error;
+    return fallbackDocument(request);
   }
 }
 
@@ -192,7 +210,13 @@ async function staleWhileRevalidate(event, cacheName, request) {
 
       return response;
     })
-    .catch(() => undefined);
+    .catch((error) => {
+      if (isAbortError(error)) {
+        return canceledResponse();
+      }
+
+      return undefined;
+    });
 
   event.waitUntil(network);
 
@@ -206,35 +230,69 @@ async function staleWhileRevalidate(event, cacheName, request) {
     return response;
   }
 
-  throw new Error("This listen could not be opened.");
+  return fallbackDocument(request);
 }
 
 async function networkOnlyWithOfflinePage(request) {
   try {
     return await fetch(request);
   } catch (error) {
+    if (isAbortError(error)) {
+      return canceledResponse();
+    }
+
     const cached = await caches.match(request);
 
     if (cached) {
       return cached;
     }
 
-    return fallbackDocument(request, error);
+    return fallbackDocument(request);
   }
 }
 
-async function fallbackDocument(request, error) {
-  if (!isDocumentRequest(request)) {
-    throw error;
+async function fallbackDocument(request) {
+  if (isDocumentRequest(request)) {
+    const offline = await caches.match("/offline.html");
+
+    if (offline) {
+      return offline;
+    }
   }
 
-  const offline = await caches.match("/offline.html");
+  return unavailableResponse();
+}
 
-  if (offline) {
-    return offline;
+function isFlightRequest(request, url) {
+  if (url.searchParams.has("_rsc")) {
+    return true;
   }
 
-  throw error;
+  if (request.headers.get("RSC") === "1") {
+    return true;
+  }
+
+  if (request.headers.get("Next-Router-Prefetch")) {
+    return true;
+  }
+
+  if (request.headers.get("Next-Router-Segment-Prefetch")) {
+    return true;
+  }
+
+  return false;
+}
+
+function isAbortError(error) {
+  return Boolean(error && error.name === "AbortError");
+}
+
+function canceledResponse() {
+  return new Response(null, { status: 204, statusText: "canceled" });
+}
+
+function unavailableResponse() {
+  return new Response(null, { status: 503, statusText: "offline", headers: { "Cache-Control": "no-store" } });
 }
 
 function canRememberShelf(request, response) {

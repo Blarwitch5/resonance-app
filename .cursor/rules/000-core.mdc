@@ -9,7 +9,7 @@ Journal sonore PWA, vinyl-first. Pas un catalogue Discogs : un espace sensoriel.
 
 ## Stack figée — ne pas dévier
 
-Next.js 16 App Router · React 19 · TypeScript strict · Tailwind 4 (OKLCH) · Drizzle · Neon Postgres · better-auth · Discogs **serveur only** · Lucide React · pnpm · Node ≥ 22.12 · Vercel Hobby
+Next.js 16 App Router · React 19 · TypeScript strict · Tailwind 4 (OKLCH) · Drizzle · Neon Postgres · better-auth · Discogs **serveur only** · Lucide React · pnpm · Node 24.x · Vercel Hobby
 
 Interdit : Astro, Prisma, SQLite, NextAuth, `any`, secrets en `NEXT_PUBLIC_*`, hex hors `globals.css`.
 

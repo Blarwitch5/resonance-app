@@ -8,7 +8,7 @@ Le produit et l’univers visuel sont décrits dans [`Read.me`](./Read.me). Les 
 
 ## Prérequis
 
-- Node.js 22.12+
+- Node.js 24.x (same as Vercel)
 - pnpm 10.11+
 - Compte [Neon](https://neon.tech) (free) et clés [Discogs](https://www.discogs.com/settings/developers)
 

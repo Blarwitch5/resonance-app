@@ -27,30 +27,29 @@ interface ResonanceMarkProps {
 
 export function ResonanceMark({ size = "sm", isListening = false, className = "" }: ResonanceMarkProps) {
   return (
-    <div
-      className={`relative shrink-0 ${MARK_SIZE[size]} ${isListening ? "mx-[22%]" : ""} ${className}`.trim()}
-      aria-hidden
-    >
-      <img src={MARK_SRC} alt="" className="size-full object-contain" />
-      {isListening
-        ? LISTENING_SIDES.flatMap((side) =>
-            listeningTrailIndexes(side).map((index) => (
-              <span
-                key={`${side}-${index}`}
-                className={`absolute size-[7.15%] rounded-full ${listeningTrailFill(side)} ${
-                  index === 0
-                    ? "motion-reduce:hidden motion-safe:listen-dot"
-                    : "motion-reduce:opacity-60 motion-safe:listen-dot"
-                }`}
-                style={{
-                  left: listeningTrailLeft(side, index),
-                  top: LISTENING_TRAIL_TOP,
-                  animationDelay: `${listeningTrailDelayMs(index)}ms`,
-                }}
-              />
-            )),
-          )
-        : null}
+    <div className={`inline-flex shrink-0 ${isListening ? "px-7" : ""} ${className}`.trim()} aria-hidden>
+      <div className={`relative ${MARK_SIZE[size]}`}>
+        <img src={MARK_SRC} alt="" className="size-full object-contain" />
+        {isListening
+          ? LISTENING_SIDES.flatMap((side) =>
+              listeningTrailIndexes(side).map((index) => (
+                <span
+                  key={`${side}-${index}`}
+                  className={`absolute size-[7.15%] rounded-full ${listeningTrailFill(side)} ${
+                    index === 0
+                      ? "motion-reduce:hidden motion-safe:listen-dot"
+                      : "motion-reduce:opacity-60 motion-safe:listen-dot"
+                  }`}
+                  style={{
+                    left: listeningTrailLeft(side, index),
+                    top: LISTENING_TRAIL_TOP,
+                    animationDelay: `${listeningTrailDelayMs(index)}ms`,
+                  }}
+                />
+              )),
+            )
+          : null}
+      </div>
     </div>
   );
 }

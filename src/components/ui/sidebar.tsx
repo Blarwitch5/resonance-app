@@ -14,10 +14,11 @@ import type { Locale } from "@/lib/settings/types";
 interface SidebarProps {
   formatNav?: ReactNode;
   profileNav?: ReactNode;
+  signOut?: ReactNode;
   locale?: Locale;
 }
 
-export function Sidebar({ formatNav, profileNav, locale = "en" }: SidebarProps) {
+export function Sidebar({ formatNav, profileNav, signOut, locale = "en" }: SidebarProps) {
   const pathname = usePathname();
   const hrefs = useMainNavHrefs();
 
@@ -52,6 +53,7 @@ export function Sidebar({ formatNav, profileNav, locale = "en" }: SidebarProps) 
           );
         })}
       </nav>
+      {signOut ? <div className="mt-auto px-3 py-4">{signOut}</div> : null}
     </aside>
   );
 }

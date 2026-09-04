@@ -229,6 +229,10 @@ body {
   animation: listen-dot 1.2s ease-in-out infinite;
 }
 
+@utility vinyl-turn {
+  animation: vinyl-turn 48s linear infinite;
+}
+
 @utility vibrato {
   animation: vibrato 500ms ease-in-out;
 }
@@ -319,6 +323,12 @@ body {
 
   80% {
     transform: rotate(3deg);
+  }
+}
+
+@keyframes vinyl-turn {
+  to {
+    transform: rotate(360deg);
   }
 }
 

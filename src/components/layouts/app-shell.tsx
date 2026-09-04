@@ -14,6 +14,7 @@ import { BottomBar } from "@/components/ui/bottom-bar";
 import { CollectionFormatNav } from "@/components/ui/collection-format-nav";
 import { ProfileNav } from "@/components/ui/profile-nav";
 import { Sidebar } from "@/components/ui/sidebar";
+import { SignOutButton } from "@/components/ui/sign-out-button";
 import { PALETTE_RECORD_MAX, type PaletteRecord } from "@/lib/collection/palette";
 import { listCollectionItems } from "@/lib/collection/repository";
 import { getSession } from "@/lib/session";
@@ -65,6 +66,7 @@ export async function AppShell({ children }: AppShellProps) {
             <ProfileNav />
           </Suspense>
         }
+        signOut={<SignOutButton layout="rail" />}
       />
       <ContentPane>
         <Suspense fallback={null}>

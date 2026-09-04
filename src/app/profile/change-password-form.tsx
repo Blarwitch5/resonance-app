@@ -5,7 +5,7 @@ import { useActionState, useEffect, useRef } from "react";
 
 import { changePasswordAction, type ChangePasswordState } from "@/app/profile/actions";
 import { Button } from "@/components/ui/button";
-import { TextField } from "@/components/ui/field";
+import { PasswordField } from "@/components/ui/password-field";
 import { Notice } from "@/components/ui/notice";
 import { useT } from "@/components/locale-provider";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/profile/password";
@@ -24,14 +24,13 @@ export function ChangePasswordForm() {
   }, [state.changed]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-4">
+    <form ref={formRef} action={formAction} aria-busy={isPending} className="flex flex-col gap-4">
       <p className="text-sm leading-6 text-text-secondary">
         {t("password.hint")}
       </p>
-      <TextField
+      <PasswordField
         id="currentPassword"
         name="currentPassword"
-        type="password"
         label={t("password.current")}
         autoComplete="current-password"
         required
@@ -39,10 +38,9 @@ export function ChangePasswordForm() {
         maxLength={MAX_PASSWORD_LENGTH}
         icon={Lock}
       />
-      <TextField
+      <PasswordField
         id="newPassword"
         name="newPassword"
-        type="password"
         label={t("password.next")}
         autoComplete="new-password"
         required
@@ -50,10 +48,9 @@ export function ChangePasswordForm() {
         maxLength={MAX_PASSWORD_LENGTH}
         icon={KeyRound}
       />
-      <TextField
+      <PasswordField
         id="confirmPassword"
         name="confirmPassword"
-        type="password"
         label={t("password.confirm")}
         autoComplete="new-password"
         required

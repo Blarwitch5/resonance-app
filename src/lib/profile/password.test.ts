@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { parsePasswordChange, passwordChangeFailure } from "@/lib/profile/password";
+import {
+  parsePasswordChange,
+  parsePasswordReset,
+  passwordChangeFailure,
+  passwordResetFailure,
+} from "@/lib/profile/password";
 
 describe("parsePasswordChange", () => {
   it("keeps a matching pair", () => {
@@ -66,6 +71,37 @@ describe("parsePasswordChange", () => {
       ok: false,
       message: "Choose a password that is not the one you use now.",
     });
+  });
+});
+
+describe("parsePasswordReset", () => {
+  it("keeps a matching pair", () => {
+    expect(parsePasswordReset({ next: "quiet-shelf", confirm: "quiet-shelf" })).toEqual({
+      ok: true,
+      newPassword: "quiet-shelf",
+    });
+  });
+
+  it("asks for a password of the right length", () => {
+    expect(parsePasswordReset({ next: "short", confirm: "short" })).toEqual({
+      ok: false,
+      message: "A password stays at least 8 characters.",
+    });
+  });
+
+  it("hears when the new lines do not match", () => {
+    expect(parsePasswordReset({ next: "quiet-shelf", confirm: "quiet-shelves" })).toEqual({
+      ok: false,
+      message: "Those new passwords do not match.",
+    });
+  });
+});
+
+describe("passwordResetFailure", () => {
+  it("stays quiet when the door has closed", () => {
+    expect(passwordResetFailure({ body: { code: "INVALID_TOKEN" } })).toBe(
+      "This reset link has expired or already been used.",
+    );
   });
 });
 

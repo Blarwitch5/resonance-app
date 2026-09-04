@@ -10,7 +10,7 @@ import { ProfileFeed } from "@/app/profile/profile-feed";
 import { RestoreResonanceForm } from "@/app/profile/restore-resonance-form";
 import { ProfileSearch } from "@/app/profile/profile-search";
 import { ProfileSettingsForm } from "@/app/profile/profile-settings-form";
-import { SignOutButton } from "@/app/profile/sign-out-button";
+import { SignOutButton } from "@/components/ui/sign-out-button";
 import { AppShell } from "@/components/layouts/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader, SectionHeading } from "@/components/ui/page-header";

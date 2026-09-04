@@ -8,6 +8,10 @@ export type PasswordChangeResult =
   | { ok: true; currentPassword: string; newPassword: string }
   | { ok: false; message: string };
 
+export type PasswordResetResult =
+  | { ok: true; newPassword: string }
+  | { ok: false; message: string };
+
 export function parsePasswordChange(
   input: {
     current: string;
@@ -43,11 +47,48 @@ export function parsePasswordChange(
   };
 }
 
+export function parsePasswordReset(
+  input: { next: string; confirm: string },
+  locale: Locale = "en",
+): PasswordResetResult {
+  if (input.next.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, message: t(locale, "password.tooShort") };
+  }
+
+  if (input.next.length > MAX_PASSWORD_LENGTH) {
+    return { ok: false, message: t(locale, "password.tooLong") };
+  }
+
+  if (input.next !== input.confirm) {
+    return { ok: false, message: t(locale, "password.mismatch") };
+  }
+
+  return { ok: true, newPassword: input.next };
+}
+
 export function passwordChangeFailure(error: unknown, locale: Locale = "en"): string {
   const code = authErrorCode(error);
 
   if (code === "INVALID_PASSWORD") {
     return t(locale, "password.wrongCurrent");
+  }
+
+  if (code === "PASSWORD_TOO_SHORT") {
+    return t(locale, "password.tooShort");
+  }
+
+  if (code === "PASSWORD_TOO_LONG") {
+    return t(locale, "password.tooLong");
+  }
+
+  return t(locale, "password.failed");
+}
+
+export function passwordResetFailure(error: unknown, locale: Locale = "en"): string {
+  const code = authErrorCode(error);
+
+  if (code === "INVALID_TOKEN") {
+    return t(locale, "auth.newPasswordInvalid");
   }
 
   if (code === "PASSWORD_TOO_SHORT") {

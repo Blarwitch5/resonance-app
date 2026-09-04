@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { WelcomeForm } from "@/app/welcome/welcome-form";
-import { ResonanceMark } from "@/components/ui/resonance-mark";
-import { bodyClass, displayTitleClass, eyebrowClass } from "@/components/ui/type";
+import { AuthDoor } from "@/components/layouts/auth-door";
 import { hasShelfItems } from "@/lib/collection/repository";
 import { getLocale } from "@/lib/i18n/locale";
 import { t } from "@/lib/i18n/translate";
@@ -28,18 +27,14 @@ export default async function WelcomePage() {
   const locale = settings.locale;
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-background px-6">
-      <div className="ripple-in w-full max-w-sm">
-        <ResonanceMark size="md" />
-        <p className={`mt-4 ${eyebrowClass}`}>Resonance</p>
-        <h1 className={`mt-3 ${displayTitleClass}`}>{t(locale, "welcome.heading")}</h1>
-        <p className={`mt-2 ${bodyClass}`}>
-          {t(locale, "welcome.body")}
-        </p>
-        <div className="mt-8">
-          <WelcomeForm />
-        </div>
+    <AuthDoor
+      title={t(locale, "welcome.heading")}
+      description={t(locale, "welcome.body")}
+      tagline={t(locale, "brand.tagline")}
+    >
+      <div className="mt-8">
+        <WelcomeForm />
       </div>
-    </div>
+    </AuthDoor>
   );
 }

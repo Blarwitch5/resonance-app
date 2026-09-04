@@ -45,6 +45,7 @@ const KNOWN_ERRORS: Record<string, string> = {
   "Something went wrong. Please try again.": "error.generic",
   "This journal could not be opened.": "auth.couldNotOpen",
   "Those credentials did not match.": "auth.credentials",
+  "This letter could not be sent just now.": "auth.resetCouldNotSend",
   "Clipboard is unavailable.": "error.clipboard",
   "This release could not be added.": "error.releaseAdd",
   "This pressing could not be kept waiting.": "error.keepWaiting",

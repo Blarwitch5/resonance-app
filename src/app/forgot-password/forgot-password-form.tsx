@@ -1,26 +1,21 @@
 "use client";
 
-import { FaceSlightlySmilingPlus, Lock, Mail, UserRound } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Mail, Send } from "lucide-react";
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
-import { PasswordField } from "@/components/ui/password-field";
 import { Notice } from "@/components/ui/notice";
 import { useLocale, useT } from "@/components/locale-provider";
 import { authClient } from "@/lib/auth-client";
 import { localizedError } from "@/lib/i18n/action-error";
-import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/profile/password";
 
-export function SignUpForm() {
+export function ForgotPasswordForm() {
   const t = useT();
   const locale = useLocale();
-  const router = useRouter();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isSent, setIsSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -29,20 +24,17 @@ export function SignUpForm() {
     setIsSubmitting(true);
 
     try {
-      const result = await authClient.signUp.email({
-        name,
+      const result = await authClient.requestPasswordReset({
         email,
-        password,
-        callbackURL: "/welcome",
+        redirectTo: "/reset-password",
       });
 
       if (result.error) {
-        setError(t("auth.couldNotOpen"));
+        setError(t("auth.resetCouldNotSend"));
         return;
       }
 
-      router.push("/welcome");
-      router.refresh();
+      setIsSent(true);
     } catch (caught) {
       setError(localizedError(locale, caught));
     } finally {
@@ -50,47 +42,32 @@ export function SignUpForm() {
     }
   }
 
+  if (isSent) {
+    return (
+      <div className="mt-8">
+        <Notice tone="success">{t("auth.resetSent")}</Notice>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="mt-8 flex flex-col gap-5">
-      <TextField
-        id="name"
-        name="name"
-        type="text"
-        label={t("common.name")}
-        autoComplete="name"
-        autoFocus
-        required
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        icon={UserRound}
-      />
       <TextField
         id="email"
         name="email"
         type="email"
         label={t("common.email")}
         autoComplete="email"
+        autoFocus
         required
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         icon={Mail}
       />
-      <PasswordField
-        id="password"
-        name="password"
-        label={t("common.password")}
-        autoComplete="new-password"
-        required
-        minLength={MIN_PASSWORD_LENGTH}
-        maxLength={MAX_PASSWORD_LENGTH}
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        icon={Lock}
-      />
       {error ? <Notice tone="error">{error}</Notice> : null}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-        {isSubmitting ? t("auth.opening") : t("auth.createJournal")}
+        <Send className="size-4 shrink-0" aria-hidden />
+        {isSubmitting ? t("auth.resetSending") : t("auth.resetSend")}
       </Button>
     </form>
   );

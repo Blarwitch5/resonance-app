@@ -9,6 +9,8 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.url(),
   DISCOGS_CONSUMER_KEY: z.string().min(1),
   DISCOGS_CONSUMER_SECRET: z.string().min(1),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  RESEND_FROM_EMAIL: z.string().min(3).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

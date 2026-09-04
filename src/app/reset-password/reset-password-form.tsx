@@ -6,6 +6,7 @@ import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useLocale, useT } from "@/components/locale-provider";
 import { authClient } from "@/lib/auth-client";
@@ -46,6 +47,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
       if (result.error) {
         setError(passwordResetFailure(result.error, locale));
+        setIsSubmitting(false);
         return;
       }
 
@@ -53,13 +55,13 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       router.refresh();
     } catch (caught) {
       setError(localizedError(locale, caught));
-    } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="mt-8 flex flex-col gap-5">
+      <fieldset disabled={isSubmitting} className="flex flex-col gap-5 border-0 p-0">
       <PasswordField
         id="newPassword"
         name="newPassword"
@@ -87,9 +89,12 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       />
       {error ? <Notice tone="error">{error}</Notice> : null}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        <Lock className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isSubmitting}>
+          <Lock className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {isSubmitting ? t("auth.newPasswordSaving") : t("auth.newPasswordSave")}
       </Button>
+      </fieldset>
     </form>
   );
 }

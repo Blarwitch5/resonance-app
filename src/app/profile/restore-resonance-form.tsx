@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { restoreResonanceAction, type RestoreResonanceState } from "@/app/profile/actions";
 import { Button } from "@/components/ui/button";
 import { controlClass, labelClass } from "@/components/ui/control";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useT } from "@/components/locale-provider";
 
@@ -62,7 +63,9 @@ export function RestoreResonanceForm() {
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       {story ? <Notice tone="success">{story}</Notice> : null}
       <Button type="submit" disabled={isPending} variant="ghost">
-        <FolderUp className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isPending}>
+          <FolderUp className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {isPending ? t("backup.restoring") : t("backup.restore")}
       </Button>
     </form>

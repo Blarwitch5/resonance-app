@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useLocale, useT } from "@/components/locale-provider";
 import { authClient } from "@/lib/auth-client";
@@ -63,10 +64,13 @@ export function ForgotPasswordForm() {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         icon={Mail}
+        disabled={isSubmitting}
       />
       {error ? <Notice tone="error">{error}</Notice> : null}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        <Send className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isSubmitting}>
+          <Send className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {isSubmitting ? t("auth.resetSending") : t("auth.resetSend")}
       </Button>
     </form>

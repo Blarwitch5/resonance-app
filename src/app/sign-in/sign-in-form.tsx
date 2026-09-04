@@ -7,8 +7,9 @@ import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
-import { PasswordField } from "@/components/ui/password-field";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
+import { PasswordField } from "@/components/ui/password-field";
 import { useLocale, useT } from "@/components/locale-provider";
 import { authClient } from "@/lib/auth-client";
 import { localizedError } from "@/lib/i18n/action-error";
@@ -41,6 +42,7 @@ export function SignInForm({ nextPath }: SignInFormProps) {
 
       if (result.error) {
         setError(t("auth.credentials"));
+        setIsSubmitting(false);
         return;
       }
 
@@ -48,13 +50,13 @@ export function SignInForm({ nextPath }: SignInFormProps) {
       router.refresh();
     } catch (caught) {
       setError(localizedError(locale, caught));
-    } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} aria-busy={isSubmitting} className="mt-8 flex flex-col gap-5">
+      <fieldset disabled={isSubmitting} className="flex flex-col gap-5 border-0 p-0">
       <TextField
         id="email"
         name="email"
@@ -86,9 +88,12 @@ export function SignInForm({ nextPath }: SignInFormProps) {
       </p>
       {error ? <Notice tone="error">{error}</Notice> : null}
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        <LogIn className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isSubmitting}>
+          <LogIn className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {isSubmitting ? t("auth.listening") : t("auth.enter")}
       </Button>
+      </fieldset>
     </form>
   );
 }

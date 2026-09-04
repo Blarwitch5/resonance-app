@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { choiceChipClass } from "@/components/ui/chip";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
 import { formatIcons } from "@/components/ui/format-icon";
+import { BusyGlyph, ListenPulse } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useT } from "@/components/locale-provider";
 import { MEDIA_FORMATS } from "@/lib/collection/types";
@@ -60,7 +61,9 @@ export function WelcomeForm() {
         </fieldset>
         {state.error ? <Notice tone="error">{state.error}</Notice> : null}
         <Button type="submit" disabled={isPending} className="w-full">
-          <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
+          <BusyGlyph isBusy={isPending}>
+            <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
+          </BusyGlyph>
           {isPending ? t("welcome.opening") : t("welcome.openShelf")}
         </Button>
       </form>
@@ -78,6 +81,7 @@ function SkipButton() {
       <input type="hidden" name="intent" value="skip" />
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       <Button type="submit" variant="ghost" disabled={isPending} className="w-full">
+        {isPending ? <ListenPulse /> : null}
         {isPending ? t("welcome.opening") : t("welcome.wander")}
       </Button>
     </form>

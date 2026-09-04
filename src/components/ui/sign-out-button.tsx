@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useLocale, useT } from "@/components/locale-provider";
 import { authClient } from "@/lib/auth-client";
@@ -47,7 +48,9 @@ export function SignOutButton({ layout = "sheet" }: SignOutButtonProps) {
           aria-busy={isSigningOut}
           className="group flex min-h-11 w-full items-center gap-3 rounded-rs-md px-3 text-sm font-medium text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong disabled:opacity-50"
         >
-          <LogOut className="size-5 motion-safe:group-hover:vibrato" aria-hidden />
+          <BusyGlyph isBusy={isSigningOut}>
+            <LogOut className="size-5 motion-safe:group-hover:vibrato" aria-hidden />
+          </BusyGlyph>
           {label}
         </button>
         {error ? <Notice tone="error">{error}</Notice> : null}
@@ -64,7 +67,9 @@ export function SignOutButton({ layout = "sheet" }: SignOutButtonProps) {
         disabled={isSigningOut}
         aria-busy={isSigningOut}
       >
-        <LogOut className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isSigningOut}>
+          <LogOut className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {label}
       </Button>
       {error ? <Notice tone="error">{error}</Notice> : null}

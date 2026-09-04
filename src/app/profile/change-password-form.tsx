@@ -6,6 +6,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { changePasswordAction, type ChangePasswordState } from "@/app/profile/actions";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useT } from "@/components/locale-provider";
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from "@/lib/profile/password";
@@ -61,7 +62,9 @@ export function ChangePasswordForm() {
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
       {state.changed ? <Notice tone="success">{t("password.updated")}</Notice> : null}
       <Button type="submit" disabled={isPending}>
-        <Lock className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isPending}>
+          <Lock className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {isPending ? t("password.saving") : t("password.change")}
       </Button>
     </form>

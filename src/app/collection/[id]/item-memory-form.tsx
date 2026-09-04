@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { updateItemAction, type UpdateItemState } from "@/app/collection/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextAreaField, TextField } from "@/components/ui/field";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useT } from "@/components/locale-provider";
 import { MEDIA_CONDITIONS, type MediaCondition } from "@/lib/collection/types";
@@ -31,7 +32,7 @@ export function ItemMemoryForm({
   const [state, formAction, isPending] = useActionState(updateItemAction, initialState);
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} aria-busy={isPending} className="flex flex-col gap-5">
       <input type="hidden" name="id" value={id} />
 
       <TextField
@@ -76,7 +77,9 @@ export function ItemMemoryForm({
       {state.saved ? <Notice tone="success">{t("journal.saved")}</Notice> : null}
 
       <Button type="submit" disabled={isPending}>
-        <Save className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isPending}>
+          <Save className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {isPending ? t("common.saving") : t("common.save")}
       </Button>
     </form>

@@ -9,6 +9,7 @@ import { choiceChipClass } from "@/components/ui/chip";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
 import { TextAreaField } from "@/components/ui/field";
 import { formatIcons } from "@/components/ui/format-icon";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useT } from "@/components/locale-provider";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
@@ -81,14 +82,10 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? (
-          t("explorer.adding")
-        ) : (
-          <>
-            <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-            {t("explorer.addRecord")}
-          </>
-        )}
+        <BusyGlyph isBusy={isPending}>
+          <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
+        {isPending ? t("explorer.adding") : t("explorer.addRecord")}
       </Button>
     </form>
   );

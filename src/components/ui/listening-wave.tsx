@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { ResonanceMark } from "@/components/ui/resonance-mark";
 
 interface ListeningWaveProps {
@@ -20,6 +22,34 @@ export function SectionLoader({ label }: { label: string }) {
       </div>
     </div>
   );
+}
+
+export function ListenRings({ className = "border-current" }: { className?: string }) {
+  return (
+    <>
+      {[0, 240, 480].map((delayMs) => (
+        <span
+          key={delayMs}
+          className={`absolute inset-0 rounded-full border-2 motion-reduce:hidden motion-safe:search-wave ${className}`}
+          style={{ animationDelay: `${delayMs}ms` }}
+          aria-hidden
+        />
+      ))}
+    </>
+  );
+}
+
+export function ListenPulse({ className = "" }: { className?: string }) {
+  return (
+    <span className={`relative inline-flex size-6 shrink-0 ${className}`.trim()} aria-hidden>
+      <ListenRings />
+      <span className="absolute inset-[7px] rounded-full bg-current opacity-80" />
+    </span>
+  );
+}
+
+export function BusyGlyph({ isBusy, children }: { isBusy: boolean; children: ReactNode }) {
+  return isBusy ? <ListenPulse /> : children;
 }
 
 export function ListeningWave({

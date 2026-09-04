@@ -10,6 +10,7 @@ import { choiceChipClass } from "@/components/ui/chip";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
 import { TextAreaField, TextField } from "@/components/ui/field";
 import { formatIcons } from "@/components/ui/format-icon";
+import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
 import { t } from "@/lib/i18n/translate";
@@ -221,7 +222,9 @@ export function ProfileSettingsForm({ name, image = null, settings }: ProfileSet
       {state.saved ? <Notice tone="success">{t(locale, "settings.saved")}</Notice> : null}
 
       <Button type="submit" disabled={isPending}>
-        <Save className="size-4 shrink-0" aria-hidden />
+        <BusyGlyph isBusy={isPending}>
+          <Save className="size-4 shrink-0" aria-hidden />
+        </BusyGlyph>
         {isPending ? t(locale, "settings.saving") : t(locale, "settings.save")}
       </Button>
     </form>

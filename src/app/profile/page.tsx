@@ -17,6 +17,7 @@ import { PageHeader, SectionHeading } from "@/components/ui/page-header";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
 import { ProfileChips } from "@/components/ui/profile-chips";
 import { ProfileSettingsSheet } from "@/components/ui/profile-settings-sheet";
+import { SearchListenPane } from "@/components/ui/search-listen";
 import { bodyClass, sectionTitleClass } from "@/components/ui/type";
 import { ViewChips } from "@/components/ui/view-chips";
 import { feedPageCount } from "@/lib/collection/feed";
@@ -162,20 +163,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       {tab === "close" || tab === "waiting" ? (
         <div className="flex flex-col gap-4">
           <ProfileChips active={tab} query={listen.query} />
-          <ProfileSearch tab={tab} query={query} elsewhere={elsewhere} isQuiet={shelfQuiet} />
-        </div>
-      ) : (
-        <ProfileChips active={tab} query={listen.query} />
-      )}
-
-      {tab === "resonance" ? <CollectionStats insight={insight} engagement={engagement} locale={settings.locale} /> : null}
-
-      {tab === "resonance" && insight.total === 0 && engagement.length === 0 ? (
-        <p className={bodyClass}>
-          {t(settings.locale, "profile.emptyShelf")}
-        </p>
-      ) : null}
-
+          <ProfileSearch tab={tab} query={query} elsewhere={elsewhere} isQuiet={shelfQuiet}>
+            <SearchListenPane>
       {hasQuery && shelfQuiet && elsewhere ? (
         <p className={bodyClass}>
           {t(settings.locale, "collection.emptyElsewhere")}
@@ -224,6 +213,20 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           layout={settings.viewMode}
         />
       ) : null}
+            </SearchListenPane>
+          </ProfileSearch>
+        </div>
+      ) : (
+        <>
+          <ProfileChips active={tab} query={listen.query} />
+          {tab === "resonance" ? (
+            <CollectionStats insight={insight} engagement={engagement} locale={settings.locale} />
+          ) : null}
+          {tab === "resonance" && insight.total === 0 && engagement.length === 0 ? (
+            <p className={bodyClass}>{t(settings.locale, "profile.emptyShelf")}</p>
+          ) : null}
+        </>
+      )}
     </AppShell>
   );
 }

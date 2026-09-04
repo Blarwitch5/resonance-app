@@ -12,6 +12,7 @@ import { FacetChips } from "@/components/ui/facet-chips";
 import { FormatChips } from "@/components/ui/format-chips";
 import { KeptChip } from "@/components/ui/kept-chip";
 import { PageHeader } from "@/components/ui/page-header";
+import { SearchListenPane } from "@/components/ui/search-listen";
 import { SortChips } from "@/components/ui/sort-chips";
 import { bodyClass, sectionTitleClass } from "@/components/ui/type";
 import { ViewChips } from "@/components/ui/view-chips";
@@ -179,8 +180,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
       />
 
       <div className="flex flex-col gap-3">
-        <CollectionSearch listen={listen} query={query} />
-
+        <CollectionSearch listen={listen} query={query}>
         <div className="flex flex-col gap-3">
           <div id="collection-listen" className="flex flex-wrap items-center gap-2">
             <FormatChips
@@ -213,8 +213,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
             <ViewChips active={settings.viewMode} next={collectionHref({ ...listen, page })} />
           </div>
         </div>
-      </div>
-
+        <SearchListenPane>
       {items.length === 0 ? (
         <section className="rounded-rs-lg border border-border bg-surface px-6 py-16 text-center">
           {hasQuery || hasFacet ? (
@@ -317,6 +316,9 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
           ) : null}
         </>
       )}
+        </SearchListenPane>
+        </CollectionSearch>
+      </div>
       <AddRecordFab href={elsewhere} />
     </AppShell>
   );

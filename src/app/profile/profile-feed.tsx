@@ -11,7 +11,7 @@ import { RecordRow } from "@/components/ui/record-row";
 import { RecordTile } from "@/components/ui/record-tile";
 import { useInfiniteFeed } from "@/components/ui/use-infinite-feed";
 import { journalFromHref } from "@/lib/collection/href";
-import { shelfListHitClass, shelfResultsClass } from "@/lib/collection/layout";
+import { shelfArriveProps, shelfListHitClass, shelfResultsClass } from "@/lib/collection/layout";
 import { recordMenuElsewhereHref } from "@/lib/collection/record-menu";
 import { shelfCardThreads } from "@/lib/collection/shelf-threads";
 import { MAX_COLLECTION_PAGE } from "@/lib/collection/types";
@@ -118,7 +118,7 @@ export function ProfileFeed({
             );
 
           return (
-            <li key={item.id}>
+            <li key={item.id} {...shelfArriveProps(index)}>
               <RecordMenu
                 href={href}
                 title={item.title}

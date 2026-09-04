@@ -13,10 +13,11 @@ import { FormatChips } from "@/components/ui/format-chips";
 import { ListenSheet } from "@/components/ui/listen-sheet";
 import { Notice } from "@/components/ui/notice";
 import { PageHeader, SectionHeading } from "@/components/ui/page-header";
-import { bodyClass } from "@/components/ui/type";
+import { SearchListenPane } from "@/components/ui/search-listen";
+import { bodyClass, sectionTitleClass } from "@/components/ui/type";
 import { ViewChips } from "@/components/ui/view-chips";
 import { echoDiscoveries, echoHeadline, echoSeedFromInsight, type EchoSeed } from "@/lib/collection/echo";
-import { shelfResultsClass } from "@/lib/collection/layout";
+import { shelfArriveProps, shelfResultsClass } from "@/lib/collection/layout";
 import { getLocale } from "@/lib/i18n/locale";
 import { t } from "@/lib/i18n/translate";
 import type { Locale } from "@/lib/settings/types";
@@ -183,8 +184,7 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
       />
 
       <div className="flex flex-col gap-3">
-        <ExplorerSearch listen={listen} query={query} />
-
+        <ExplorerSearch listen={listen} query={query}>
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
           <FormatChips
@@ -246,8 +246,7 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
           <ExplorerFacetChips listen={listen} insight={shelfInsight} drafts={threadDrafts} show="active" />
         </div>
         </div>
-      </div>
-
+        <SearchListenPane>
       {searchError ? <Notice tone="error">{searchError}</Notice> : null}
 
       {!hasListen && echo === null ? (
@@ -269,22 +268,30 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
       ) : null}
 
       {hasListen && !searchError && results.length === 0 ? (
-        <div className="flex flex-col gap-4">
-          <p className={`flex items-center gap-2 ${bodyClass}`}>
-            <SearchX className="size-4 shrink-0" aria-hidden />
+        <section className="rounded-rs-lg border border-border bg-surface px-6 py-16 text-center">
+          <SearchX className="mx-auto size-8 text-text-tertiary" aria-hidden />
+          <p className={`mt-4 ${sectionTitleClass}`}>
             {requestedPage > 1
               ? t(locale, "explorer.nothingMore")
               : isBarcodeQuery(query)
                 ? t(locale, "explorer.nothingBarcode")
                 : t(locale, "explorer.nothingSearch")}
           </p>
+          {requestedPage > 1 ? null : (
+            <p className={`mx-auto mt-2 max-w-sm ${bodyClass}`}>{t(locale, "explorer.nothingHint")}</p>
+          )}
           {requestedPage > 1 ? (
-            <ButtonLink href={explorerSearchHref({ ...listen, page: 1 })} variant="ghost" className="self-start">
+            <ButtonLink href={explorerSearchHref({ ...listen, page: 1 })} variant="ghost" className="mt-6">
               <ChevronLeft className="size-4 shrink-0" aria-hidden />
               {t(locale, "back.firstPressings")}
             </ButtonLink>
+          ) : query ? (
+            <ButtonLink href={explorerSearchHref({ ...listen, query: undefined, page: 1 })} variant="ghost" className="mt-6">
+              <SearchX className="size-4 shrink-0" aria-hidden />
+              {t(locale, "common.clearSearch")}
+            </ButtonLink>
           ) : null}
-        </div>
+        </section>
       ) : null}
 
       {results.length > 0 ? (
@@ -305,6 +312,9 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
           layout={viewMode}
         />
       ) : null}
+        </SearchListenPane>
+        </ExplorerSearch>
+      </div>
     </AppShell>
   );
 }
@@ -392,7 +402,7 @@ function EchoRange({
       </div>
       <ul className={shelfResultsClass(layout)}>
         {drafts.map((draft, index) => (
-          <li key={draft.discogsId ?? `${draft.artist}-${draft.title}`}>
+          <li key={draft.discogsId ?? `${draft.artist}-${draft.title}`} {...shelfArriveProps(index)}>
             <ExplorerReleaseCard
               draft={draft}
               listen={further}

@@ -49,23 +49,23 @@ export function SearchField({
   }
 
   return (
-    <div className="relative min-w-0 flex-1">
+    <div className="relative min-w-0 flex-1 overflow-visible">
       <label className="sr-only" htmlFor={id}>
         {label}
       </label>
-      <Search
-        className={`pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-tertiary ${
-          isPending ? "motion-safe:animate-[ripple_700ms_ease-out_infinite]" : ""
-        }`}
-        aria-hidden
-      />
+      <span className="pointer-events-none absolute top-1/2 left-2 z-10 flex size-8 -translate-y-1/2 items-center justify-center">
+        <Search
+          className={`size-4 ${isPending ? "text-primary motion-safe:search-pulse" : "text-text-tertiary"}`}
+          aria-hidden
+        />
+      </span>
       <input
         id={id}
         name={name}
         type="search"
         enterKeyHint="search"
         placeholder={placeholder}
-        className={`${controlClass} pl-10 [&::-webkit-search-cancel-button]:appearance-none ${hasClear ? "pr-12" : ""}`}
+        className={`${controlClass} pl-11 [&::-webkit-search-cancel-button]:appearance-none ${hasClear ? "pr-12" : ""}`}
         onKeyDown={onKeyDown}
         {...(isControlled
           ? {

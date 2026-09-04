@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition, type FormEvent } from "react";
 
-import { SHELF_SEARCH_DEBOUNCE_MS } from "@/lib/collection/search";
+import { isSearchListening, SHELF_SEARCH_DEBOUNCE_MS } from "@/lib/collection/search";
 
 export function useInstantSearch(
   committedQuery: string,
@@ -60,5 +60,7 @@ export function useInstantSearch(
     go(value);
   }
 
-  return { value, setValue, isPending, onSubmit };
+  const isListening = isSearchListening(value, committedQuery, isPending);
+
+  return { value, setValue, isPending, isListening, onSubmit };
 }

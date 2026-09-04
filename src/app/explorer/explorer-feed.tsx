@@ -6,7 +6,7 @@ import { loadMoreExplorerAction } from "@/app/explorer/actions";
 import { ExplorerReleaseCard } from "@/app/explorer/explorer-release-card";
 import { InfiniteSentinel } from "@/components/ui/infinite-sentinel";
 import { useInfiniteFeed } from "@/components/ui/use-infinite-feed";
-import { shelfResultsClass } from "@/lib/collection/layout";
+import { shelfArriveProps, shelfResultsClass } from "@/lib/collection/layout";
 import type { ExplorerFeedHit } from "@/lib/collection/types";
 import {
   explorerSearchHref,
@@ -68,7 +68,7 @@ export function ExplorerFeed({
     <>
       <ul className={shelfResultsClass(layout)}>
         {feed.items.map((item, index) => (
-          <li key={explorerHitKey(item)}>
+          <li key={explorerHitKey(item)} {...shelfArriveProps(index)}>
             <ExplorerReleaseCard
               draft={item.draft}
               listen={listen}

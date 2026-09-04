@@ -11,7 +11,7 @@ import { RecordRow } from "@/components/ui/record-row";
 import { RecordTile } from "@/components/ui/record-tile";
 import { useInfiniteFeed } from "@/components/ui/use-infinite-feed";
 import { collectionHref, journalFromHref } from "@/lib/collection/href";
-import { shelfResultsClass } from "@/lib/collection/layout";
+import { shelfArriveProps, shelfResultsClass } from "@/lib/collection/layout";
 import { memoryExcerpt } from "@/lib/collection/memory";
 import { recordMenuElsewhereHref } from "@/lib/collection/record-menu";
 import { shelfCardThreads } from "@/lib/collection/shelf-threads";
@@ -136,7 +136,7 @@ function ShelfRecordList({
         );
 
         return (
-          <li key={item.id}>
+          <li key={item.id} {...shelfArriveProps(index)}>
             <RecordMenu
               href={href}
               title={item.title}

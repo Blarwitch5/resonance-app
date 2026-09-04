@@ -20,7 +20,8 @@ Loading, empty, error, success, disabled, partiel (offline). Empty Collection : 
 
 ## Interaction
 
-- Cibles ≥ 44px (`min-h-11` / `min-h-12` / bottom bar `min-h-14`).
+- Cibles ≥ 44px. Champs et CTA : `min-h-11` / `px-3`–`px-4` mobile, `min-h-12` / `px-6` dès `sm`. Bottom bar `min-h-14`.
+- Inputs : rester en `text-base` (évite le zoom iOS). Ne pas descendre sous 44px.
 - Long-press mobile : ouvre le même `RecordMenu` que le clic droit desktop. Boutons visibles restent.
 - Swipe liste mobile : révèle garder près / entendre ailleurs / laisser partir (mêmes actions que le menu). Grille et desktop : non. Ne pas confliter avec le pull-to-refresh ni le long-press.
 - Overlay : `bg-overlay`, Esc ferme, focus trap.

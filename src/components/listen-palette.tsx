@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 
 import { emptyStoredReturns, listReturnFromLocation, readStoredReturns } from "@/components/return-path";
 import { useLocale, useT } from "@/components/locale-provider";
+import { controlClass } from "@/components/ui/control";
 import { focusListenField } from "@/components/ui/focus-listen";
 import { FOCUS_SEARCH_KEY, focusSearchField } from "@/components/ui/focus-search";
 import { trapFocus } from "@/components/ui/trap-focus";
@@ -260,7 +261,7 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
             aria-activedescendant={active ? `${listId}-${active.id}` : undefined}
             role="combobox"
             onChange={(event) => setQuery(event.target.value)}
-            className="min-h-12 w-full rounded-rs-sm border border-border bg-surface py-3 pr-4 pl-10 text-base font-normal text-text outline-none ring-border-strong focus:ring-2"
+            className={`${controlClass} pl-10`}
           />
         </div>
         <ul id={listId} role="listbox" aria-label={t("palette.quietPaths")} className="mt-3 max-h-80 overflow-y-auto">

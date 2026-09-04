@@ -3,6 +3,7 @@
 import { Download } from "lucide-react";
 
 import { useT } from "@/components/locale-provider";
+import { ButtonLink } from "@/components/ui/button";
 
 export function ExportResonanceLink() {
   const t = useT();
@@ -12,13 +13,10 @@ export function ExportResonanceLink() {
       <p className="text-sm leading-6 text-text-secondary">
         {t("backup.exportHint")}
       </p>
-      <a
-        href="/api/resonance/backup"
-        className="inline-flex min-h-12 items-center justify-center gap-2 self-start rounded-full border border-border bg-transparent px-6 text-sm font-semibold text-text outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong"
-      >
+      <ButtonLink href="/api/resonance/backup" variant="ghost" className="self-start">
         <Download className="size-4 shrink-0" aria-hidden />
         {t("backup.export")}
-      </a>
+      </ButtonLink>
     </div>
   );
 }

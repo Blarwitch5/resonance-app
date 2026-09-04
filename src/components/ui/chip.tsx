@@ -22,7 +22,7 @@ export function ChipLink({
       href={href}
       aria-current={isActive ? "page" : undefined}
       aria-label={ariaLabel}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong ${
+      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong sm:px-4 ${
         isActive
           ? "border-transparent bg-primary-soft text-on-primary-soft"
           : "border-border text-text-secondary"
@@ -34,7 +34,7 @@ export function ChipLink({
 }
 
 export const choiceChipClass =
-  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border px-4 text-sm font-medium text-text transition-colors has-checked:border-transparent has-checked:bg-primary-soft has-checked:text-on-primary-soft has-focus-visible:ring-2 has-focus-visible:ring-border-strong";
+  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-border px-3 text-sm font-medium text-text transition-colors has-checked:border-transparent has-checked:bg-primary-soft has-checked:text-on-primary-soft has-focus-visible:ring-2 has-focus-visible:ring-border-strong sm:px-4";
 
 interface ChipButtonProps {
   isActive: boolean;
@@ -57,7 +57,7 @@ export function ChipButton({
       aria-pressed={isActive}
       aria-label={ariaLabel}
       disabled={disabled}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong disabled:pointer-events-none lg:px-4 ${
+      className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-colors outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong disabled:pointer-events-none sm:px-4 ${
         isActive
           ? "border-transparent bg-primary-soft text-on-primary-soft"
           : "border-border text-text-secondary"

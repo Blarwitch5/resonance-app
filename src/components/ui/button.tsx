@@ -16,6 +16,9 @@ const variants: Record<ButtonVariant, string> = {
   ghost: "border border-border bg-transparent text-text hover:bg-surface-pressed",
 };
 
+export const buttonClass =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors outline-none sm:min-h-12 sm:px-6 focus-visible:ring-2 focus-visible:ring-border-strong";
+
 export function Button({
   children,
   variant = "primary",
@@ -28,7 +31,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:bg-text-disabled disabled:text-on-primary ${variants[variant]} ${className}`}
+      className={`${buttonClass} disabled:bg-text-disabled disabled:text-on-primary ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
@@ -58,7 +61,7 @@ export function ButtonLink({
       href={href}
       aria-label={ariaLabel}
       data-record-link={isRecordLink ? "" : undefined}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-border-strong ${variants[variant]} ${className}`}
+      className={`${buttonClass} ${variants[variant]} ${className}`}
     >
       {children}
     </Link>

@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { resolvedAuthUrl } from "@/lib/auth-origins";
+import { deployEnvFrom, resolvedAuthUrl } from "@/lib/auth-origins";
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -27,7 +27,7 @@ function formatEnvError(error: z.ZodError): string {
 export function getEnv(): Env {
   const parsed = envSchema.safeParse({
     ...process.env,
-    BETTER_AUTH_URL: resolvedAuthUrl(process.env) ?? process.env.BETTER_AUTH_URL,
+    BETTER_AUTH_URL: resolvedAuthUrl(deployEnvFrom(process.env)) ?? process.env.BETTER_AUTH_URL,
   });
 
   if (!parsed.success) {

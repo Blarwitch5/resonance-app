@@ -7,6 +7,15 @@ export interface DeployEnv {
   VERCEL_PROJECT_PRODUCTION_URL?: string;
 }
 
+export function deployEnvFrom(env: Record<string, string | undefined>): DeployEnv {
+  return {
+    BETTER_AUTH_URL: env.BETTER_AUTH_URL,
+    VERCEL_ENV: env.VERCEL_ENV,
+    VERCEL_URL: env.VERCEL_URL,
+    VERCEL_PROJECT_PRODUCTION_URL: env.VERCEL_PROJECT_PRODUCTION_URL,
+  };
+}
+
 export function developmentAuthOrigins(): string[] {
   return [
     "http://localhost:3000",

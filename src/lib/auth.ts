@@ -6,7 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 
 import { getDb } from "@/db";
 import { account, session, user, verification } from "@/db/schema";
-import { developmentAuthOrigins, uniqueOrigins, vercelAuthOrigins } from "@/lib/auth-origins";
+import { deployEnvFrom, developmentAuthOrigins, uniqueOrigins, vercelAuthOrigins } from "@/lib/auth-origins";
 import { getEnv } from "@/lib/env";
 import { resetPasswordMailHref } from "@/lib/mail/reset-href";
 import { sendResetPasswordMail } from "@/lib/mail/reset-password";
@@ -28,7 +28,7 @@ function createAuth() {
     baseURL: env.BETTER_AUTH_URL,
     trustedOrigins: uniqueOrigins(
       [env.BETTER_AUTH_URL],
-      vercelAuthOrigins(process.env),
+      vercelAuthOrigins(deployEnvFrom(process.env)),
       env.NODE_ENV === "development" ? developmentAuthOrigins() : [],
     ),
     database: drizzleAdapter(getDb(), {

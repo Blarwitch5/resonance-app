@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   CREDENTIAL_ACCOUNT_ISSUER,
+  deployEnvFrom,
   developmentAuthOrigins,
   resolvedAuthUrl,
   uniqueOrigins,
@@ -71,5 +72,19 @@ describe("uniqueOrigins", () => {
       "https://a.example",
       "https://b.example",
     ]);
+  });
+});
+
+describe("deployEnvFrom", () => {
+  it("picks the Vercel voices out of a process env", () => {
+    expect(
+      resolvedAuthUrl(
+        deployEnvFrom({
+          BETTER_AUTH_URL: "https://listen.example",
+          VERCEL_URL: "resonance-app.vercel.app",
+          PATH: "/usr/bin",
+        }),
+      ),
+    ).toBe("https://listen.example");
   });
 });

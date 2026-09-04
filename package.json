@@ -22,6 +22,8 @@
     "@better-auth/drizzle-adapter": "^1.7.2",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/blob": "^2.8.0",
+    "@zxing/browser": "^0.2.1",
+    "@zxing/library": "^0.23.0",
     "better-auth": "^1.7.2",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.40.0",

@@ -37,32 +37,36 @@ export function ExplorerSearch({ listen, query, children }: ExplorerSearchProps)
 
   return (
     <SearchListenRoot isListening={isListening} label={t("common.listening")}>
-      <form
-        action="/explorer"
-        method="get"
-        className="flex gap-3"
-        aria-busy={isListening}
-        onSubmit={onSubmit}
-      >
-        {listen.format ? <input type="hidden" name="format" value={listen.format} /> : null}
-        {listen.genre ? <input type="hidden" name="genre" value={listen.genre} /> : null}
-        {listen.label ? <input type="hidden" name="label" value={listen.label} /> : null}
-        {listen.decade !== undefined ? <input type="hidden" name="decade" value={String(listen.decade)} /> : null}
-        {listen.year !== undefined ? <input type="hidden" name="year" value={String(listen.year)} /> : null}
-        <SearchField
-          id="explorer-q"
-          name="q"
-          value={value}
-          onValueChange={setValue}
-          isPending={isListening}
-          placeholder={t("explorer.searchPlaceholder")}
-          label={t("explorer.searchLabel")}
-          clearLabel={t("common.clearSearch")}
-        />
+      <div className="flex gap-3">
+        <form
+          id="explorer-search"
+          action="/explorer"
+          method="get"
+          className="flex min-w-0 flex-1 gap-3"
+          aria-busy={isListening}
+          onSubmit={onSubmit}
+        >
+          {listen.format ? <input type="hidden" name="format" value={listen.format} /> : null}
+          {listen.genre ? <input type="hidden" name="genre" value={listen.genre} /> : null}
+          {listen.label ? <input type="hidden" name="label" value={listen.label} /> : null}
+          {listen.decade !== undefined ? <input type="hidden" name="decade" value={String(listen.decade)} /> : null}
+          {listen.year !== undefined ? <input type="hidden" name="year" value={String(listen.year)} /> : null}
+          <SearchField
+            id="explorer-q"
+            name="q"
+            value={value}
+            onValueChange={setValue}
+            isPending={isListening}
+            placeholder={t("explorer.searchPlaceholder")}
+            label={t("explorer.searchLabel")}
+            clearLabel={t("common.clearSearch")}
+          />
+        </form>
         <div className="flex shrink-0 gap-3">
           <BarcodeScanner />
           <Button
             type="submit"
+            form="explorer-search"
             className="shrink-0 px-4 sm:px-6"
             aria-label={isListening ? t("common.listening") : t("common.search")}
           >
@@ -72,7 +76,7 @@ export function ExplorerSearch({ listen, query, children }: ExplorerSearchProps)
             <span>{isListening ? t("common.listening") : t("common.search")}</span>
           </Button>
         </div>
-      </form>
+      </div>
       <div className="flex flex-col gap-3">{children}</div>
     </SearchListenRoot>
   );

@@ -15,49 +15,14 @@ import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
 import { useT } from "@/components/locale-provider";
-
-type CameraIssue = "unsupported" | "permission" | "missing" | "unknown";
-
-interface DetectedBarcode {
-  rawValue: string;
-}
-
-interface BarcodeDetectorInstance {
-  detect: (source: ImageBitmapSource) => Promise<DetectedBarcode[]>;
-}
-
-interface BarcodeDetectorConstructor {
-  new (options?: { formats?: string[] }): BarcodeDetectorInstance;
-  getSupportedFormats?: () => Promise<string[]>;
-}
-
-const PREFERRED_FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"];
-
-function getBarcodeDetector(): BarcodeDetectorConstructor | undefined {
-  if (typeof window === "undefined" || !("BarcodeDetector" in window)) {
-    return undefined;
-  }
-
-  return (window as Window & { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector;
-}
-
-function cameraIssueFromError(error: unknown): CameraIssue {
-  if (typeof error !== "object" || error === null || !("name" in error)) {
-    return "unknown";
-  }
-
-  const name = String(error.name);
-
-  if (name === "NotAllowedError" || name === "SecurityError") {
-    return "permission";
-  }
-
-  if (name === "NotFoundError" || name === "OverconstrainedError") {
-    return "missing";
-  }
-
-  return "unknown";
-}
+import {
+  PREFERRED_BARCODE_FORMATS,
+  cameraIssueFromError,
+  canRequestCamera,
+  getBarcodeDetector,
+  requestBarcodeCamera,
+  type CameraIssue,
+} from "@/lib/discogs/scan-barcode";
 
 function cameraIssueCopy(issue: CameraIssue, t: (path: string) => string): string {
   if (issue === "unsupported") {
@@ -84,16 +49,29 @@ export function BarcodeScanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
+  const zxingStopRef = useRef<(() => void) | null>(null);
+  const readingRef = useRef(false);
+  const foundRef = useRef(false);
+  const openingRef = useRef(false);
+  const ignoreBackdropClose = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [hasStream, setHasStream] = useState(false);
+  const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null);
   const [issue, setIssue] = useState<CameraIssue | null>(null);
   const [typedCode, setTypedCode] = useState("");
 
   const stopCamera = useCallback(() => {
+    foundRef.current = false;
+    readingRef.current = false;
+
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
+
+    zxingStopRef.current?.();
+    zxingStopRef.current = null;
 
     streamRef.current?.getTracks().forEach((track) => {
       track.stop();
@@ -109,6 +87,7 @@ export function BarcodeScanner() {
 
   const close = useCallback(() => {
     stopCamera();
+    setHasStream(false);
     setIsOpen(false);
     setIssue(null);
     setTypedCode("");
@@ -131,6 +110,12 @@ export function BarcodeScanner() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -188,120 +173,216 @@ export function BarcodeScanner() {
   }, [close, isOpen]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || !hasStream || !videoEl) {
+      return;
+    }
+
+    const previewEl = videoEl;
+    const stream = streamRef.current;
+
+    if (!stream) {
       return;
     }
 
     let cancelled = false;
 
-    async function startCamera() {
-      const Detector = getBarcodeDetector();
+    previewEl.setAttribute("playsinline", "true");
+    previewEl.setAttribute("webkit-playsinline", "true");
+    previewEl.muted = true;
+    previewEl.srcObject = stream;
+    void previewEl.play().catch(() => {
+      // iOS can delay play until the element is visible; the decode loop waits.
+    });
 
-      if (!Detector) {
-        setIssue("unsupported");
+    async function startNativeLoop(detectorSource: NonNullable<ReturnType<typeof getBarcodeDetector>>) {
+      const supported =
+        typeof detectorSource.getSupportedFormats === "function"
+          ? await detectorSource.getSupportedFormats()
+          : [...PREFERRED_BARCODE_FORMATS];
+      const formats = PREFERRED_BARCODE_FORMATS.filter((format) => supported.includes(format));
+      const detector = new detectorSource(formats.length > 0 ? { formats: [...formats] } : undefined);
+
+      const tick = async () => {
+        if (cancelled || foundRef.current) {
+          return;
+        }
+
+        if (document.hidden || previewEl.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          rafRef.current = requestAnimationFrame(() => {
+            void tick();
+          });
+          return;
+        }
+
+        try {
+          const detected = await detector.detect(previewEl);
+          const value = detected[0]?.rawValue?.trim();
+
+          if (value && value.length > 0) {
+            foundRef.current = true;
+            goToSearch(value);
+            return;
+          }
+        } catch {
+          // Frame skipped — keep listening.
+        }
+
+        if (!cancelled) {
+          rafRef.current = requestAnimationFrame(() => {
+            void tick();
+          });
+        }
+      };
+
+      rafRef.current = requestAnimationFrame(() => {
+        void tick();
+      });
+    }
+
+    async function startZxingLoop() {
+      const [{ BrowserMultiFormatReader }, { BarcodeFormat, DecodeHintType }] = await Promise.all([
+        import("@zxing/browser"),
+        import("@zxing/library"),
+      ]);
+
+      if (cancelled || !streamRef.current) {
         return;
       }
 
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+      ]);
+      const reader = new BrowserMultiFormatReader(hints);
+      const controls = await reader.decodeFromVideoElement(previewEl, (result) => {
+        const text = result?.getText()?.trim();
+
+        if (!text || foundRef.current) {
+          return;
+        }
+
+        foundRef.current = true;
+        goToSearch(text);
+      });
+
+      if (cancelled) {
+        controls.stop();
+        return;
+      }
+
+      zxingStopRef.current = () => {
+        controls.stop();
+      };
+    }
+
+    async function startReading() {
+      if (readingRef.current) {
+        return;
+      }
+
+      readingRef.current = true;
+      const Detector = getBarcodeDetector();
+
       try {
-        const supported =
-          typeof Detector.getSupportedFormats === "function"
-            ? await Detector.getSupportedFormats()
-            : PREFERRED_FORMATS;
-        const formats = PREFERRED_FORMATS.filter((format) => supported.includes(format));
-        const detector = new Detector(formats.length > 0 ? { formats } : undefined);
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: { facingMode: { ideal: "environment" } },
-        });
-
-        if (cancelled) {
-          stream.getTracks().forEach((track) => {
-            track.stop();
-          });
+        if (Detector) {
+          await startNativeLoop(Detector);
           return;
         }
 
-        streamRef.current = stream;
-        const video = videoRef.current;
-
-        if (!video) {
-          stream.getTracks().forEach((track) => {
-            track.stop();
-          });
-          return;
-        }
-
-        video.srcObject = stream;
-        await video.play();
-
-        const tick = async () => {
-          if (cancelled || document.hidden || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-            if (!cancelled) {
-              rafRef.current = requestAnimationFrame(() => {
-                void tick();
-              });
-            }
-            return;
-          }
-
-          try {
-            const detected = await detector.detect(video);
-            const value = detected[0]?.rawValue?.trim();
-
-            if (value && value.length > 0) {
-              goToSearch(value);
-              return;
-            }
-          } catch {
-            // Frame skipped — keep listening.
-          }
-
-          if (!cancelled) {
-            rafRef.current = requestAnimationFrame(() => {
-              void tick();
-            });
-          }
-        };
-
-        rafRef.current = requestAnimationFrame(() => {
-          void tick();
-        });
-      } catch (error) {
+        await startZxingLoop();
+      } catch {
         if (!cancelled) {
-          setIssue(cameraIssueFromError(error));
+          stopCamera();
+          setHasStream(false);
+          setIssue("unsupported");
         }
       }
     }
 
-    void startCamera();
+    void startReading();
 
     return () => {
       cancelled = true;
-      stopCamera();
+      readingRef.current = false;
+
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+
+      zxingStopRef.current?.();
+      zxingStopRef.current = null;
     };
-  }, [goToSearch, isOpen, stopCamera]);
+  }, [goToSearch, hasStream, isOpen, stopCamera, videoEl]);
+
+  async function openScanner() {
+    if (openingRef.current || isOpen) {
+      return;
+    }
+
+    openingRef.current = true;
+    foundRef.current = false;
+
+    try {
+      if (!canRequestCamera()) {
+        setHasStream(false);
+        setIssue("unsupported");
+        setIsOpen(true);
+        return;
+      }
+
+      try {
+        const stream = await requestBarcodeCamera();
+        streamRef.current = stream;
+        setHasStream(true);
+        setIssue(null);
+        setIsOpen(true);
+      } catch (error) {
+        setHasStream(false);
+        setIssue(cameraIssueFromError(error));
+        setIsOpen(true);
+      }
+    } finally {
+      openingRef.current = false;
+    }
+  }
 
   function onManualSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    event.stopPropagation();
     goToSearch(typedCode);
   }
 
   const dialog =
     isOpen && isMounted
       ? createPortal(
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 sm:items-center">
-            <button
-              type="button"
-              className="absolute inset-0 cursor-default"
-              aria-label={t("explorer.scanClose")}
-              onClick={close}
-            />
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-overlay p-4 sm:items-center"
+            onClick={() => {
+              if (ignoreBackdropClose.current) {
+                return;
+              }
+
+              close();
+            }}
+          >
             <div
               ref={dialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby={titleId}
               className="relative z-10 w-full max-w-md rounded-rs-lg bg-surface-elevated p-5"
+              onClick={(event) => event.stopPropagation()}
+              onPointerDown={() => {
+                ignoreBackdropClose.current = true;
+                window.setTimeout(() => {
+                  ignoreBackdropClose.current = false;
+                }, 400);
+              }}
             >
               <div className="flex items-start justify-between gap-3">
                 <h2 id={titleId} className="flex items-center gap-2 text-lg font-semibold text-text">
@@ -319,9 +400,12 @@ export function BarcodeScanner() {
                 </button>
               </div>
 
-              {issue === null ? (
+              {hasStream ? (
                 <video
-                  ref={videoRef}
+                  ref={(node) => {
+                    videoRef.current = node;
+                    setVideoEl(node);
+                  }}
                   className="mt-4 aspect-3/4 max-h-[50vh] w-full rounded-rs-sm bg-surface-pressed object-cover"
                   playsInline
                   muted
@@ -339,13 +423,14 @@ export function BarcodeScanner() {
                   name="barcode"
                   type="text"
                   inputMode="numeric"
+                  enterKeyHint="search"
                   autoComplete="off"
                   label={t("explorer.scanType")}
                   value={typedCode}
                   onChange={(event) => setTypedCode(event.target.value)}
                   placeholder="0123456789012"
                 />
-                <Button type="submit">
+                <Button type="button" onClick={() => goToSearch(typedCode)}>
                   <Search className="size-4 shrink-0" aria-hidden />
                   {t("explorer.scanLookup")}
                 </Button>
@@ -363,7 +448,9 @@ export function BarcodeScanner() {
         variant="ghost"
         className="min-w-12 shrink-0 gap-2 px-4"
         aria-label={t("explorer.scanAria")}
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          void openScanner();
+        }}
       >
         <ScanBarcode className="size-4 shrink-0" aria-hidden />
         <span className="hidden sm:inline">{t("explorer.scan")}</span>

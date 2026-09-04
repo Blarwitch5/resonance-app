@@ -7,12 +7,19 @@ const nextConfig: NextConfig = {
     "@better-auth/core",
     "@better-auth/drizzle-adapter",
     "@better-auth/utils",
+    "sharp",
   ],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "3mb",
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "i.discogs.com" },
       { protocol: "https", hostname: "st.discogs.com" },
       { protocol: "https", hostname: "img.discogs.com" },
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
   async headers() {

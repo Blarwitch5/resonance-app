@@ -1,9 +1,10 @@
 "use client";
 
-import { Ear, Image, Languages, LayoutGrid, List, Monitor, Moon, Save, Sun, UserRound } from "lucide-react";
+import { Ear, Languages, LayoutGrid, List, Monitor, Moon, Save, Sun, UserRound } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
 import { saveSettingsAction, type SaveSettingsState } from "@/app/profile/actions";
+import { PortraitField } from "@/app/profile/portrait-field";
 import { Button } from "@/components/ui/button";
 import { choiceChipClass } from "@/components/ui/chip";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
@@ -12,7 +13,7 @@ import { formatIcons } from "@/components/ui/format-icon";
 import { Notice } from "@/components/ui/notice";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
 import { t } from "@/lib/i18n/translate";
-import { MAX_DISPLAY_NAME, MAX_PORTRAIT_URL } from "@/lib/profile/types";
+import { MAX_DISPLAY_NAME } from "@/lib/profile/types";
 import {
   LOCALES,
   THEME_PREFERENCES,
@@ -74,19 +75,7 @@ export function ProfileSettingsForm({ name, image = null, settings }: ProfileSet
         icon={UserRound}
       />
 
-      <TextField
-        id="portrait"
-        name="portrait"
-        type="url"
-        label={t(locale, "settings.portrait")}
-        autoComplete="photo"
-        inputMode="url"
-        maxLength={MAX_PORTRAIT_URL}
-        defaultValue={image ?? ""}
-        placeholder={t(locale, "settings.portraitPlaceholder")}
-        icon={Image}
-      />
-      <p className="-mt-3 text-sm leading-6 text-text-secondary">{t(locale, "settings.portraitHint")}</p>
+      <PortraitField locale={locale} name={name} imageUrl={image} />
 
       <TextAreaField
         id="bio"

@@ -5,6 +5,9 @@ import type { Locale } from "@/lib/settings/types";
 const KNOWN_ERRORS: Record<string, string> = {
   "A name stays between 1 and 80 characters.": "error.name",
   "A portrait needs a quiet HTTPS link.": "error.portrait",
+  "Choose a JPEG, PNG, or WebP still.": "error.portraitKind",
+  "This portrait is too large to keep.": "error.portraitSize",
+  "This portrait could not be kept just now.": "error.portraitKeep",
   "A bio stays under 280 characters.": "error.bio",
   "Choose light, dark, or auto.": "error.theme",
   "Keep at least one format on your shelf.": "error.oneFormat",

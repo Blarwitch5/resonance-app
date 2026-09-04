@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { resolvedAuthUrl } from "@/lib/auth-origins";
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
@@ -11,6 +13,7 @@ const envSchema = z.object({
   DISCOGS_CONSUMER_SECRET: z.string().min(1),
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM_EMAIL: z.string().min(3).optional(),
+  BLOB_READ_WRITE_TOKEN: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -22,7 +25,10 @@ function formatEnvError(error: z.ZodError): string {
 }
 
 export function getEnv(): Env {
-  const parsed = envSchema.safeParse(process.env);
+  const parsed = envSchema.safeParse({
+    ...process.env,
+    BETTER_AUTH_URL: resolvedAuthUrl(process.env) ?? process.env.BETTER_AUTH_URL,
+  });
 
   if (!parsed.success) {
     throw new Error(`Invalid environment variables (${formatEnvError(parsed.error)})`);

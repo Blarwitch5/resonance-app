@@ -4,12 +4,14 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { RESONANCE_PATH_HEADER, signInHref } from "@/lib/auth-path";
 
 export const getSession = cache(async () => {
-  return auth.api.getSession({
-    headers: await headers(),
+  const requestHeaders = await headers();
+
+  return getAuth().api.getSession({
+    headers: requestHeaders,
   });
 });
 

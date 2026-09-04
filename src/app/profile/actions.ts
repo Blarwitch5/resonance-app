@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { MAX_BACKUP_BYTES, parseResonanceBackup } from "@/lib/collection/backup";
 import { feedPageCount, type FeedLoadResult } from "@/lib/collection/feed";
 import { addCollectionItems, countCollectionItems, listCollectionItems, restoreCollectionItems } from "@/lib/collection/repository";
@@ -14,9 +14,10 @@ import { DatabaseError, ValidationError } from "@/lib/errors";
 import { localizedError } from "@/lib/i18n/action-error";
 import { persistLocaleCookie } from "@/lib/i18n/locale";
 import { parsePasswordChange, passwordChangeFailure } from "@/lib/profile/password";
+import { readPortraitUpload } from "@/lib/profile/portrait";
+import { keepPortrait, restPortrait } from "@/lib/profile/portrait-blob";
 import {
   parseDisplayName,
-  parsePortraitUrl,
   PROFILE_SHELF_SIZE,
   toProfileShelfItem,
   type ProfileShelfItem,
@@ -45,10 +46,11 @@ export async function saveSettingsAction(
       throw new ValidationError("A name stays between 1 and 80 characters.");
     }
 
-    const portrait = parsePortraitUrl(String(formData.get("portrait") ?? ""));
+    const portraitFile = formData.get("portrait");
+    const portraitRead = await readPortraitUpload(portraitFile instanceof File ? portraitFile : null);
 
-    if (portrait === undefined) {
-      throw new ValidationError("A portrait needs a quiet HTTPS link.");
+    if (portraitRead.status === "invalid") {
+      throw new ValidationError(portraitRead.message);
     }
 
     const bioResult = bioSchema.safeParse(String(formData.get("bio") ?? ""));
@@ -91,14 +93,22 @@ export async function saveSettingsAction(
       onboardedAt: current.onboardedAt,
     };
 
+    const currentImage = session.user.image ?? null;
+    const removePortrait = formData.get("removePortrait") === "on";
+    let portrait = currentImage;
+
+    if (portraitRead.status === "ready") {
+      portrait = await keepPortrait(session.user.id, portraitRead.bytes);
+    } else if (removePortrait) {
+      portrait = null;
+    }
+
     await upsertUserSettings(session.user.id, patch);
     await persistLocaleCookie(locale);
 
-    const currentImage = session.user.image ?? null;
-
     if (name !== session.user.name || portrait !== currentImage) {
       try {
-        await auth.api.updateUser({
+        await getAuth().api.updateUser({
           body: {
             ...(name !== session.user.name ? { name } : {}),
             ...(portrait !== currentImage ? { image: portrait } : {}),
@@ -107,6 +117,10 @@ export async function saveSettingsAction(
         });
       } catch (error) {
         throw new DatabaseError("Your space could not be saved.", { cause: error });
+      }
+
+      if (portrait !== currentImage) {
+        await restPortrait(currentImage);
       }
     }
 
@@ -247,6 +261,8 @@ export async function restoreResonanceAction(
       onboardedAt: current.onboardedAt ?? new Date(),
     });
 
+    await persistLocaleCookie(backup.settings.locale ?? current.locale);
+
     revalidatePath("/profile");
     revalidatePath("/collection");
 
@@ -283,7 +299,7 @@ export async function changePasswordAction(
     }
 
     try {
-      await auth.api.changePassword({
+      await getAuth().api.changePassword({
         body: {
           currentPassword: parsed.currentPassword,
           newPassword: parsed.newPassword,

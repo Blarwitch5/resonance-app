@@ -3,19 +3,11 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import { LOCALE_COOKIE } from "@/lib/i18n/cookie";
-import { getSession } from "@/lib/session";
-import { getUserSettings } from "@/lib/settings/repository";
 import { parseLocale, type Locale } from "@/lib/settings/types";
 
 export { LOCALE_COOKIE };
 
 export async function getLocale(): Promise<Locale> {
-  const session = await getSession();
-
-  if (session) {
-    return (await getUserSettings(session.user.id)).locale;
-  }
-
   const stored = (await cookies()).get(LOCALE_COOKIE)?.value;
   return parseLocale(stored) ?? "en";
 }

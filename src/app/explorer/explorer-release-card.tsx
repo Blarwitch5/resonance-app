@@ -160,6 +160,7 @@ export function ExplorerReleaseCard({
       catalogNumber={draft.catalogNumber}
       elsewhereHref={elsewhereHref}
       canSwipe={layout === "list"}
+      layout={layout}
     >
       {withHoldWaiting(card, draft, presence, canWishlist)}
     </RecordMenu>

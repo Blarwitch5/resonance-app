@@ -204,6 +204,23 @@ export function recordSwipeActions(actions: readonly RecordMenuAction[]): Record
   return actions.filter((action) => RECORD_SWIPE_ACTION_IDS.has(action.id));
 }
 
+export function recordMenuMoreClass(isOpen: boolean, placement: "cover" | "row" = "cover"): string {
+  const base =
+    "z-20 hidden size-11 items-center justify-center rounded-full border border-border bg-surface-elevated text-text outline-none lg:flex hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong";
+
+  if (placement === "row") {
+    return `relative shrink-0 ${base}`;
+  }
+
+  const cover = `absolute top-2 left-2 ${base}`;
+
+  if (isOpen) {
+    return cover;
+  }
+
+  return `${cover} lg:pointer-events-none lg:opacity-0 motion-safe:lg:transition-opacity lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100`;
+}
+
 const MENU_EDGE = 8;
 
 export function clampMenuPosition(

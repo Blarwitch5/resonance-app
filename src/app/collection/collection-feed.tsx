@@ -149,6 +149,7 @@ function ShelfRecordList({
               canRelease={true}
               isFavorite={item.isFavorite}
               canSwipe={layout === "list"}
+              layout={layout}
             >
               <ReleaseSlot id={item.id}>
                 <KeptCloseSlot id={item.id} isFavorite={item.isFavorite} layout={layout === "list" ? "row" : "cover"}>

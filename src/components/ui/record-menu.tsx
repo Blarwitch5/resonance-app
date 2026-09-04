@@ -1,6 +1,6 @@
 "use client";
 
-import { Barcode, BookmarkPlus, BookOpen, DoorOpen, FaceSlightlySmilingPlus, Hash, Heart, Library, ScanSearch, Share, type LucideIcon } from "lucide-react";
+import { Barcode, BookmarkPlus, BookOpen, DoorOpen, Ellipsis, FaceSlightlySmilingPlus, Hash, Heart, Library, ScanSearch, Share, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -26,6 +26,7 @@ import {
   clampMenuPosition,
   explorerMenuActions,
   recordMenuActions,
+  recordMenuMoreClass,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
   recordSwipeActions,
@@ -110,6 +111,7 @@ interface RecordMenuProps {
   addHref?: string | null;
   canHold?: boolean;
   canSwipe?: boolean;
+  layout?: "list" | "grid";
   children: ReactNode;
 }
 
@@ -128,6 +130,7 @@ export function RecordMenu({
   addHref = null,
   canHold = false,
   canSwipe = false,
+  layout = "grid",
   children,
 }: RecordMenuProps) {
   const t = useT();
@@ -180,6 +183,7 @@ export function RecordMenu({
   const swipeActions = recordSwipeActions(visibleActions);
   const reveal = swipeRevealWidth(swipeActions.length);
   const showSwipe = canSwipe && swipeActions.length > 0;
+  const morePlacement = layout === "list" ? "row" : "cover";
   const revealRef = useRef(reveal);
   revealRef.current = reveal;
 
@@ -379,6 +383,19 @@ export function RecordMenu({
     }
 
     pressOrigin.current = null;
+  }
+
+  function openFromMore(event: ReactMouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (anchor) {
+      close();
+      return;
+    }
+
+    const box = event.currentTarget.getBoundingClientRect();
+    openAt(box.left, box.bottom);
   }
 
   function onContextMenu(event: ReactMouseEvent<HTMLDivElement>) {
@@ -716,9 +733,9 @@ export function RecordMenu({
       data-record-swipe={
         showSwipe ? (isSwipeDragging ? "dragging" : swipeOffset > 0 ? "open" : "rest") : undefined
       }
-      className={`touch-callout-none touch-manipulation select-none lg:select-text${
-        showSwipe ? " touch-pan-y lg:touch-auto" : ""
-      }`}
+      className={`group relative touch-callout-none touch-manipulation select-none lg:select-text${
+        layout === "list" ? " flex items-center gap-2" : ""
+      }${showSwipe ? " touch-pan-y lg:touch-auto" : ""}`}
       onContextMenu={onContextMenu}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -727,7 +744,23 @@ export function RecordMenu({
       onClickCapture={onClickCapture}
       onKeyDown={onKeyDownCapture}
     >
-      {swipeFrame}
+      {layout === "list" ? <div className="min-w-0 flex-1">{swipeFrame}</div> : swipeFrame}
+      {actions.length > 0 ? (
+        <button
+          type="button"
+          className={recordMenuMoreClass(anchor !== null, morePlacement)}
+          aria-haspopup="menu"
+          aria-expanded={anchor !== null}
+          aria-controls={anchor ? menuId : undefined}
+          aria-label={t("menu.more", { title })}
+          onPointerDown={(event) => {
+            event.stopPropagation();
+          }}
+          onClick={openFromMore}
+        >
+          <Ellipsis className="size-4" aria-hidden />
+        </button>
+      ) : null}
       {isClient && anchor
         ? createPortal(
             <div

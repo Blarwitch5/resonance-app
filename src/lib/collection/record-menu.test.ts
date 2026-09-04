@@ -5,6 +5,7 @@ import {
   explorerMenuActions,
   recordMenuActions,
   recordMenuElsewhereHref,
+  recordMenuMoreClass,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
   recordSwipeActions,
@@ -300,6 +301,28 @@ describe("recordSwipeActions", () => {
         }),
       ).map((action) => action.id),
     ).toEqual(["add", "hold", "elsewhere"]);
+  });
+});
+
+describe("recordMenuMoreClass", () => {
+  it("lets the desk reveal a quiet more on hover", () => {
+    const className = recordMenuMoreClass(false);
+    expect(className).toContain("absolute");
+    expect(className).toContain("lg:opacity-0");
+    expect(className).toContain("lg:group-hover:opacity-100");
+    expect(className).toContain("lg:group-focus-within:opacity-100");
+  });
+
+  it("keeps more in sight while the menu is open", () => {
+    expect(recordMenuMoreClass(true)).not.toContain("lg:opacity-0");
+  });
+
+  it("sits beside the row action instead of the cover", () => {
+    const className = recordMenuMoreClass(false, "row");
+    expect(className).not.toContain("absolute");
+    expect(className).toContain("relative");
+    expect(className).toContain("shrink-0");
+    expect(className).not.toContain("lg:opacity-0");
   });
 });
 

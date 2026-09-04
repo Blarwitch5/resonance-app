@@ -326,6 +326,7 @@ const en = {
     release: "Release",
     copiedLink: "Link copied",
     actionsFor: "Actions for {title}",
+    more: "More for {title}",
     releaseFor: "Release {title}",
   },
   copy: {
@@ -947,6 +948,7 @@ const fr: typeof en = {
     release: "Laisser partir",
     copiedLink: "Lien copié",
     actionsFor: "Actions pour {title}",
+    more: "Plus pour {title}",
     releaseFor: "Laisser partir {title}",
   },
   copy: {

@@ -131,6 +131,7 @@ export function ProfileFeed({
                 canRelease={true}
                 isFavorite={item.isFavorite}
                 canSwipe={layout === "list"}
+                layout={layout}
               >
                 <ReleaseSlot id={item.id}>
                   {canKeepClose ? (

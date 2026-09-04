@@ -1,15 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  artistClass,
   bodyClass,
+  creditClass,
   displayTitleClass,
   eyebrowClass,
+  factValueClass,
   hintClass,
   kickerClass,
   metaClass,
   pageTitleClass,
   recordTitleClass,
   sectionTitleClass,
+  yearValueClass,
 } from "@/components/ui/type";
 
 describe("type rhythm", () => {
@@ -24,5 +28,9 @@ describe("type rhythm", () => {
     expect(metaClass).toContain("text-xs");
     expect(hintClass).toContain("text-tertiary");
     expect(kickerClass).toContain("uppercase");
+    expect(artistClass).toContain("italic");
+    expect(yearValueClass).toContain("font-mono");
+    expect(creditClass).toContain("italic");
+    expect(factValueClass).toContain("font-medium");
   });
 });

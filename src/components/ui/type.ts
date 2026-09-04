@@ -10,6 +10,14 @@ export const sectionTitleClass = "text-lg font-semibold text-text";
 
 export const recordTitleClass = "text-sm leading-snug font-semibold text-text";
 
+export const artistClass = "text-lg font-normal italic tracking-wide text-text-secondary";
+
+export const factValueClass = "text-sm font-medium leading-5 text-text";
+
+export const yearValueClass = "font-mono text-sm font-medium tabular-nums tracking-wide text-text";
+
+export const creditClass = "text-sm italic leading-6 text-text-secondary";
+
 export const bodyClass = "text-sm leading-6 text-text-secondary";
 
 export const metaClass = "text-xs leading-5 text-text-secondary";

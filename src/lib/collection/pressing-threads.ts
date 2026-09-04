@@ -57,6 +57,15 @@ export interface PressingThreadView {
   elsewhereHref: string;
 }
 
+export interface PressingFact {
+  key: "year" | "decade" | "origin" | "label" | "pressing";
+  label: string;
+  value: string;
+  href: string | null;
+  ariaLabel: string | null;
+  isMono: boolean;
+}
+
 export function toPressingThreads(source: PressingThreadSource, locale: Locale = "en"): PressingThreadView {
   const artist = parseArtistFilter(source.artist);
   const label = parseLabelFilter(source.label ?? undefined);
@@ -133,6 +142,65 @@ export function toPressingThreads(source: PressingThreadSource, locale: Locale =
       format: source.format,
     }),
   };
+}
+
+export function pressingFacts(threads: PressingThreadView, locale: Locale = "en"): PressingFact[] {
+  const facts: PressingFact[] = [
+    {
+      key: "year",
+      label: t(locale, "thread.pressed"),
+      value: threads.year !== null ? String(threads.year) : t(locale, "thread.yearUnknown"),
+      href: threads.yearHref,
+      ariaLabel: threads.yearAria,
+      isMono: threads.year !== null,
+    },
+  ];
+
+  if (threads.decade) {
+    facts.push({
+      key: "decade",
+      label: t(locale, "thread.decade"),
+      value: threads.decade.label,
+      href: threads.decade.href,
+      ariaLabel: threads.decade.ariaLabel,
+      isMono: false,
+    });
+  }
+
+  if (threads.country) {
+    facts.push({
+      key: "origin",
+      label: t(locale, "thread.origin"),
+      value: threads.country,
+      href: null,
+      ariaLabel: null,
+      isMono: false,
+    });
+  }
+
+  if (threads.label) {
+    facts.push({
+      key: "label",
+      label: t(locale, "thread.label"),
+      value: threads.label,
+      href: threads.labelHref,
+      ariaLabel: t(locale, "thread.hearOnShelf", { name: threads.label }),
+      isMono: false,
+    });
+  }
+
+  if (threads.formatLine) {
+    facts.push({
+      key: "pressing",
+      label: t(locale, "thread.pressing"),
+      value: threads.formatLine,
+      href: threads.formatHref,
+      ariaLabel: t(locale, "thread.hearOnShelf", { name: t(locale, `format.${threads.format}`) }),
+      isMono: false,
+    });
+  }
+
+  return facts;
 }
 
 function toFoundWhen(value: Date | string | null | undefined): string | null {

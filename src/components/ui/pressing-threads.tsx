@@ -7,11 +7,17 @@ import type { ReactNode } from "react";
 import { ChipLink } from "@/components/ui/chip";
 import { CopyPressingButton } from "@/components/ui/copy-pressing-button";
 import { FormatIcon } from "@/components/ui/format-icon";
-import { formatIcons } from "@/components/ui/format-tokens";
 import { PressingLinks } from "@/components/ui/pressing-links";
-import { displayTitleClass } from "@/components/ui/type";
-import { useT } from "@/components/locale-provider";
-import type { PressingThreadView } from "@/lib/collection/pressing-threads";
+import {
+  artistClass,
+  creditClass,
+  displayTitleClass,
+  factValueClass,
+  kickerClass,
+  yearValueClass,
+} from "@/components/ui/type";
+import { useLocale, useT } from "@/components/locale-provider";
+import { pressingFacts, type PressingThreadView } from "@/lib/collection/pressing-threads";
 import type { Locale } from "@/lib/settings/types";
 
 interface PressingArtistProps {
@@ -23,14 +29,14 @@ export function PressingArtist({ name, href }: PressingArtistProps) {
   const t = useT();
 
   if (!href) {
-    return <p className="text-base leading-6 text-text-secondary">{name}</p>;
+    return <p className={artistClass}>{name}</p>;
   }
 
   return (
     <Link
       href={href}
       aria-label={t("thread.hearOnShelf", { name })}
-      className="inline-flex min-h-11 items-center text-base leading-6 text-text-secondary outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
+      className={`inline-flex min-h-11 items-center outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong ${artistClass}`}
     >
       {name}
     </Link>
@@ -55,133 +61,118 @@ export function PressingThreads({
   locale,
 }: PressingThreadsProps) {
   const t = useT();
+  const factsLocale = useLocale();
+  const facts = pressingFacts(threads, locale ?? factsLocale);
   const hasChips = threads.genres.length > 0 || threads.condition !== null;
-  const FormatGlyph = formatIcons[threads.format];
+  const hasIdentity = Boolean(title || showArtist);
+  const hasCopies = Boolean(threads.catalogNumber || threads.barcode);
 
   return (
-    <>
-      <FormatIcon format={threads.format} href={threads.formatHref} />
-      {title || showArtist ? (
-        <div className="flex flex-col gap-1">
-          {title ? <h1 className={titleClassName}>{title}</h1> : null}
-          {showArtist ? <PressingArtist name={threads.artist} href={threads.artistHref} /> : null}
-        </div>
-      ) : null}
-      <div className="flex flex-col gap-1">
-        <p className="flex flex-wrap items-center gap-x-2 text-sm leading-6 text-text-secondary">
-          {threads.yearHref && threads.yearAria ? (
-            <ThreadLink href={threads.yearHref} ariaLabel={threads.yearAria}>
-              {threads.year}
-            </ThreadLink>
-          ) : (
-            <span className="inline-flex min-h-11 items-center">
-              {threads.year ? `${threads.year}` : t("thread.yearUnknown")}
-            </span>
-          )}
-          {threads.decade ? (
-            <>
-              <Dot />
-              <ThreadLink href={threads.decade.href} ariaLabel={threads.decade.ariaLabel}>
-                {threads.decade.label}
-              </ThreadLink>
-            </>
-          ) : null}
-          {threads.label ? (
-            <>
-              <Dot />
-              {threads.labelHref ? (
-                <ThreadLink href={threads.labelHref} ariaLabel={t("thread.hearOnShelf", { name: threads.label })}>
-                  {threads.label}
-                </ThreadLink>
-              ) : (
-                <span>{threads.label}</span>
-              )}
-            </>
-          ) : null}
-          {threads.country ? (
-            <>
-              <Dot />
-              <span>{threads.country}</span>
-            </>
-          ) : null}
-        </p>
-        {threads.formatLine ? (
-          <p className="flex items-center gap-2 text-sm leading-6 text-text-secondary">
-            <FormatGlyph className="size-4 shrink-0" aria-hidden />
-            <span>{threads.formatLine}</span>
-          </p>
-        ) : null}
-        {threads.creditLine ? (
-          <p className="text-sm leading-6 text-text-secondary">{threads.creditLine}</p>
-        ) : null}
-        {hasChips ? (
-          <ul className="flex flex-wrap gap-2">
-            {threads.genres.map((genre) => (
-              <li key={genre.name}>
-                <ChipLink href={genre.href} isActive={false}>
-                  <Music className="size-4 shrink-0" aria-hidden />
-                  {genre.name}
-                </ChipLink>
-              </li>
-            ))}
-            {threads.condition ? (
-              <li>
-                <ChipLink
-                  href={threads.condition.href}
-                  isActive={false}
-                  aria-label={threads.condition.ariaLabel}
-                >
-                  <CircleDot className="size-4 shrink-0" aria-hidden />
-                  {threads.condition.label}
-                </ChipLink>
-              </li>
-            ) : null}
-          </ul>
-        ) : null}
-        {threads.catalogNumber ? <CopyPressingButton kind="catalog" value={threads.catalogNumber} /> : null}
-        {threads.barcode ? <CopyPressingButton kind="barcode" value={threads.barcode} /> : null}
-        {threads.found ? (
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-6 text-text-secondary">
-            <MapPin className="size-3.5 shrink-0" aria-hidden />
-            {threads.found.href ? (
-              <ThreadLink
-                href={threads.found.href}
-                ariaLabel={t("thread.hearFound", { place: threads.found.where })}
-              >
-                {threads.found.where}
-              </ThreadLink>
-            ) : (
-              <span className="inline-flex min-h-11 items-center">{threads.found.where}</span>
-            )}
-            {threads.found.when ? (
-              threads.found.whenHref ? (
-                <>
-                  <span aria-hidden>·</span>
-                  <ThreadLink
-                    href={threads.found.whenHref}
-                    ariaLabel={t("thread.hearFound", { place: threads.found.when.slice(0, 4) })}
-                  >
-                    {threads.found.when}
-                  </ThreadLink>
-                </>
-              ) : (
-                <span>· {threads.found.when}</span>
-              )
-            ) : null}
-          </p>
-        ) : null}
-        {showLinks ? (
-          <PressingLinks
-            href={threads.discogs?.href}
-            releaseId={threads.discogs?.id}
-            title={threads.title}
-            artist={threads.artist}
-            elsewhereHref={threads.elsewhereHref}
-            locale={locale}
-          />
+    <div className="flex flex-col gap-5">
+      <div className={hasIdentity ? "flex flex-wrap items-start gap-4" : undefined}>
+        <FormatIcon format={threads.format} href={threads.formatHref} />
+        {hasIdentity ? (
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            {title ? <h1 className={titleClassName}>{title}</h1> : null}
+            {showArtist ? <PressingArtist name={threads.artist} href={threads.artistHref} /> : null}
+          </div>
         ) : null}
       </div>
-    </>
+      {facts.length > 0 ? (
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+          {facts.map((fact) => (
+            <div key={fact.key} className="flex min-h-11 min-w-0 flex-col justify-center gap-1">
+              <dt className={kickerClass}>{fact.label}</dt>
+                  <dd className={fact.isMono ? yearValueClass : factValueClass}>
+                    {fact.href ? (
+                      <ThreadLink href={fact.href} ariaLabel={fact.ariaLabel ?? fact.value}>
+                        {fact.value}
+                      </ThreadLink>
+                    ) : (
+                      <span className="inline-flex min-h-11 items-center">{fact.value}</span>
+                    )}
+                  </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      {threads.creditLine ? (
+        <p className="flex flex-col gap-1">
+          <span className={kickerClass}>{t("thread.credits")}</span>
+          <span className={creditClass}>{threads.creditLine}</span>
+        </p>
+      ) : null}
+      {hasChips ? (
+        <ul className="flex flex-wrap gap-2">
+          {threads.genres.map((genre) => (
+            <li key={genre.name}>
+              <ChipLink href={genre.href} isActive={false}>
+                <Music className="size-4 shrink-0" aria-hidden />
+                {genre.name}
+              </ChipLink>
+            </li>
+          ))}
+          {threads.condition ? (
+            <li>
+              <ChipLink
+                href={threads.condition.href}
+                isActive={false}
+                aria-label={threads.condition.ariaLabel}
+              >
+                <CircleDot className="size-4 shrink-0" aria-hidden />
+                {threads.condition.label}
+              </ChipLink>
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
+      {hasCopies ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {threads.catalogNumber ? <CopyPressingButton kind="catalog" value={threads.catalogNumber} /> : null}
+          {threads.barcode ? <CopyPressingButton kind="barcode" value={threads.barcode} /> : null}
+        </div>
+      ) : null}
+      {threads.found ? (
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className={kickerClass}>{t("thread.found")}</span>
+          <MapPin className="size-3.5 shrink-0 text-text-tertiary" aria-hidden />
+          {threads.found.href ? (
+            <ThreadLink
+              href={threads.found.href}
+              ariaLabel={t("thread.hearFound", { place: threads.found.where })}
+              compact
+            >
+              <span className={factValueClass}>{threads.found.where}</span>
+            </ThreadLink>
+          ) : (
+            <span className={factValueClass}>{threads.found.where}</span>
+          )}
+          {threads.found.when ? (
+            threads.found.whenHref ? (
+              <ThreadLink
+                href={threads.found.whenHref}
+                ariaLabel={t("thread.hearFound", { place: threads.found.when.slice(0, 4) })}
+                compact
+              >
+                <span className={yearValueClass}>{threads.found.when}</span>
+              </ThreadLink>
+            ) : (
+              <span className={yearValueClass}>{threads.found.when}</span>
+            )
+          ) : null}
+        </p>
+      ) : null}
+      {showLinks ? (
+        <PressingLinks
+          href={threads.discogs?.href}
+          releaseId={threads.discogs?.id}
+          title={threads.title}
+          artist={threads.artist}
+          elsewhereHref={threads.elsewhereHref}
+          locale={locale}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -209,8 +200,4 @@ export function ThreadLink({
       {children}
     </Link>
   );
-}
-
-function Dot() {
-  return <span aria-hidden>·</span>;
 }

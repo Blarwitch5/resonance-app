@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toPressingThreads } from "@/lib/collection/pressing-threads";
+import { pressingFacts, toPressingThreads } from "@/lib/collection/pressing-threads";
 
 const source = {
   format: "vinyl" as const,
@@ -75,5 +75,17 @@ describe("toPressingThreads", () => {
     expect(threads.found).toBeNull();
     expect(threads.discogs).toBeNull();
     expect(threads.elsewhereHref).toBe("/explorer?q=Unknown+Untitled&format=cd");
+  });
+});
+
+describe("pressingFacts", () => {
+  it("lays year, decade, origin, label, and pressing side by side", () => {
+    const facts = pressingFacts(toPressingThreads(source));
+
+    expect(facts.map((fact) => fact.key)).toEqual(["year", "decade", "origin", "label", "pressing"]);
+    expect(facts[0]?.value).toBe("1959");
+    expect(facts[0]?.isMono).toBe(true);
+    expect(facts[2]?.value).toBe("US");
+    expect(facts[4]?.value).toBe("Vinyl · LP · Album");
   });
 });

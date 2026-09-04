@@ -12,7 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import { localizedError } from "@/lib/i18n/action-error";
 
 interface SignOutButtonProps {
-  layout?: "sheet" | "rail";
+  layout?: "sheet" | "rail" | "page";
 }
 
 export function SignOutButton({ layout = "sheet" }: SignOutButtonProps) {
@@ -59,10 +59,11 @@ export function SignOutButton({ layout = "sheet" }: SignOutButtonProps) {
   }
 
   return (
-    <div className="flex flex-col items-start gap-3">
+    <div className={`flex flex-col gap-3 ${layout === "page" ? "items-stretch" : "items-start"}`}>
       <Button
         type="button"
         variant="ghost"
+        className={layout === "page" ? "w-full" : ""}
         onClick={() => void handleSignOut()}
         disabled={isSigningOut}
         aria-busy={isSigningOut}

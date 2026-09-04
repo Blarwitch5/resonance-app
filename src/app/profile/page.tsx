@@ -125,9 +125,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         title={t(settings.locale, "profile.title")}
         description={`${session.user.name} · ${session.user.email}`}
         extra={
-          settings.bio ? (
-            <p className={`max-w-xl ${bodyClass}`}>{settings.bio}</p>
-          ) : null
+          <>
+            {settings.bio ? (
+              <p className={`max-w-xl ${bodyClass}`}>{settings.bio}</p>
+            ) : null}
+            <div className="pt-1 lg:hidden">
+              <SignOutButton layout="page" />
+            </div>
+          </>
         }
         action={
           <div className="flex items-center gap-1">

@@ -52,6 +52,9 @@ export function BusyGlyph({ isBusy, children }: { isBusy: boolean; children: Rea
   return isBusy ? <ListenPulse /> : children;
 }
 
+/** Compact pull pulse: size-14 rings at listen-wave scale 1.85, plus a little air. */
+export const LISTENING_WAVE_COMPACT_PX = 112;
+
 export function ListeningWave({
   label,
   progress = 1,
@@ -64,9 +67,10 @@ export function ListeningWave({
     <div
       className={
         compact
-          ? "flex flex-col items-center justify-end gap-2 py-2"
+          ? "flex items-center justify-center overflow-visible"
           : "flex flex-col items-center justify-center gap-3"
       }
+      style={compact ? { width: LISTENING_WAVE_COMPACT_PX, height: LISTENING_WAVE_COMPACT_PX } : undefined}
       aria-live={isActive ? "polite" : "off"}
       aria-busy={isActive}
     >

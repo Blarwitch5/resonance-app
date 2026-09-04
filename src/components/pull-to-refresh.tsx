@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 
-import { ListeningWave } from "@/components/ui/listening-wave";
+import { LISTENING_WAVE_COMPACT_PX, ListeningWave } from "@/components/ui/listening-wave";
 import { useT } from "@/components/locale-provider";
-import { PULL_REFRESH_THRESHOLD, pullProgress, resistedPull, shouldContinuePull, shouldReleaseRefresh } from "@/lib/motion/pull";
+import { pullProgress, resistedPull, shouldContinuePull, shouldReleaseRefresh } from "@/lib/motion/pull";
 
 const DESKTOP_QUERY = "(min-width: 1024px)";
 
@@ -120,9 +120,10 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
     };
   }, [isDesktop, isRefreshing, router]);
 
-  const offset = isRefreshing ? PULL_REFRESH_THRESHOLD : resistedPull(distance);
+  const offset = isRefreshing ? LISTENING_WAVE_COMPACT_PX : resistedPull(distance);
   const progress = isRefreshing ? 1 : pullProgress(distance);
   const isVisible = offset > 4 || isRefreshing;
+  const slot = isVisible ? Math.max(offset, LISTENING_WAVE_COMPACT_PX) : 0;
   const label = isRefreshing
     ? t("refresh.listening")
     : progress >= 1
@@ -133,8 +134,8 @@ export function PullToRefresh({ children }: PullToRefreshProps) {
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {!isDesktop && isVisible ? (
         <div
-          className="flex items-end justify-center overflow-hidden"
-          style={{ height: offset }}
+          className="flex shrink-0 items-center justify-center overflow-visible"
+          style={{ height: slot }}
           aria-hidden={!isRefreshing}
         >
           <ListeningWave label={label} progress={progress} isActive={isRefreshing} compact />

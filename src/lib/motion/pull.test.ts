@@ -45,4 +45,8 @@ describe("shouldContinuePull", () => {
     expect(shouldContinuePull(4, 24)).toBe(true);
     expect(shouldContinuePull(0, 8)).toBe(false);
   });
+
+  it("does not start a refresh on a sideways swipe that dips", () => {
+    expect(shouldContinuePull(16, 20)).toBe(false);
+  });
 });

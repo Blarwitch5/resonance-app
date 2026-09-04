@@ -1,6 +1,6 @@
 "use client";
 
-import { Barcode, BookmarkPlus, BookOpen, DoorOpen, Ellipsis, FaceSlightlySmilingPlus, Hash, Heart, Library, ScanSearch, Share, type LucideIcon } from "lucide-react";
+import { Barcode, BookmarkPlus, BookOpen, Ellipsis, FaceSlightlySmilingPlus, Hash, Heart, Library, ScanSearch, Share, Trash2, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -59,9 +59,9 @@ const ACTION_ICONS: Record<RecordMenuActionId, LucideIcon> = {
   share: Share,
   "copy-barcode": Barcode,
   "copy-catalog": Hash,
-  release: DoorOpen,
+  release: Trash2,
   "keep-shelf": Heart,
-  "confirm-release": DoorOpen,
+  "confirm-release": Trash2,
 };
 
 const FORM_ACTIONS: Partial<Record<RecordMenuActionId, string>> = {
@@ -78,14 +78,14 @@ const COPY_KIND: Partial<Record<RecordMenuActionId, PressingCopyKind>> = {
 
 function swipeActionClass(id: RecordMenuActionId): string {
   if (id === "release" || id === "confirm-release") {
-    return "bg-error-soft text-error";
+    return "bg-error text-on-error";
   }
 
   if (id === "keep" || id === "keep-shelf") {
-    return "bg-primary-soft text-on-primary-soft";
+    return "bg-primary text-on-primary";
   }
 
-  return "bg-surface-elevated text-text";
+  return "bg-secondary text-on-secondary";
 }
 
 function subscribeToClient(): () => void {
@@ -200,6 +200,7 @@ export function RecordMenu({
     setSwipeOffset(0);
     setIsSwipeDragging(false);
     setIsConfirmingRelease(false);
+    wrapperRef.current?.style.removeProperty("touch-action");
   }, [applySwipeOffset]);
 
   const restSwipeRef = useRef(restSwipe);
@@ -364,7 +365,7 @@ export function RecordMenu({
       restSwipeRef.current();
     }
 
-    if (swipeOffset === 0 && !isSwipeDragging) {
+    if (isSwipeDragging || swipeOffset === 0) {
       return;
     }
 
@@ -475,6 +476,7 @@ export function RecordMenu({
       }
 
       swipeAxisRef.current = "horizontal";
+      wrapperRef.current?.style.setProperty("touch-action", "none");
       clearPress();
       close();
       suppressClick.current = true;
@@ -523,6 +525,7 @@ export function RecordMenu({
       }
     }
 
+    wrapperRef.current?.style.removeProperty("touch-action");
     swipeOrigin.current = null;
     swipeAxisRef.current = "undecided";
   }
@@ -735,7 +738,13 @@ export function RecordMenu({
       }
       className={`group relative touch-callout-none touch-manipulation select-none lg:select-text${
         layout === "list" ? " flex items-center gap-2" : ""
-      }${showSwipe ? " touch-pan-y lg:touch-auto" : ""}`}
+      }${
+        showSwipe
+          ? isSwipeDragging
+            ? " touch-none lg:touch-auto"
+            : " touch-pan-y lg:touch-auto"
+          : ""
+      }`}
       onContextMenu={onContextMenu}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

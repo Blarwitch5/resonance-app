@@ -34,6 +34,7 @@
   --color-warning: var(--rs-warning);
   --color-warning-soft: var(--rs-warning-soft);
   --color-error: var(--rs-error);
+  --color-on-error: var(--rs-on-error);
   --color-error-soft: var(--rs-error-soft);
   --color-info: var(--rs-info);
   --color-info-soft: var(--rs-info-soft);
@@ -85,6 +86,7 @@
   --rs-warning: oklch(0.5 0.14 80);
   --rs-warning-soft: oklch(0.94 0.06 80);
   --rs-error: oklch(0.48 0.18 20);
+  --rs-on-error: oklch(0.98 0.01 20);
   --rs-error-soft: oklch(0.95 0.06 20);
   --rs-info: oklch(0.48 0.12 220);
   --rs-info-soft: oklch(0.93 0.05 220);
@@ -131,6 +133,7 @@
   --rs-warning: oklch(0.84 0.08 80);
   --rs-warning-soft: oklch(0.24 0.04 80);
   --rs-error: oklch(0.8 0.1 20);
+  --rs-on-error: oklch(0.16 0.03 20);
   --rs-error-soft: oklch(0.24 0.045 20);
   --rs-info: oklch(0.82 0.07 220);
   --rs-info-soft: oklch(0.24 0.04 220);

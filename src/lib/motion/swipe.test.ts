@@ -34,8 +34,14 @@ describe("swipeAxis", () => {
     expect(swipeAxis(-(SWIPE_SLOP_PX + 1), 2)).toBe("horizontal");
   });
 
+  it("keeps the row when the swipe drifts a little down", () => {
+    expect(swipeAxis(20, 22)).toBe("horizontal");
+    expect(swipeAxis(SWIPE_SLOP_PX + 1, SWIPE_SLOP_PX + 1)).toBe("horizontal");
+  });
+
   it("leaves the shelf to scroll when the finger travels down", () => {
     expect(swipeAxis(4, SWIPE_SLOP_PX + 1)).toBe("vertical");
+    expect(swipeAxis(8, 20)).toBe("vertical");
   });
 });
 

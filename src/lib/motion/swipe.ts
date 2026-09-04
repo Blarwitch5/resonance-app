@@ -1,5 +1,7 @@
 export const SWIPE_SLOP_PX = 12;
 export const SWIPE_ACTION_WIDTH = 56;
+/** Vertical must clearly dominate; a slight downward drift must not steal the row. */
+export const SWIPE_VERTICAL_RATIO = 1.5;
 
 export type SwipeAxis = "undecided" | "horizontal" | "vertical";
 
@@ -15,7 +17,15 @@ export function swipeAxis(dx: number, dy: number, slop = SWIPE_SLOP_PX): SwipeAx
     return "undecided";
   }
 
-  return travelX > travelY ? "horizontal" : "vertical";
+  if (travelY > slop && travelY >= travelX * SWIPE_VERTICAL_RATIO) {
+    return "vertical";
+  }
+
+  if (travelX > slop) {
+    return "horizontal";
+  }
+
+  return "undecided";
 }
 
 export function swipeRevealWidth(actionCount: number, actionWidth = SWIPE_ACTION_WIDTH): number {

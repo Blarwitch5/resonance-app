@@ -23,5 +23,5 @@ export function shouldContinuePull(dx: number, dy: number, slop = 8): boolean {
     return false;
   }
 
-  return Math.abs(dx) <= dy;
+  return dy >= Math.abs(dx) * 1.5;
 }

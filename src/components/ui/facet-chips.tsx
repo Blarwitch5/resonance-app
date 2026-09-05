@@ -1,6 +1,7 @@
 import { Calendar, CalendarPlus, CircleDot, Hourglass, MapPin, Music, Tag, UserRound } from "lucide-react";
 
 import { ChipLink } from "@/components/ui/chip";
+import { PressingText } from "@/components/ui/pressing-text";
 import { collectionHref } from "@/lib/collection/href";
 import type { CollectionQuery } from "@/lib/collection/types";
 import { decadeName } from "@/lib/i18n/labels";
@@ -18,19 +19,19 @@ export function FacetChips({ listen, locale = "en" }: FacetChipsProps) {
       {listen.artist ? (
         <ChipLink href={collectionHref({ ...listen, artist: undefined })} isActive>
           <UserRound className="size-4 shrink-0" aria-hidden />
-          {listen.artist}
+          <PressingText>{listen.artist}</PressingText>
         </ChipLink>
       ) : null}
       {listen.label ? (
         <ChipLink href={collectionHref({ ...listen, label: undefined })} isActive>
           <Tag className="size-4 shrink-0" aria-hidden />
-          {listen.label}
+          <PressingText>{listen.label}</PressingText>
         </ChipLink>
       ) : null}
       {listen.found ? (
         <ChipLink href={collectionHref({ ...listen, found: undefined })} isActive>
           <MapPin className="size-4 shrink-0" aria-hidden />
-          {listen.found}
+          <PressingText>{listen.found}</PressingText>
         </ChipLink>
       ) : null}
       {listen.when !== undefined ? (
@@ -54,7 +55,7 @@ export function FacetChips({ listen, locale = "en" }: FacetChipsProps) {
       {listen.genre ? (
         <ChipLink href={collectionHref({ ...listen, genre: undefined })} isActive>
           <Music className="size-4 shrink-0" aria-hidden />
-          {listen.genre}
+          <PressingText>{listen.genre}</PressingText>
         </ChipLink>
       ) : null}
       {listen.decade !== undefined ? (

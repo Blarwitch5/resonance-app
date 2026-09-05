@@ -39,6 +39,7 @@ describe("return path", () => {
   it("maps a journal or confirm page back to its list", () => {
     expect(listPathForDetail("/collection/abc")).toBe("/collection");
     expect(listPathForDetail("/explorer/add/123")).toBe("/explorer");
+    expect(listPathForDetail("/explorer/manual")).toBe("/explorer");
     expect(listPathForDetail("/collection")).toBeNull();
     expect(listPathForDetail("/profile")).toBeNull();
   });

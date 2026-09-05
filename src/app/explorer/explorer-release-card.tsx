@@ -7,6 +7,7 @@ import { HoldWaitingSlot } from "@/app/explorer/wishlist-release-form";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/chip";
 import { CoverArt } from "@/components/ui/cover-art";
+import { PressingText } from "@/components/ui/pressing-text";
 import { formatIcons } from "@/components/ui/format-tokens";
 import { RecordMenu } from "@/components/ui/record-menu";
 import { RecordTileCaption } from "@/components/ui/record-tile";
@@ -74,7 +75,7 @@ export function ExplorerReleaseCard({
           : `line-clamp-2 w-fit max-w-full ${recordTitleClass}`
       }
     >
-      {draft.title}
+      <PressingText>{draft.title}</PressingText>
     </h2>
   );
   const linkedHeading = href ? (

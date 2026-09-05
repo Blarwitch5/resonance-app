@@ -61,7 +61,7 @@ export function listPathForDetail(pathname: string): string | null {
     return "/collection";
   }
 
-  if (pathname.startsWith("/explorer/add/")) {
+  if (pathname === "/explorer/manual" || pathname.startsWith("/explorer/add/")) {
     return "/explorer";
   }
 

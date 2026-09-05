@@ -11,6 +11,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/chip";
 import { CoverArt } from "@/components/ui/cover-art";
 import { Notice } from "@/components/ui/notice";
+import { PressingText } from "@/components/ui/pressing-text";
 import { PressingArtist, PressingThreads } from "@/components/ui/pressing-threads";
 import { RecordSides } from "@/components/ui/record-sides";
 import { ShelfKin } from "@/components/ui/shelf-kin";
@@ -174,7 +175,9 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
       <BackLink href={explorerBackHref(query.from)}>{t(locale, "back.explorer")}</BackLink>
       <header className="flex flex-col gap-2">
         <p className={eyebrowClass}>{t(locale, "common.confirm")}</p>
-        <h1 className={pageTitleClass}>{preview.title}</h1>
+        <h1 className={pageTitleClass}>
+          <PressingText>{preview.title}</PressingText>
+        </h1>
         <PressingArtist name={threads.artist} href={threads.artistHref} />
       </header>
 

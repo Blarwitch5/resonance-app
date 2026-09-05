@@ -15,6 +15,7 @@ describe("safeNextHref", () => {
     expect(safeNextHref("/collection/abc?wave=1")).toBe("/collection/abc?wave=1");
     expect(safeNextHref("/explorer?q=Miles")).toBe("/explorer?q=Miles");
     expect(safeNextHref("/explorer/add/123")).toBe("/explorer/add/123");
+    expect(safeNextHref("/explorer/manual")).toBe("/explorer/manual");
     expect(safeNextHref("/profile?settings=1")).toBe("/profile?settings=1");
     expect(safeNextHref("/welcome")).toBe("/welcome");
   });

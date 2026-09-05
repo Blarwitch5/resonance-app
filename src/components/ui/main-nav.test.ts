@@ -7,6 +7,7 @@ describe("isMainNavActive", () => {
     expect(isMainNavActive("/collection", "/collection")).toBe(true);
     expect(isMainNavActive("/collection/abc", "/collection")).toBe(true);
     expect(isMainNavActive("/explorer/add/12", "/explorer")).toBe(true);
+    expect(isMainNavActive("/explorer/manual", "/explorer")).toBe(true);
   });
 
   it("does not light another tab", () => {

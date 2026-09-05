@@ -6,6 +6,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNod
 import { sampleDockClass } from "@/components/ui/chrome";
 import { CoverArt } from "@/components/ui/cover-art";
 import { Notice } from "@/components/ui/notice";
+import { PressingText } from "@/components/ui/pressing-text";
 import { RecordSideHeading } from "@/components/ui/record-side-heading";
 import { recordTitleClass } from "@/components/ui/type";
 import { useT, useLocale } from "@/components/locale-provider";
@@ -382,7 +383,9 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl, keepClose }
                     <span className="font-mono text-xs leading-5 text-text-tertiary">
                       {track.position || "·"}
                     </span>
-                    <span className="text-sm leading-6 text-text">{track.title}</span>
+                    <span className="text-sm leading-6 text-text">
+                      <PressingText>{track.title}</PressingText>
+                    </span>
                     <span className="font-mono text-xs leading-5 tabular-nums text-text-tertiary">
                       {track.duration ?? ""}
                     </span>
@@ -416,11 +419,11 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl, keepClose }
               <CoverArt url={nowPlaying.artwork} alt="" sizes="48px" className="size-12 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p id={headingId} className={`line-clamp-2 ${recordTitleClass}`} title={nowPlaying.title}>
-                  {nowPlaying.title}
+                  <PressingText>{nowPlaying.title}</PressingText>
                 </p>
                 <p className="truncate text-xs leading-5 text-text-secondary">
                   {queued.position ? `${queued.position} · ` : null}
-                  {nowPlaying.artist} · {t("sample.fromDeezerLine")}
+                  <PressingText>{nowPlaying.artist}</PressingText> · {t("sample.fromDeezerLine")}
                 </p>
               </div>
             </div>

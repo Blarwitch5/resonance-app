@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Library, Radio, SearchX } from "lucide-react";
+import { ChevronLeft, ChevronRight, Library, PenLine, Radio, SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -250,9 +250,13 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
       {searchError ? <Notice tone="error">{searchError}</Notice> : null}
 
       {!hasListen && echo === null ? (
-        <p className={bodyClass}>
-          {t(locale, "explorer.hint")}
-        </p>
+        <div className="flex flex-col gap-3">
+          <p className={bodyClass}>{t(locale, "explorer.hint")}</p>
+          <ButtonLink href="/explorer/manual" variant="ghost" className="self-start">
+            <PenLine className="size-4 shrink-0" aria-hidden />
+            {t(locale, "explorer.writeIn")}
+          </ButtonLink>
+        </div>
       ) : null}
 
       {echo ? (
@@ -285,12 +289,20 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
               <ChevronLeft className="size-4 shrink-0" aria-hidden />
               {t(locale, "back.firstPressings")}
             </ButtonLink>
-          ) : query ? (
-            <ButtonLink href={explorerSearchHref({ ...listen, query: undefined, page: 1 })} variant="ghost" className="mt-6">
-              <SearchX className="size-4 shrink-0" aria-hidden />
-              {t(locale, "common.clearSearch")}
-            </ButtonLink>
-          ) : null}
+          ) : (
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <ButtonLink href="/explorer/manual">
+                <PenLine className="size-4 shrink-0" aria-hidden />
+                {t(locale, "explorer.writeIn")}
+              </ButtonLink>
+              {query ? (
+                <ButtonLink href={explorerSearchHref({ ...listen, query: undefined, page: 1 })} variant="ghost">
+                  <SearchX className="size-4 shrink-0" aria-hidden />
+                  {t(locale, "common.clearSearch")}
+                </ButtonLink>
+              ) : null}
+            </div>
+          )}
         </section>
       ) : null}
 

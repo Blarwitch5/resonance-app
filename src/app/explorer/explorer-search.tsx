@@ -3,7 +3,7 @@
 import { Search } from "lucide-react";
 import { useCallback, type ReactNode } from "react";
 
-import { BarcodeScanner } from "@/app/explorer/barcode-scanner";
+import { BarcodeScanButton } from "@/app/explorer/barcode-scanner";
 import { Button } from "@/components/ui/button";
 import { BusyGlyph } from "@/components/ui/listening-wave";
 import { SearchField } from "@/components/ui/search-field";
@@ -63,7 +63,7 @@ export function ExplorerSearch({ listen, query, children }: ExplorerSearchProps)
           />
         </form>
         <div className="flex shrink-0 gap-3">
-          <BarcodeScanner />
+          <BarcodeScanButton />
           <Button
             type="submit"
             form="explorer-search"

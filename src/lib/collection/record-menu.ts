@@ -36,7 +36,7 @@ export function recordMenuActions(input: {
 }): RecordMenuAction[] {
   const locale = input.locale ?? "en";
   const actions: RecordMenuAction[] = [
-    { id: "open", label: t(locale, "menu.open", { title: input.title }) },
+    { id: "open", label: t(locale, "menu.open") },
   ];
 
   if (input.canKeepClose) {
@@ -47,7 +47,7 @@ export function recordMenuActions(input: {
   }
 
   appendCopyActions(actions, locale, input.barcode, input.catalogNumber);
-  appendTravelActions(actions, locale, input.title, input.shareHref, input.elsewhereHref);
+  appendTravelActions(actions, locale, input.shareHref, input.elsewhereHref);
 
   if (input.canRelease) {
     actions.push({
@@ -77,32 +77,32 @@ export function explorerMenuActions(input: {
     if (input.addHref) {
       actions.push({
         id: "add",
-        label: t(locale, "menu.add", { title: input.title }),
+        label: t(locale, "menu.add"),
       });
     }
 
     if (input.canHold) {
       actions.push({
         id: "hold",
-        label: t(locale, "menu.hold", { title: input.title }),
+        label: t(locale, "menu.hold"),
       });
     }
   } else {
     actions.push({
       id: "open",
-      label: t(locale, "menu.open", { title: input.title }),
+      label: t(locale, "menu.open"),
     });
 
     if (input.presence.status === "wishlist") {
       actions.push({
         id: "shelf",
-        label: t(locale, "menu.shelf", { title: input.title }),
+        label: t(locale, "menu.shelf"),
       });
     }
   }
 
   appendCopyActions(actions, locale, input.barcode, input.catalogNumber);
-  appendTravelActions(actions, locale, input.title, input.shareHref, input.elsewhereHref);
+  appendTravelActions(actions, locale, input.shareHref, input.elsewhereHref);
   return actions;
 }
 
@@ -151,21 +151,20 @@ function copyValue(value: string | null | undefined): string | undefined {
 function appendTravelActions(
   actions: RecordMenuAction[],
   locale: Locale,
-  title: string,
   shareHref?: string | null,
   elsewhereHref?: string | null,
 ): void {
   if (shareHref) {
     actions.push({
       id: "share",
-      label: t(locale, "menu.share", { title }),
+      label: t(locale, "menu.share"),
     });
   }
 
   if (elsewhereHref) {
     actions.push({
       id: "elsewhere",
-      label: t(locale, "menu.elsewhere", { title }),
+      label: t(locale, "menu.elsewhere"),
     });
   }
 }

@@ -736,6 +736,7 @@ export function RecordMenu({
       data-record-swipe={
         showSwipe ? (isSwipeDragging ? "dragging" : swipeOffset > 0 ? "open" : "rest") : undefined
       }
+      data-menu={anchor ? "open" : undefined}
       className={`group relative touch-callout-none touch-manipulation select-none lg:select-text${
         layout === "list" ? " flex items-center gap-2" : ""
       }${

@@ -3,29 +3,30 @@
 import { BookmarkPlus, FaceSlightlySmilingPlus, Library } from "lucide-react";
 import { useActionState } from "react";
 
-import { addReleaseAction, type AddReleaseState } from "@/app/explorer/actions";
+import { addManualReleaseAction, type AddReleaseState } from "@/app/explorer/actions";
+import { ManualCoverField } from "@/app/explorer/manual/manual-cover-field";
 import { Button } from "@/components/ui/button";
 import { choiceChipClass } from "@/components/ui/chip";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
-import { TextAreaField } from "@/components/ui/field";
+import { TextAreaField, TextField } from "@/components/ui/field";
 import { formatIcons } from "@/components/ui/format-icon";
 import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useJournalLeave } from "@/components/ui/use-journal-leave";
 import { useT } from "@/components/locale-provider";
+import { PRESSING_BARCODE_MAX, PRESSING_LABEL_MAX, PRESSING_NAME_MAX } from "@/lib/collection/manual";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
 
 const initialState: AddReleaseState = { error: null, href: null };
 
-interface AddReleaseFormProps {
-  discogsId: number;
+interface ManualReleaseFormProps {
   defaultFormat: MediaFormat;
   formats: MediaFormat[];
 }
 
-export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddReleaseFormProps) {
+export function ManualReleaseForm({ defaultFormat, formats }: ManualReleaseFormProps) {
   const t = useT();
-  const [state, formAction, isPending] = useActionState(addReleaseAction, initialState);
+  const [state, formAction, isPending] = useActionState(addManualReleaseAction, initialState);
   const isLeaving = useJournalLeave(state.href);
   const isBusy = isPending || isLeaving;
   const available = formats.length > 0 ? formats : [...MEDIA_FORMATS];
@@ -33,7 +34,55 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
-      <input type="hidden" name="discogsId" value={discogsId} />
+      <TextField
+        id="manual-artist"
+        name="artist"
+        label={t("explorer.writeArtist")}
+        autoComplete="off"
+        required
+        maxLength={PRESSING_NAME_MAX}
+        translate="no"
+      />
+      <TextField
+        id="manual-title"
+        name="title"
+        label={t("explorer.writeAlbum")}
+        autoComplete="off"
+        required
+        maxLength={PRESSING_NAME_MAX}
+        translate="no"
+      />
+      <div className="grid gap-5 sm:grid-cols-2">
+        <TextField
+          id="manual-year"
+          name="year"
+          type="number"
+          inputMode="numeric"
+          label={t("explorer.writeYear")}
+          placeholder="1993"
+          min={1880}
+          max={2100}
+        />
+        <TextField
+          id="manual-label"
+          name="label"
+          label={t("explorer.writeLabel")}
+          autoComplete="off"
+          maxLength={PRESSING_LABEL_MAX}
+          translate="no"
+        />
+      </div>
+      <TextField
+        id="manual-barcode"
+        name="barcode"
+        label={t("explorer.writeBarcode")}
+        inputMode="numeric"
+        autoComplete="off"
+        maxLength={PRESSING_BARCODE_MAX}
+        translate="no"
+      />
+
+      <ManualCoverField />
 
       <fieldset className={fieldsetClass}>
         <legend className={legendClass}>{t("format.legend")}</legend>
@@ -88,7 +137,7 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
         <BusyGlyph isBusy={isBusy}>
           <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
         </BusyGlyph>
-        {isBusy ? t("explorer.adding") : t("explorer.addRecord")}
+        {isBusy ? t("explorer.writing") : t("explorer.writeIn")}
       </Button>
     </form>
   );

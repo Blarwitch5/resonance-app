@@ -76,6 +76,15 @@ export function journalHref(id: string, wave = false): string {
   return wave ? `/collection/${id}?wave=1` : `/collection/${id}`;
 }
 
+export function isSafeJournalHref(href: string): boolean {
+  if (!href.startsWith("/collection/") || href.startsWith("//") || href.includes("://")) {
+    return false;
+  }
+
+  const [pathname] = href.split("?");
+  return Boolean(pathname && pathname.length > "/collection/".length);
+}
+
 export function journalFromHref(id: string, from?: string | null, wave = false): string {
   return withListReturn(journalHref(id, wave), from);
 }

@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { CollectionFeed } from "@/app/collection/collection-feed";
 import { CollectionSearch } from "@/app/collection/collection-search";
 import { AppShell } from "@/components/layouts/app-shell";
-import { AddRecordFab } from "@/components/ui/add-record-fab";
 import { ButtonLink } from "@/components/ui/button";
 import { CollectionListenSheet } from "@/components/ui/listen-sheet";
 import { FacetChips } from "@/components/ui/facet-chips";
@@ -319,7 +318,6 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
         </SearchListenPane>
         </CollectionSearch>
       </div>
-      <AddRecordFab href={elsewhere} />
     </AppShell>
   );
 }

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ListMusic } from "lucide-react";
 
 import { SectionHeading } from "@/components/ui/page-header";
+import { PressingText } from "@/components/ui/pressing-text";
 import { RecordSamplePlayer } from "@/components/ui/record-sample-player";
 import { RecordSideHeading } from "@/components/ui/record-side-heading";
 import { pressingListen } from "@/lib/collection/runtime";
@@ -67,7 +68,9 @@ function StaticRecordSides({ sides, locale = "en" }: RecordSidesProps) {
                 className="grid grid-cols-[2.75rem_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-border-subtle py-2 last:border-b-0"
               >
                 <span className="font-mono text-xs leading-5 text-text-tertiary">{track.position || "·"}</span>
-                <span className="text-sm leading-6 text-text">{track.title}</span>
+                <span className="text-sm leading-6 text-text">
+                  <PressingText>{track.title}</PressingText>
+                </span>
                 <span className="font-mono text-xs leading-5 tabular-nums text-text-tertiary">
                   {track.duration ?? ""}
                 </span>

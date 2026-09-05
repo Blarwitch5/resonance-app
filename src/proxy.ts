@@ -3,7 +3,7 @@ import { getSessionCookie } from "better-auth/cookies";
 
 import { RESONANCE_PATH_HEADER, signInHref } from "@/lib/auth-path";
 
-const protectedPrefixes = ["/collection", "/profile", "/explorer/add", "/welcome", "/api/resonance"];
+const protectedPrefixes = ["/collection", "/profile", "/explorer/add", "/explorer/manual", "/welcome", "/api/resonance"];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -32,5 +32,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/collection/:path*", "/profile/:path*", "/explorer/add/:path*", "/welcome", "/api/resonance/:path*"],
+  matcher: ["/collection/:path*", "/profile/:path*", "/explorer/add/:path*", "/explorer/manual", "/welcome", "/api/resonance/:path*"],
 };

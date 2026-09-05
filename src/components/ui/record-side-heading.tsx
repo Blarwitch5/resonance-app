@@ -1,3 +1,4 @@
+import { PressingText } from "@/components/ui/pressing-text";
 import { hintClass, kickerClass } from "@/components/ui/type";
 import { sideRuntime } from "@/lib/collection/runtime";
 import type { RecordSide } from "@/lib/collection/types";
@@ -19,7 +20,9 @@ export function RecordSideHeading({ side, showRuntime = true, locale = "en" }: R
   return (
     <div className="flex items-baseline justify-between gap-3">
       {side.heading ? (
-        <h3 className={kickerClass}>{side.heading}</h3>
+        <h3 className={kickerClass}>
+          <PressingText>{side.heading}</PressingText>
+        </h3>
       ) : (
         <span />
       )}

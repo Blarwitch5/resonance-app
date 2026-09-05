@@ -20,7 +20,7 @@ describe("recordMenuActions", () => {
         canKeepClose: true,
       }),
     ).toEqual([
-      { id: "open", label: "Open In Utero in your journal" },
+      { id: "open", label: "Open this album in your journal" },
       { id: "keep", label: "Keep this close" },
     ]);
   });
@@ -56,7 +56,7 @@ describe("recordMenuActions", () => {
       }).at(-1),
     ).toEqual({
       id: "elsewhere",
-      label: "Hear other pressings of In Utero",
+      label: "Hear other pressings of this album",
     });
   });
 
@@ -76,7 +76,7 @@ describe("recordMenuActions", () => {
         isFavorite: false,
         shareHref: "https://www.discogs.com/release/2313422",
       }).find((action) => action.id === "share")?.label,
-    ).toBe("Share In Utero");
+    ).toBe("Share this album");
   });
 
   it("stays quiet about a pressing without a Discogs thread", () => {
@@ -185,6 +185,14 @@ describe("explorerMenuActions", () => {
         elsewhereHref: "/explorer?q=Nirvana+In+Utero",
       }).map((action) => action.id),
     ).toEqual(["add", "hold", "elsewhere"]);
+    expect(
+      explorerMenuActions({
+        title: "A Very Long Album Title That Would Overflow",
+        presence: { status: "absent" },
+        addHref: "/explorer/add/2313422",
+        canHold: true,
+      }).find((action) => action.id === "hold")?.label,
+    ).toBe("Keep this album");
   });
 
   it("skips holding when the room is unsigned", () => {
@@ -206,8 +214,8 @@ describe("explorerMenuActions", () => {
         elsewhereHref: "/explorer?q=Nirvana+In+Utero",
       }),
     ).toEqual([
-      { id: "open", label: "Open In Utero in your journal" },
-      { id: "elsewhere", label: "Hear other pressings of In Utero" },
+      { id: "open", label: "Open this album in your journal" },
+      { id: "elsewhere", label: "Hear other pressings of this album" },
     ]);
   });
 

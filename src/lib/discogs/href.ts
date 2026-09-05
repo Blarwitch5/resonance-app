@@ -225,6 +225,17 @@ export function explorerAddHref(discogsId: number, from?: string | null): string
   return `${path}?from=${encodeURIComponent(listen)}`;
 }
 
+export function explorerManualHref(from?: string | null): string {
+  const path = "/explorer/manual";
+  const listen = from ? parseStoredReturn("/explorer", from) : null;
+
+  if (!listen || listen === "/explorer") {
+    return path;
+  }
+
+  return `${path}?from=${encodeURIComponent(listen)}`;
+}
+
 export function explorerBackHref(from: string | undefined): string {
   return parseStoredReturn("/explorer", from ?? null) ?? "/explorer";
 }

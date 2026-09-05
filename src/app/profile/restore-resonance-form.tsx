@@ -5,7 +5,7 @@ import { useActionState } from "react";
 
 import { restoreResonanceAction, type RestoreResonanceState } from "@/app/profile/actions";
 import { Button } from "@/components/ui/button";
-import { controlClass, labelClass } from "@/components/ui/control";
+import { controlClass, controlInsetClass, labelClass } from "@/components/ui/control";
 import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useT } from "@/components/locale-provider";
@@ -57,7 +57,7 @@ export function RestoreResonanceForm() {
           type="file"
           accept="application/json,.json"
           required
-          className={controlClass}
+          className={`${controlClass} ${controlInsetClass()}`}
         />
       </label>
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}

@@ -1,18 +1,22 @@
 "use client";
 
-import { ScanBarcode, Search, X } from "lucide-react";
+import { PenLine, ScanBarcode, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
+  createContext,
   useCallback,
+  useContext,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
+  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { TextField } from "@/components/ui/field";
 import { useT } from "@/components/locale-provider";
 import {
@@ -40,7 +44,19 @@ function cameraIssueCopy(issue: CameraIssue, t: (path: string) => string): strin
   return t("explorer.scanUnknown");
 }
 
-export function BarcodeScanner() {
+const BarcodeScanContext = createContext<(() => void) | null>(null);
+
+export function useBarcodeScan(): () => void {
+  const open = useContext(BarcodeScanContext);
+
+  if (!open) {
+    throw new Error("BarcodeScanProvider is missing.");
+  }
+
+  return open;
+}
+
+export function BarcodeScanProvider({ children }: { children: ReactNode }) {
   const t = useT();
   const router = useRouter();
   const titleId = useId();
@@ -319,7 +335,7 @@ export function BarcodeScanner() {
     };
   }, [goToSearch, hasStream, isOpen, stopCamera, videoEl]);
 
-  async function openScanner() {
+  const openScanner = useCallback(async () => {
     if (openingRef.current || isOpen) {
       return;
     }
@@ -349,7 +365,13 @@ export function BarcodeScanner() {
     } finally {
       openingRef.current = false;
     }
-  }
+  }, [isOpen]);
+
+  const open = useMemo(() => {
+    return () => {
+      void openScanner();
+    };
+  }, [openScanner]);
 
   function onManualSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -434,6 +456,11 @@ export function BarcodeScanner() {
                   <Search className="size-4 shrink-0" aria-hidden />
                   {t("explorer.scanLookup")}
                 </Button>
+                <p className="text-sm leading-6 text-text-secondary">{t("explorer.noBarcode")}</p>
+                <ButtonLink href="/explorer/manual" variant="ghost" className="self-start">
+                  <PenLine className="size-4 shrink-0" aria-hidden />
+                  {t("explorer.writeIn")}
+                </ButtonLink>
               </form>
             </div>
           </div>,
@@ -442,20 +469,27 @@ export function BarcodeScanner() {
       : null;
 
   return (
-    <>
-      <Button
-        type="button"
-        variant="ghost"
-        className="min-w-12 shrink-0 gap-2 px-4"
-        aria-label={t("explorer.scanAria")}
-        onClick={() => {
-          void openScanner();
-        }}
-      >
-        <ScanBarcode className="size-4 shrink-0" aria-hidden />
-        <span className="hidden sm:inline">{t("explorer.scan")}</span>
-      </Button>
+    <BarcodeScanContext.Provider value={open}>
+      {children}
       {dialog}
-    </>
+    </BarcodeScanContext.Provider>
+  );
+}
+
+export function BarcodeScanButton() {
+  const t = useT();
+  const open = useBarcodeScan();
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      className="min-w-12 shrink-0 gap-2 px-4"
+      aria-label={t("explorer.scanAria")}
+      onClick={open}
+    >
+      <ScanBarcode className="size-4 shrink-0" aria-hidden />
+      <span className="hidden sm:inline">{t("explorer.scan")}</span>
+    </Button>
   );
 }

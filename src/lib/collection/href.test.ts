@@ -5,6 +5,7 @@ import {
   collectionFormatNavHref,
   collectionHref,
   formatListenFromLocation,
+  isSafeJournalHref,
   journalFromHref,
   journalHref,
   parseWaveFlag,
@@ -64,6 +65,17 @@ describe("journalFromHref", () => {
     expect(journalFromHref("abc", "/profile?tab=close")).toBe(
       "/collection/abc?from=%2Fprofile%3Ftab%3Dclose",
     );
+  });
+});
+
+describe("isSafeJournalHref", () => {
+  it("only follows a journal path on this shelf", () => {
+    expect(isSafeJournalHref("/collection/abc")).toBe(true);
+    expect(isSafeJournalHref("/collection/abc?wave=1")).toBe(true);
+    expect(isSafeJournalHref("/collection")).toBe(false);
+    expect(isSafeJournalHref("/collection/")).toBe(false);
+    expect(isSafeJournalHref("//evil.example")).toBe(false);
+    expect(isSafeJournalHref("/explorer/manual")).toBe(false);
   });
 });
 

@@ -12,6 +12,7 @@ import {
   explorerListenCount,
   explorerListenFromEcho,
   explorerListenFromShelf,
+  explorerManualHref,
   explorerQueryFromPressing,
   explorerSearchHref,
   explorerWhenFromParams,
@@ -201,6 +202,16 @@ describe("explorerCardHref", () => {
       "/collection/rec-1?from=%2Fexplorer%3Fq%3DNirvana",
     );
     expect(explorerCardHref({ status: "wishlist", itemId: "rec-2" }, 2313422)).toBe("/collection/rec-2");
+  });
+});
+
+describe("explorerManualHref", () => {
+  it("opens the hand-written pressing page", () => {
+    expect(explorerManualHref()).toBe("/explorer/manual");
+    expect(explorerManualHref("/explorer?q=Nirvana")).toBe(
+      "/explorer/manual?from=%2Fexplorer%3Fq%3DNirvana",
+    );
+    expect(explorerManualHref("https://evil.example/explorer")).toBe("/explorer/manual");
   });
 });
 

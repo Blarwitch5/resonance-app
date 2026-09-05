@@ -3,6 +3,7 @@
 import { Calendar, Hourglass, Music, Tag, type LucideIcon } from "lucide-react";
 
 import { ChipLink } from "@/components/ui/chip";
+import { PressingText } from "@/components/ui/pressing-text";
 import { useLocale } from "@/components/locale-provider";
 import { decadeName } from "@/lib/i18n/labels";
 import type { CollectionInsight } from "@/lib/collection/stats";
@@ -63,13 +64,13 @@ export function ExplorerFacetChips({
       {showActive && listen.genre ? (
         <ChipLink href={explorerSearchHref({ ...listen, genre: undefined, page: 1 })} isActive>
           <Music className="size-4 shrink-0" aria-hidden />
-          {listen.genre}
+          <PressingText>{listen.genre}</PressingText>
         </ChipLink>
       ) : null}
       {showActive && listen.label ? (
         <ChipLink href={explorerSearchHref({ ...listen, label: undefined, page: 1 })} isActive>
           <Tag className="size-4 shrink-0" aria-hidden />
-          {listen.label}
+          <PressingText>{listen.label}</PressingText>
         </ChipLink>
       ) : null}
       {showActive && listen.decade !== undefined ? (
@@ -95,7 +96,11 @@ export function ExplorerFacetChips({
                 isActive={false}
               >
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {suggestion.label}
+                {suggestion.kind === "genre" || suggestion.kind === "label" ? (
+                  <PressingText>{suggestion.label}</PressingText>
+                ) : (
+                  suggestion.label
+                )}
               </ChipLink>
             );
           })

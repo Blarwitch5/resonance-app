@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 
+import { PressingText } from "@/components/ui/pressing-text";
 import { ThreadLink } from "@/components/ui/pressing-threads";
 import type { ShelfCardThread } from "@/lib/collection/shelf-threads";
 
@@ -14,13 +15,17 @@ export function ShelfThread({ thread, className, compact = false }: ShelfThreadP
     return (
       <span className={className}>
         <ThreadLink href={thread.href} ariaLabel={thread.ariaLabel} compact={compact}>
-          {thread.label}
+          <PressingText>{thread.label}</PressingText>
         </ThreadLink>
       </span>
     );
   }
 
-  return <span className={className}>{thread.label}</span>;
+  return (
+    <span className={className}>
+      <PressingText>{thread.label}</PressingText>
+    </span>
+  );
 }
 
 export function ShelfThreadLine({

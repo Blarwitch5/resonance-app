@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { CoverArt } from "@/components/ui/cover-art";
+import { PressingText } from "@/components/ui/pressing-text";
 import { formatIcons } from "@/components/ui/format-tokens";
 import { ShelfThread, ShelfThreadLine } from "@/components/ui/shelf-thread";
 import { hintClass, metaClass, recordTitleClass } from "@/components/ui/type";
@@ -59,7 +60,7 @@ export function RecordTile({
             href={href}
             className={`line-clamp-2 w-fit max-w-full ${recordTitleClass} outline-none focus-visible:ring-2 focus-visible:ring-border-strong`}
           >
-            {title}
+            <PressingText>{title}</PressingText>
           </Link>
         }
         format={format}

@@ -4,7 +4,12 @@ import { ImageIcon } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { choiceChipClass } from "@/components/ui/chip";
-import { controlClass, labelClass } from "@/components/ui/control";
+import {
+  controlBareClass,
+  controlFrameClass,
+  controlIconSlotClass,
+  labelClass,
+} from "@/components/ui/control";
 import { t } from "@/lib/i18n/translate";
 import { shrinkPortraitFile } from "@/lib/profile/portrait-client";
 import { initialsFromName } from "@/lib/profile/types";
@@ -80,18 +85,17 @@ export function PortraitField({ locale, name, imageUrl = null }: PortraitFieldPr
               <span aria-hidden>{initials}</span>
             )}
           </span>
-          <span className="relative min-w-0 flex-1">
-            <ImageIcon
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-tertiary"
-              aria-hidden
-            />
+          <span className={`min-w-0 flex-1 ${controlFrameClass}`}>
+            <span className={controlIconSlotClass} aria-hidden>
+              <ImageIcon className="size-4" />
+            </span>
             <input
               id={fieldId}
               ref={fileRef}
               name="portrait"
               type="file"
               accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
-              className={`${controlClass} pl-10`}
+              className={`${controlBareClass} pr-3 sm:pr-4`}
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 void rememberStill(file);

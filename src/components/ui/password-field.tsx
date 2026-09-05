@@ -3,7 +3,7 @@
 import { Eye, EyeOff, type LucideIcon } from "lucide-react";
 import { useState, type InputHTMLAttributes } from "react";
 
-import { controlClass, labelClass } from "@/components/ui/control";
+import { controlBareClass, controlFrameClass, controlIconSlotClass, labelClass } from "@/components/ui/control";
 import { useT } from "@/components/locale-provider";
 
 interface PasswordFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "id" | "type"> {
@@ -20,17 +20,16 @@ export function PasswordField({ id, label, icon: Icon, ...props }: PasswordField
   return (
     <label htmlFor={id} className={labelClass}>
       {label}
-      <span className="relative block">
+      <span className={controlFrameClass}>
         {Icon ? (
-          <Icon
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-tertiary"
-            aria-hidden
-          />
+          <span className={controlIconSlotClass} aria-hidden>
+            <Icon className="size-4" />
+          </span>
         ) : null}
         <input
           id={id}
           type={isVisible ? "text" : "password"}
-          className={`${controlClass} pr-12 ${Icon ? "pl-10" : ""}`}
+          className={`${controlBareClass} pr-12 ${Icon ? "" : "pl-3 sm:pl-4"}`}
           {...props}
         />
         <button

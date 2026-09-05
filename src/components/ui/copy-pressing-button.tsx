@@ -4,6 +4,7 @@ import { Barcode, Hash } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Notice } from "@/components/ui/notice";
+import { PressingText } from "@/components/ui/pressing-text";
 import { hintClass, kickerClass } from "@/components/ui/type";
 import { useLocale } from "@/components/locale-provider";
 import { pressingCopyVoice, type PressingCopyKind } from "@/lib/collection/copy-pressing";
@@ -69,7 +70,9 @@ export function CopyPressingButton({ kind, value }: CopyPressingButtonProps) {
           <Icon className="size-4 shrink-0 text-text-tertiary" aria-hidden />
           <span className={kickerClass}>{voice.kind}</span>
         </span>
-        <span className="pl-6 font-mono text-xs leading-5 text-text-secondary">{voice.label}</span>
+        <span className="pl-6 font-mono text-xs leading-5 text-text-secondary">
+          <PressingText>{voice.label}</PressingText>
+        </span>
       </button>
       <p className={`hidden pl-6 lg:block ${hintClass}`}>{voice.hint}</p>
       {error ? <Notice tone="error">{error}</Notice> : null}

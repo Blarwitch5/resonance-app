@@ -31,6 +31,14 @@ describe("t", () => {
     expect(t("fr", "offlinePage.quietShelf")).toBe(
       "L’air est calme. Tu lis ce qui est déjà sur l’étagère.",
     );
+    expect(t("en", "menu.open")).toBe("Open this album in your journal");
+    expect(t("fr", "menu.open")).toBe("Ouvrir cet album dans ton journal");
+    expect(t("en", "menu.hold")).toBe("Keep this album");
+    expect(t("fr", "menu.hold")).toBe("Garder cet album");
+    expect(t("fr", "explorer.writeIn")).toBe("Ajouter un pressage à la main");
+    expect(t("fr", "explorer.nothingHint")).toBe(
+      "Un autre titre, un autre artiste, un code-barres à la lumière, ou ajoute ce pressage à la main.",
+    );
   });
 
   it("keeps the same keys in both tongues", () => {

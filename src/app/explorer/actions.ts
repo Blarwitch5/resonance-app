@@ -4,8 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { readCoverUpload } from "@/lib/collection/cover";
+import { keepCover, restCover } from "@/lib/collection/cover-blob";
 import type { FeedLoadResult } from "@/lib/collection/feed";
 import { journalHref } from "@/lib/collection/href";
+import { toManualReleaseDraft } from "@/lib/collection/manual";
 import { addCollectionItem, listShelfPresence, updateCollectionItem } from "@/lib/collection/repository";
 import {
   MEDIA_FORMATS,
@@ -37,6 +40,7 @@ import { enabledFormats, preferredFormat } from "@/lib/settings/types";
 
 export interface AddReleaseState {
   error: string | null;
+  href: string | null;
 }
 
 function parseKind(value: FormDataEntryValue | null): CollectionKind {
@@ -83,10 +87,63 @@ export async function addReleaseAction(
     createdId = created.id;
     isOwned = kind === "owned";
   } catch (error) {
-    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error) };
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error), href: null };
   }
 
-  redirect(journalHref(createdId, isOwned));
+  revalidatePath("/collection");
+  revalidatePath("/explorer");
+  revalidatePath("/profile");
+  return { error: null, href: journalHref(createdId, isOwned) };
+}
+
+export async function addManualReleaseAction(
+  _previous: AddReleaseState,
+  formData: FormData,
+): Promise<AddReleaseState> {
+  const session = await requireSession();
+  let createdId: string;
+  let isOwned = false;
+  let coverUrl: string | null = null;
+
+  try {
+    const kind = parseKind(formData.get("kind"));
+    const draft = toManualReleaseDraft({
+      artist: String(formData.get("artist") ?? ""),
+      title: String(formData.get("title") ?? ""),
+      format: parseFormatOrThrow(formData.get("format")),
+      year: String(formData.get("year") ?? ""),
+      label: String(formData.get("label") ?? ""),
+      barcode: String(formData.get("barcode") ?? ""),
+    });
+    const coverFile = formData.get("cover");
+    const coverRead = await readCoverUpload(coverFile instanceof File ? coverFile : null);
+
+    if (coverRead.status === "invalid") {
+      throw new ValidationError(coverRead.message);
+    }
+
+    if (coverRead.status === "ready") {
+      coverUrl = await keepCover(session.user.id, coverRead.bytes);
+    }
+
+    const created = await addCollectionItem(
+      session.user.id,
+      { ...draft, coverUrl },
+      kind,
+      String(formData.get("notes") ?? ""),
+    );
+
+    createdId = created.id;
+    isOwned = kind === "owned";
+  } catch (error) {
+    await restCover(coverUrl);
+    return { error: localizedError((await loadUserSettings(session.user.id)).locale, error), href: null };
+  }
+
+  revalidatePath("/collection");
+  revalidatePath("/explorer");
+  revalidatePath("/profile");
+  return { error: null, href: journalHref(createdId, isOwned) };
 }
 
 export interface AddWishlistState {

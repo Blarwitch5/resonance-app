@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 
 import { emptyStoredReturns, listReturnFromLocation, readStoredReturns } from "@/components/return-path";
 import { useLocale, useT } from "@/components/locale-provider";
-import { controlClass } from "@/components/ui/control";
+import { controlBareClass, controlFrameClass, controlIconSlotClass } from "@/components/ui/control";
 import { focusListenField } from "@/components/ui/focus-listen";
 import { FOCUS_SEARCH_KEY, focusSearchField } from "@/components/ui/focus-search";
 import { trapFocus } from "@/components/ui/trap-focus";
@@ -240,11 +240,10 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
         <h2 id={titleId} className="sr-only">
           {t("palette.jump")}
         </h2>
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-tertiary"
-            aria-hidden
-          />
+        <div className={controlFrameClass}>
+          <span className={controlIconSlotClass} aria-hidden>
+            <Search className="size-4" />
+          </span>
           <input
             ref={inputRef}
             id={`${listId}-q`}
@@ -261,7 +260,7 @@ export function ListenPalette({ records = [], formats = [] }: ListenPaletteProps
             aria-activedescendant={active ? `${listId}-${active.id}` : undefined}
             role="combobox"
             onChange={(event) => setQuery(event.target.value)}
-            className={`${controlClass} pl-10`}
+            className={`${controlBareClass} appearance-none pr-3 sm:pr-4`}
           />
         </div>
         <ul id={listId} role="listbox" aria-label={t("palette.quietPaths")} className="mt-3 max-h-80 overflow-y-auto">

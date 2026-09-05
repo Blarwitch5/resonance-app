@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CoverArt } from "@/components/ui/cover-art";
+import { PressingText } from "@/components/ui/pressing-text";
 import { formatIcons } from "@/components/ui/format-tokens";
 import { ShelfThreadLine } from "@/components/ui/shelf-thread";
 import { hintClass, metaClass, recordTitleClass } from "@/components/ui/type";
@@ -57,7 +58,7 @@ export function RecordRow({
           href={href}
           className={`truncate ${recordTitleClass} outline-none focus-visible:ring-2 focus-visible:ring-border-strong`}
         >
-          {title}
+          <PressingText>{title}</PressingText>
         </Link>
         <ShelfThreadLine
           compact

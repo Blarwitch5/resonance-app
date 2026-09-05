@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { ChipLink } from "@/components/ui/chip";
 import { CopyPressingButton } from "@/components/ui/copy-pressing-button";
+import { PressingText } from "@/components/ui/pressing-text";
 import { FormatIcon } from "@/components/ui/format-icon";
 import { PressingLinks } from "@/components/ui/pressing-links";
 import {
@@ -29,7 +30,11 @@ export function PressingArtist({ name, href }: PressingArtistProps) {
   const t = useT();
 
   if (!href) {
-    return <p className={artistClass}>{name}</p>;
+    return (
+      <p className={artistClass}>
+        <PressingText>{name}</PressingText>
+      </p>
+    );
   }
 
   return (
@@ -38,7 +43,7 @@ export function PressingArtist({ name, href }: PressingArtistProps) {
       aria-label={t("thread.hearOnShelf", { name })}
       className={`inline-flex min-h-11 items-center outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong ${artistClass}`}
     >
-      {name}
+      <PressingText>{name}</PressingText>
     </Link>
   );
 }
@@ -73,7 +78,11 @@ export function PressingThreads({
         <FormatIcon format={threads.format} href={threads.formatHref} />
         {hasIdentity ? (
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            {title ? <h1 className={titleClassName}>{title}</h1> : null}
+            {title ? (
+              <h1 className={titleClassName}>
+                <PressingText>{title}</PressingText>
+              </h1>
+            ) : null}
             {showArtist ? <PressingArtist name={threads.artist} href={threads.artistHref} /> : null}
           </div>
         ) : null}
@@ -86,10 +95,12 @@ export function PressingThreads({
                   <dd className={fact.isMono ? yearValueClass : factValueClass}>
                     {fact.href ? (
                       <ThreadLink href={fact.href} ariaLabel={fact.ariaLabel ?? fact.value}>
-                        {fact.value}
+                        {keepFactAsWritten(fact) ? <PressingText>{fact.value}</PressingText> : fact.value}
                       </ThreadLink>
                     ) : (
-                      <span className="inline-flex min-h-11 items-center">{fact.value}</span>
+                      <span className="inline-flex min-h-11 items-center">
+                        {keepFactAsWritten(fact) ? <PressingText>{fact.value}</PressingText> : fact.value}
+                      </span>
                     )}
                   </dd>
             </div>
@@ -99,7 +110,9 @@ export function PressingThreads({
       {threads.creditLine ? (
         <p className="flex flex-col gap-1">
           <span className={kickerClass}>{t("thread.credits")}</span>
-          <span className={creditClass}>{threads.creditLine}</span>
+          <span className={creditClass}>
+            <PressingText>{threads.creditLine}</PressingText>
+          </span>
         </p>
       ) : null}
       {hasChips ? (
@@ -108,7 +121,7 @@ export function PressingThreads({
             <li key={genre.name}>
               <ChipLink href={genre.href} isActive={false}>
                 <Music className="size-4 shrink-0" aria-hidden />
-                {genre.name}
+                <PressingText>{genre.name}</PressingText>
               </ChipLink>
             </li>
           ))}
@@ -142,10 +155,14 @@ export function PressingThreads({
               ariaLabel={t("thread.hearFound", { place: threads.found.where })}
               compact
             >
-              <span className={factValueClass}>{threads.found.where}</span>
+              <span className={factValueClass}>
+                <PressingText>{threads.found.where}</PressingText>
+              </span>
             </ThreadLink>
           ) : (
-            <span className={factValueClass}>{threads.found.where}</span>
+            <span className={factValueClass}>
+              <PressingText>{threads.found.where}</PressingText>
+            </span>
           )}
           {threads.found.when ? (
             threads.found.whenHref ? (
@@ -174,6 +191,10 @@ export function PressingThreads({
       ) : null}
     </div>
   );
+}
+
+function keepFactAsWritten(fact: { key: string; isMono: boolean }): boolean {
+  return fact.key === "origin" || fact.key === "label" || fact.key === "pressing" || fact.isMono;
 }
 
 export function ThreadLink({

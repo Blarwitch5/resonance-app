@@ -1,7 +1,15 @@
 import type { LucideIcon } from "lucide-react";
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
-import { controlClass, labelClass, textAreaClass } from "@/components/ui/control";
+import {
+  controlBareClass,
+  controlClass,
+  controlFrameClass,
+  controlIconSlotClass,
+  controlInsetClass,
+  labelClass,
+  textAreaClass,
+} from "@/components/ui/control";
 
 interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "id"> {
   id: string;
@@ -13,15 +21,16 @@ export function TextField({ id, label, icon: Icon, ...props }: TextFieldProps) {
   return (
     <label htmlFor={id} className={labelClass}>
       {label}
-      <span className="relative block">
-        {Icon ? (
-          <Icon
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-text-tertiary"
-            aria-hidden
-          />
-        ) : null}
-        <input id={id} className={`${controlClass} ${Icon ? "pl-10" : ""}`} {...props} />
-      </span>
+      {Icon ? (
+        <span className={controlFrameClass}>
+          <span className={controlIconSlotClass} aria-hidden>
+            <Icon className="size-4" />
+          </span>
+          <input id={id} className={`${controlBareClass} pr-3 sm:pr-4`} {...props} />
+        </span>
+      ) : (
+        <input id={id} className={`${controlClass} ${controlInsetClass()}`} {...props} />
+      )}
     </label>
   );
 }
@@ -50,7 +59,7 @@ export function SelectField({ id, label, children, ...props }: SelectFieldProps)
   return (
     <label htmlFor={id} className={labelClass}>
       {label}
-      <select id={id} className={controlClass} {...props}>
+      <select id={id} className={`${controlClass} ${controlInsetClass()}`} {...props}>
         {children}
       </select>
     </label>

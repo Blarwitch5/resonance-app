@@ -14,6 +14,7 @@ interface ShelfKinRecord {
   title: string;
   artist: string;
   coverUrl: string | null;
+  coverThumbUrl?: string | null;
   year: number | null;
   label?: string | null;
   genres?: readonly string[];
@@ -55,6 +56,7 @@ export function ShelfKin({ headline, href, records, from, locale = "en" }: Shelf
             <RecordTile
               href={journalFromHref(record.id, from)}
               coverUrl={record.coverUrl}
+              compactUrl={record.coverThumbUrl}
               title={record.title}
               artist={record.artist}
               year={record.year}

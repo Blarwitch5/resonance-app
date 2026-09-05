@@ -81,9 +81,10 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
   const isArrivalWave = parseWaveFlag(query.wave) && !item.isWishlist;
   const decade = decadeFromYear(item.year);
   const kinPageSize = SHELF_KIN_LIMIT + (item.isWishlist ? 0 : 1);
-  const [pressing, neighbors, previews, artistRecords, decadeRecords, settings] = await Promise.all([
+  const settings = await getUserSettings(session.user.id);
+  const [pressing, neighbors, previews, artistRecords, decadeRecords, marketAsk] = await Promise.all([
     loadPressingListen(item.discogsId),
-    listShelfNeighbors(session.user.id, item.id, item.isWishlist),
+    listShelfNeighbors(session.user.id, item.id, item.isWishlist, item.createdAt),
     loadDeezerPreviews(item.artist, item.title),
     listCollectionItems(session.user.id, {
       kind: "owned",
@@ -97,12 +98,10 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
           pageSize: kinPageSize,
         })
       : Promise.resolve([]),
-    getUserSettings(session.user.id),
-  ]);
-  const marketAsk =
     settings.marketValueEnabled && item.discogsId !== null
-      ? await getMarketplaceAsk(item.discogsId)
-      : null;
+      ? getMarketplaceAsk(item.discogsId)
+      : Promise.resolve(null),
+  ]);
   const marketLine = marketAsk ? marketplaceVoice(settings.locale, marketAsk) : null;
   const kin = pickShelfKin({
     currentId: item.id,
@@ -134,9 +133,14 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
   }, settings.locale);
   const remembered = catalogToRemember(item.catalogNumber, pressing.catalogNumber);
 
-  if (remembered) {
+  const coverThumbUrl = !item.coverThumbUrl ? pressing.coverThumbUrl : null;
+
+  if (remembered || coverThumbUrl) {
     after(() => {
-      void rememberCatalogNumber(session.user.id, item.id, remembered);
+      void rememberJournalStill(session.user.id, item.id, {
+        catalogNumber: remembered,
+        coverThumbUrl,
+      });
     });
   }
   const sides = attachDeezerPreviews(pressing.sides, previews);
@@ -151,6 +155,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
         <div className={journalCoverStickyClass}>
           <CoverArt
             url={item.coverUrl}
+            compactUrl={item.coverThumbUrl}
             alt={coverAlt(settings.locale, item.title, item.artist)}
             sizes="(max-width: 1024px) 80vw, 320px"
             className={isArrivalWave ? "motion-safe:ripple-in" : undefined}
@@ -194,6 +199,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
             artist={item.artist}
             title={item.title}
             coverUrl={item.coverUrl}
+            compactUrl={item.coverThumbUrl}
             locale={settings.locale}
             keepClose={
               <KeptCloseForm id={item.id} isFavorite={item.isFavorite} variant="icon" />
@@ -222,9 +228,16 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
   );
 }
 
-async function rememberCatalogNumber(userId: string, id: string, catalogNumber: string): Promise<void> {
+async function rememberJournalStill(
+  userId: string,
+  id: string,
+  patch: { catalogNumber: string | null; coverThumbUrl: string | null },
+): Promise<void> {
   try {
-    await updateCollectionItem(userId, id, { catalogNumber });
+    await updateCollectionItem(userId, id, {
+      ...(patch.catalogNumber ? { catalogNumber: patch.catalogNumber } : {}),
+      ...(patch.coverThumbUrl ? { coverThumbUrl: patch.coverThumbUrl } : {}),
+    });
   } catch {
     return;
   }
@@ -232,14 +245,28 @@ async function rememberCatalogNumber(userId: string, id: string, catalogNumber: 
 
 async function loadPressingListen(discogsId: number | null) {
   if (discogsId === null) {
-    return { sides: [], country: null, catalogNumber: null, formatNames: [], creditLine: null };
+    return {
+      sides: [],
+      country: null,
+      catalogNumber: null,
+      formatNames: [],
+      creditLine: null,
+      coverThumbUrl: null,
+    };
   }
 
   try {
     return await getReleaseListen(discogsId);
   } catch (error) {
     if (error instanceof DiscogsError) {
-      return { sides: [], country: null, catalogNumber: null, formatNames: [], creditLine: null };
+      return {
+        sides: [],
+        country: null,
+        catalogNumber: null,
+        formatNames: [],
+        creditLine: null,
+        coverThumbUrl: null,
+      };
     }
 
     throw error;

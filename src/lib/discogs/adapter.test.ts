@@ -18,6 +18,7 @@ const hit: DiscogsSearchHit = {
   genre: ["Jazz"],
   barcode: ["07464405791"],
   cover_image: "https://img.discogs.com/cover.jpg",
+  thumb: "https://img.discogs.com/thumb.jpg",
 };
 
 const release: DiscogsRelease = {
@@ -32,7 +33,7 @@ const release: DiscogsRelease = {
   formats: [{ name: "Vinyl" }, { name: "LP" }],
   images: [
     { uri: "https://img.discogs.com/spacer.gif", type: "secondary" },
-    { uri: "https://img.discogs.com/cover.jpg", type: "primary" },
+    { uri: "https://img.discogs.com/cover.jpg", uri150: "https://img.discogs.com/cover-150.jpg", type: "primary" },
   ],
   identifiers: [
     { type: "Catalog Number", value: "CL 1355" },
@@ -61,6 +62,7 @@ describe("toReleaseDraftFromSearch", () => {
       label: "Columbia",
       barcode: "07464405791",
       coverUrl: "https://img.discogs.com/cover.jpg",
+      coverThumbUrl: "https://img.discogs.com/thumb.jpg",
     });
   });
 
@@ -90,6 +92,7 @@ describe("toReleaseDraft and toReleasePreview", () => {
     expect(draft.barcode).toBe("07464405791");
     expect(draft.genres).toEqual(["Jazz", "Modal"]);
     expect(draft.coverUrl).toBe("https://img.discogs.com/cover.jpg");
+    expect(draft.coverThumbUrl).toBe("https://img.discogs.com/cover-150.jpg");
     expect(draft.catalogNumber).toBe("CL 1355");
   });
 

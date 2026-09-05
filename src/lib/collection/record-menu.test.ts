@@ -8,6 +8,7 @@ import {
   recordMenuMoreClass,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
+  recordSwipeActionClass,
   recordSwipeActions,
 } from "@/lib/collection/record-menu";
 
@@ -275,7 +276,7 @@ describe("recordSwipeActions", () => {
           canRelease: true,
         }),
       ).map((action) => action.id),
-    ).toEqual(["keep", "elsewhere", "release"]);
+    ).toEqual(["keep", "share", "elsewhere", "release"]);
   });
 
   it("asks to keep the pressing before a swipe lets it go", () => {
@@ -309,6 +310,19 @@ describe("recordSwipeActions", () => {
         }),
       ).map((action) => action.id),
     ).toEqual(["add", "hold", "elsewhere"]);
+  });
+});
+
+describe("recordSwipeActionClass", () => {
+  it("gives neighboring swipe actions different grounds", () => {
+    expect(recordSwipeActionClass("add")).toContain("from-primary");
+    expect(recordSwipeActionClass("share")).toContain("bg-primary");
+    expect(recordSwipeActionClass("share")).not.toContain("from-info");
+    expect(recordSwipeActionClass("hold")).toContain("from-secondary");
+    expect(recordSwipeActionClass("elsewhere")).toContain("from-info");
+    expect(recordSwipeActionClass("release")).toContain("from-error");
+    expect(recordSwipeActionClass("add")).not.toBe(recordSwipeActionClass("hold"));
+    expect(recordSwipeActionClass("hold")).not.toBe(recordSwipeActionClass("elsewhere"));
   });
 });
 

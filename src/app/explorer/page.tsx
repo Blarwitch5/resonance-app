@@ -129,8 +129,7 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
   const genre = parseGenreFilter(rawGenre);
   const label = parseLabelFilter(rawLabel);
   const { year, decade } = explorerWhenFromParams(rawYear, rawDecade);
-  const session = await getSession();
-  const locale = await getLocale();
+  const [session, locale] = await Promise.all([getSession(), getLocale()]);
   const settings = session ? await getUserSettings(session.user.id) : null;
   const viewMode: ViewMode = settings?.viewMode ?? "list";
   const enabled = settings ? enabledFormats(settings) : MEDIA_FORMATS.slice();
@@ -152,8 +151,11 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
   }
 
   const hasListen = hasExplorerListen(listen);
-  const { results, error: searchError, page, pages } = await searchReleases(listen);
-  const owned = session ? await listCollectionStatItems(session.user.id) : [];
+  const [searchOutcome, owned] = await Promise.all([
+    searchReleases(listen),
+    session ? listCollectionStatItems(session.user.id) : Promise.resolve([]),
+  ]);
+  const { results, error: searchError, page, pages } = searchOutcome;
   const insight = summarizeCollection(owned);
   const echo = !hasListen && session ? await loadEchoRange(session.user.id, insight, format) : null;
   const threadDrafts = results.length > 0 ? results : (echo?.drafts ?? []);

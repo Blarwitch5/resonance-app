@@ -193,6 +193,7 @@ const RECORD_SWIPE_ACTION_IDS: ReadonlySet<RecordMenuActionId> = new Set([
   "add",
   "hold",
   "shelf",
+  "share",
   "elsewhere",
   "release",
   "keep-shelf",
@@ -201,6 +202,26 @@ const RECORD_SWIPE_ACTION_IDS: ReadonlySet<RecordMenuActionId> = new Set([
 
 export function recordSwipeActions(actions: readonly RecordMenuAction[]): RecordMenuAction[] {
   return actions.filter((action) => RECORD_SWIPE_ACTION_IDS.has(action.id));
+}
+
+export function recordSwipeActionClass(id: RecordMenuActionId): string {
+  if (id === "release" || id === "confirm-release") {
+    return "bg-gradient-to-b from-error to-error text-on-error";
+  }
+
+  if (id === "share") {
+    return "bg-primary text-on-primary";
+  }
+
+  if (id === "keep" || id === "keep-shelf" || id === "add") {
+    return "bg-gradient-to-b from-primary to-primary-active text-on-primary";
+  }
+
+  if (id === "hold" || id === "shelf") {
+    return "bg-gradient-to-b from-secondary to-secondary-active text-on-secondary";
+  }
+
+  return "bg-gradient-to-b from-info to-cd text-on-primary";
 }
 
 export function recordMenuMoreClass(isOpen: boolean, placement: "cover" | "row" = "cover"): string {

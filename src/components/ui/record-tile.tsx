@@ -14,6 +14,7 @@ import type { Locale } from "@/lib/settings/types";
 interface RecordTileProps {
   href: string;
   coverUrl: string | null;
+  compactUrl?: string | null;
   title: string;
   artist: string;
   year?: number | string | null;
@@ -27,6 +28,7 @@ interface RecordTileProps {
 export function RecordTile({
   href,
   coverUrl,
+  compactUrl = null,
   title,
   artist,
   year = null,
@@ -43,11 +45,13 @@ export function RecordTile({
     <div className="flex flex-col gap-2">
       <Link
         href={href}
+        prefetch={false}
         data-record-link=""
         className="group block rounded-rs-md outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
       >
         <CoverArt
           url={coverUrl}
+          compactUrl={compactUrl}
           alt={coverAlt(locale, title, artist)}
           sizes={sizes}
           priority={priority}
@@ -58,6 +62,7 @@ export function RecordTile({
         heading={
           <Link
             href={href}
+            prefetch={false}
             className={`line-clamp-2 w-fit max-w-full ${recordTitleClass} outline-none focus-visible:ring-2 focus-visible:ring-border-strong`}
           >
             <PressingText>{title}</PressingText>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { journalHref } from "@/lib/collection/href";
-import { hasShelfItems, listCollectionItems } from "@/lib/collection/repository";
+import { hasShelfItems, listTonightRecords } from "@/lib/collection/repository";
 import { tonightDayKey, tonightFromShelf } from "@/lib/collection/tonight";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
@@ -18,7 +18,7 @@ export default async function TonightPage() {
   const session = await requireSession();
   const [settings, owned] = await Promise.all([
     getUserSettings(session.user.id),
-    listCollectionItems(session.user.id, { kind: "owned" }),
+    listTonightRecords(session.user.id),
   ]);
   const id = tonightFromShelf(owned, tonightDayKey());
 

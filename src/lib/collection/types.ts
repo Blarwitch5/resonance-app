@@ -311,6 +311,7 @@ export interface ReleaseDraft {
   label: string | null;
   genres: string[];
   coverUrl: string | null;
+  coverThumbUrl?: string | null;
   barcode: string | null;
   catalogNumber: string | null;
 }
@@ -343,6 +344,7 @@ export interface ShelfCard {
   catalogNumber: string | null;
   format: MediaFormat;
   coverUrl: string | null;
+  coverThumbUrl: string | null;
   notes: string | null;
   isFavorite: boolean;
   discogsId: number | null;
@@ -364,6 +366,7 @@ export function toShelfCard(item: ShelfCard): ShelfCard {
     catalogNumber: item.catalogNumber,
     format: item.format,
     coverUrl: item.coverUrl,
+    coverThumbUrl: item.coverThumbUrl,
     notes: item.notes,
     isFavorite: item.isFavorite,
     discogsId: item.discogsId,

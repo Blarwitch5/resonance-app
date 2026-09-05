@@ -13,7 +13,7 @@ import { KeptChip } from "@/components/ui/kept-chip";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchListenPane } from "@/components/ui/search-listen";
 import { SortChips } from "@/components/ui/sort-chips";
-import { bodyClass, sectionTitleClass } from "@/components/ui/type";
+import { bodyClass, hintClass, sectionTitleClass } from "@/components/ui/type";
 import { ViewChips } from "@/components/ui/view-chips";
 import { feedPageCount } from "@/lib/collection/feed";
 import { collectionHref } from "@/lib/collection/href";
@@ -291,6 +291,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
         </section>
       ) : (
         <>
+          <p className={hintClass}>{t(settings.locale, "collection.leaveHint")}</p>
           <CollectionFeed
             key={collectionHref(listen)}
             viewMode={settings.viewMode}

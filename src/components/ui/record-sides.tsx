@@ -16,11 +16,20 @@ interface RecordSidesProps {
   artist?: string;
   title?: string;
   coverUrl?: string | null;
+  compactUrl?: string | null;
   locale?: Locale;
   keepClose?: ReactNode;
 }
 
-export function RecordSides({ sides, artist, title, coverUrl, locale = "en", keepClose }: RecordSidesProps) {
+export function RecordSides({
+  sides,
+  artist,
+  title,
+  coverUrl,
+  compactUrl = null,
+  locale = "en",
+  keepClose,
+}: RecordSidesProps) {
   if (sides.length === 0) {
     return null;
   }
@@ -41,6 +50,7 @@ export function RecordSides({ sides, artist, title, coverUrl, locale = "en", kee
           artist={artist}
           title={title}
           coverUrl={coverUrl}
+          compactUrl={compactUrl}
           keepClose={keepClose}
         />
       ) : (

@@ -35,6 +35,8 @@ describe("t", () => {
     expect(t("fr", "menu.open")).toBe("Ouvrir cet album dans ton journal");
     expect(t("en", "menu.hold")).toBe("Keep this album");
     expect(t("fr", "menu.hold")).toBe("Garder cet album");
+    expect(t("en", "collection.leaveHint")).toContain("right-click");
+    expect(t("fr", "collection.leaveHint")).toContain("clic droit");
     expect(t("fr", "explorer.writeIn")).toBe("Ajouter un pressage à la main");
     expect(t("fr", "explorer.nothingHint")).toBe(
       "Un autre titre, un autre artiste, un code-barres à la lumière, ou ajoute ce pressage à la main.",

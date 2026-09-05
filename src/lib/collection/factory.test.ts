@@ -26,6 +26,16 @@ describe("createCollectionItem", () => {
     expect(item.label).toBe("Columbia");
     expect(item.isFavorite).toBe(false);
     expect(item.isWishlist).toBe(false);
+    expect(item.coverThumbUrl).toBeNull();
+  });
+
+  it("keeps a compact sleeve when Discogs sent one", () => {
+    expect(
+      createCollectionItem({
+        draft: { ...draft, coverThumbUrl: "https://i.discogs.com/thumb.jpeg" },
+        kind: "owned",
+      }).coverThumbUrl,
+    ).toBe("https://i.discogs.com/thumb.jpeg");
   });
 
   it("keeps a catalog number the pressing still carries", () => {

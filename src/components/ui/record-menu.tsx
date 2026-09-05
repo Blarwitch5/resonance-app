@@ -1,6 +1,6 @@
 "use client";
 
-import { Barcode, BookmarkPlus, BookOpen, Ellipsis, FaceSlightlySmilingPlus, Hash, Heart, Library, ScanSearch, Share, Trash2, type LucideIcon } from "lucide-react";
+import { Barcode, BookmarkPlus, BookOpen, CirclePlus, Ellipsis, Hash, Heart, Library, ScanSearch, Share, Trash2, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -29,6 +29,7 @@ import {
   recordMenuMoreClass,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
+  recordSwipeActionClass,
   recordSwipeActions,
   type RecordMenuActionId,
 } from "@/lib/collection/record-menu";
@@ -53,7 +54,7 @@ const ACTION_ICONS: Record<RecordMenuActionId, LucideIcon> = {
   open: BookOpen,
   keep: Heart,
   elsewhere: ScanSearch,
-  add: FaceSlightlySmilingPlus,
+  add: CirclePlus,
   hold: BookmarkPlus,
   shelf: Library,
   share: Share,
@@ -75,18 +76,6 @@ const COPY_KIND: Partial<Record<RecordMenuActionId, PressingCopyKind>> = {
   "copy-barcode": "barcode",
   "copy-catalog": "catalog",
 };
-
-function swipeActionClass(id: RecordMenuActionId): string {
-  if (id === "release" || id === "confirm-release") {
-    return "bg-error text-on-error";
-  }
-
-  if (id === "keep" || id === "keep-shelf") {
-    return "bg-primary text-on-primary";
-  }
-
-  return "bg-secondary text-on-secondary";
-}
 
 function subscribeToClient(): () => void {
   return () => undefined;
@@ -649,8 +638,10 @@ export function RecordMenu({
     return label;
   }
 
+  const isSwipeOpen = isSwipeDragging || swipeOffset > 0;
+  const swipeGround = isSwipeOpen ? "bg-surface-pressed" : "bg-background";
   const swipeFrame = showSwipe ? (
-    <div className="relative overflow-hidden rounded-rs-md lg:overflow-visible">
+    <div className={`relative overflow-hidden rounded-rs-md lg:overflow-visible ${swipeGround}`}>
       <div
         className="absolute inset-y-0 right-0 flex lg:hidden"
         role="group"
@@ -665,8 +656,27 @@ export function RecordMenu({
         {swipeActions.map((action) => {
           const Icon = ACTION_ICONS[action.id];
           const formAttr = FORM_ACTIONS[action.id];
-          const className = `flex h-full min-h-12 flex-col items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-strong ${swipeActionClass(action.id)}`;
+          const className = `flex h-full min-h-12 flex-col items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-strong ${recordSwipeActionClass(action.id)}`;
           const style = { width: SWIPE_ACTION_WIDTH };
+
+          if (action.id === "share") {
+            return (
+              <button
+                key={action.id}
+                type="button"
+                data-swipe-action=""
+                aria-label={action.label}
+                onClick={() => {
+                  restSwipe();
+                  void onShare();
+                }}
+                className={className}
+                style={style}
+              >
+                <Icon className="size-4" aria-hidden />
+              </button>
+            );
+          }
 
           if (action.id === "release" || action.id === "keep-shelf") {
             return (
@@ -720,7 +730,7 @@ export function RecordMenu({
       </div>
       <div
         ref={swipeSheetRef}
-        className={`relative bg-background ${isSwipeDragging ? "" : "transition-transform duration-200 ease-out"}`}
+        className={`relative ${swipeGround} ${isSwipeDragging ? "" : "transition-transform duration-200 ease-out"}`}
         style={{ transform: `translate3d(${-swipeOffset}px, 0, 0)` }}
       >
         {children}

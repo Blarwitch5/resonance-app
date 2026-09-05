@@ -32,10 +32,18 @@ interface RecordSamplePlayerProps {
   artist?: string;
   title?: string;
   coverUrl?: string | null;
+  compactUrl?: string | null;
   keepClose?: ReactNode;
 }
 
-export function RecordSamplePlayer({ sides, artist, title, coverUrl, keepClose }: RecordSamplePlayerProps) {
+export function RecordSamplePlayer({
+  sides,
+  artist,
+  title,
+  coverUrl,
+  compactUrl = null,
+  keepClose,
+}: RecordSamplePlayerProps) {
   const t = useT();
   const locale = useLocale();
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -416,7 +424,13 @@ export function RecordSamplePlayer({ sides, artist, title, coverUrl, keepClose }
               </button>
             </div>
             <div className={`flex min-w-0 items-center gap-3 ${keepClose ? "pr-24" : "pr-10"}`}>
-              <CoverArt url={nowPlaying.artwork} alt="" sizes="48px" className="size-12 shrink-0" />
+              <CoverArt
+                url={nowPlaying.artwork ?? coverUrl ?? null}
+                compactUrl={compactUrl}
+                alt=""
+                sizes="48px"
+                className="size-12 shrink-0"
+              />
               <div className="min-w-0 flex-1">
                 <p id={headingId} className={`line-clamp-2 ${recordTitleClass}`} title={nowPlaying.title}>
                   <PressingText>{nowPlaying.title}</PressingText>

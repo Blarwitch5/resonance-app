@@ -1,4 +1,4 @@
-import { FaceSlightlySmilingPlus, Library } from "lucide-react";
+import { CirclePlus, Library } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -60,6 +60,7 @@ export function ExplorerReleaseCard({
   const cover = (
     <CoverArt
       url={draft.coverUrl}
+      compactUrl={draft.coverThumbUrl}
       alt={href ? "" : coverAlt(locale, draft.title, draft.artist)}
       sizes={layout === "list" ? "64px" : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"}
       priority={priority}
@@ -81,6 +82,7 @@ export function ExplorerReleaseCard({
   const linkedHeading = href ? (
     <Link
       href={href}
+      prefetch={false}
       className="rounded-rs-sm outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
     >
       {heading}
@@ -95,13 +97,16 @@ export function ExplorerReleaseCard({
       className={metaClass}
     />
   );
-  const action = <CardAction draft={draft} presence={presence} from={from} locale={locale} />;
+  const action = (
+    <CardAction draft={draft} presence={presence} from={from} locale={locale} layout={layout} />
+  );
   const card =
     layout === "list" ? (
       <article className={`flex min-h-14 items-center gap-3 py-2 ${shelfListHitClass}`} aria-labelledby={headingId}>
         {href ? (
           <Link
             href={href}
+            prefetch={false}
             data-record-link=""
             aria-label={explorerCardLabel(draft.title, presence, locale)}
             className="w-16 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
@@ -128,6 +133,7 @@ export function ExplorerReleaseCard({
         {href ? (
           <Link
             href={href}
+            prefetch={false}
             data-record-link=""
             aria-label={explorerCardLabel(draft.title, presence, locale)}
             className="group block rounded-rs-md outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
@@ -190,11 +196,13 @@ function CardAction({
   presence,
   from,
   locale,
+  layout,
 }: {
   draft: ReleaseDraft;
   presence: ShelfPresence;
   from?: string;
   locale: Locale;
+  layout: ViewMode;
 }) {
   if (presence.status === "owned") {
     return (
@@ -230,14 +238,16 @@ function CardAction({
     return null;
   }
 
+  const isList = layout === "list";
+
   return (
     <ButtonLink
       href={addHref}
-      className="min-h-11 px-4"
+      className={isList ? "min-h-11 min-w-11 px-0 sm:min-h-11 sm:px-0" : "min-h-11 px-4"}
       aria-label={t(locale, "explorer.addAria", { title: draft.title })}
     >
-      <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-      {t(locale, "common.add")}
+      <CirclePlus className="size-4 shrink-0" aria-hidden />
+      {isList ? null : t(locale, "common.add")}
     </ButtonLink>
   );
 }

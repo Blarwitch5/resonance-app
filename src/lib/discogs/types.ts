@@ -19,7 +19,7 @@ export interface DiscogsRelease {
   labels?: Array<{ name: string; catno?: string }>;
   genres?: string[];
   styles?: string[];
-  images?: Array<{ uri: string; type?: string }>;
+  images?: Array<{ uri: string; uri150?: string; type?: string }>;
   formats?: Array<{ name: string }>;
   identifiers?: Array<{ type: string; value: string }>;
   country?: string;

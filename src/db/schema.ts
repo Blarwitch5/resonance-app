@@ -101,6 +101,7 @@ export const collectionItem = pgTable(
     label: text("label"),
     genres: text("genres").array().notNull().default([]),
     coverUrl: text("cover_url"),
+    coverThumbUrl: text("cover_thumb_url"),
     barcode: text("barcode"),
     catalogNumber: text("catalog_number"),
     condition: mediaCondition("condition"),

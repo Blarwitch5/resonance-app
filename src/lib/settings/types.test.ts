@@ -93,5 +93,7 @@ describe("shelfListHitClass", () => {
     expect(shelfListHitClass).toContain("px-3");
     expect(shelfListHitClass).toContain("hover:bg-surface-pressed");
     expect(shelfListHitClass).toContain("group-data-[menu=open]:bg-surface-pressed");
+    expect(shelfListHitClass).toContain("group-data-[record-swipe=open]:bg-surface-pressed");
+    expect(shelfListHitClass).toContain("group-data-[record-swipe=dragging]:bg-surface-pressed");
   });
 });

@@ -211,6 +211,7 @@ export interface ReleaseListen {
   catalogNumber: string | null;
   formatNames: string[];
   creditLine: string | null;
+  coverThumbUrl: string | null;
 }
 
 export async function getReleaseListen(discogsId: number): Promise<ReleaseListen> {
@@ -223,6 +224,7 @@ export async function getReleaseListen(discogsId: number): Promise<ReleaseListen
     catalogNumber: preview.catalogNumber,
     formatNames: preview.formatNames,
     creditLine: preview.creditLine,
+    coverThumbUrl: preview.coverThumbUrl ?? null,
   };
 }
 

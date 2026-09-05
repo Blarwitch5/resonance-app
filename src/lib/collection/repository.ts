@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, gte, ilike, inArray, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, gte, ilike, inArray, lt, ne, or, sql, type SQL } from "drizzle-orm";
 
 import { getDb } from "@/db";
 import { collectionItem } from "@/db/schema";
@@ -179,6 +179,37 @@ export async function countCollectionItems(userId: string, filters: ListFilters 
   }
 }
 
+export async function listTonightRecords(userId: string) {
+  try {
+    return await getDb()
+      .select({
+        id: collectionItem.id,
+        isFavorite: collectionItem.isFavorite,
+      })
+      .from(collectionItem)
+      .where(and(...collectionWhere(userId, { kind: "owned" })));
+  } catch (error) {
+    throw new DatabaseError("Your collection could not be loaded.", { cause: error });
+  }
+}
+
+export async function listPaletteRecords(userId: string, limit: number) {
+  try {
+    return await getDb()
+      .select({
+        id: collectionItem.id,
+        artist: collectionItem.artist,
+        title: collectionItem.title,
+      })
+      .from(collectionItem)
+      .where(and(...collectionWhere(userId, { kind: "owned" })))
+      .orderBy(desc(collectionItem.createdAt))
+      .limit(limit);
+  } catch (error) {
+    throw new DatabaseError("Your collection could not be loaded.", { cause: error });
+  }
+}
+
 export async function listCollectionStatItems(userId: string): Promise<CollectionStatItem[]> {
   try {
     return await getDb()
@@ -317,26 +348,36 @@ export async function listShelfNeighbors(
   userId: string,
   itemId: string,
   isWishlist: boolean,
+  createdAt: Date | string,
 ): Promise<{ before: ShelfNeighbor | null; after: ShelfNeighbor | null }> {
+  const when = createdAt instanceof Date ? createdAt : new Date(createdAt);
+  const scope = and(eq(collectionItem.userId, userId), eq(collectionItem.isWishlist, isWishlist));
+
   try {
-    const rows = await getDb()
-      .select({
-        id: collectionItem.id,
-        title: collectionItem.title,
-      })
-      .from(collectionItem)
-      .where(and(eq(collectionItem.userId, userId), eq(collectionItem.isWishlist, isWishlist)))
-      .orderBy(desc(collectionItem.createdAt));
-
-    const index = rows.findIndex((row) => row.id === itemId);
-
-    if (index < 0) {
-      return { before: null, after: null };
-    }
+    const [newer, older] = await Promise.all([
+      getDb()
+        .select({
+          id: collectionItem.id,
+          title: collectionItem.title,
+        })
+        .from(collectionItem)
+        .where(and(scope, ne(collectionItem.id, itemId), gt(collectionItem.createdAt, when)))
+        .orderBy(asc(collectionItem.createdAt))
+        .limit(1),
+      getDb()
+        .select({
+          id: collectionItem.id,
+          title: collectionItem.title,
+        })
+        .from(collectionItem)
+        .where(and(scope, ne(collectionItem.id, itemId), lt(collectionItem.createdAt, when)))
+        .orderBy(desc(collectionItem.createdAt))
+        .limit(1),
+    ]);
 
     return {
-      before: rows[index - 1] ?? null,
-      after: rows[index + 1] ?? null,
+      before: newer[0] ?? null,
+      after: older[0] ?? null,
     };
   } catch (error) {
     throw new DatabaseError("Your collection could not be loaded.", { cause: error });
@@ -390,6 +431,7 @@ export async function updateCollectionItem(
     purchaseLocation?: string | null;
     purchaseDate?: Date | null;
     catalogNumber?: string | null;
+    coverThumbUrl?: string | null;
   },
 ) {
   try {
@@ -528,6 +570,7 @@ export async function restoreCollectionItems(
       label: record.label,
       genres: record.genres,
       coverUrl: record.coverUrl,
+      coverThumbUrl: record.coverThumbUrl,
       barcode: record.barcode,
       catalogNumber: record.catalogNumber,
       condition: record.condition,

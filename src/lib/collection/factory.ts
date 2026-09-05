@@ -10,6 +10,7 @@ interface NormalizedItem {
   label: string | null;
   genres: string[];
   coverUrl: string | null;
+  coverThumbUrl: string | null;
   barcode: string | null;
   catalogNumber: string | null;
   isFavorite: boolean;
@@ -35,6 +36,7 @@ export function createCollectionItem(input: {
     artist,
     label: input.draft.label?.trim() || null,
     catalogNumber: input.draft.catalogNumber?.trim() || null,
+    coverThumbUrl: input.draft.coverThumbUrl ?? null,
     notes: input.notes?.trim() || null,
     isFavorite: input.kind === "favorite",
     isWishlist: input.kind === "wishlist",

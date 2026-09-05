@@ -13,6 +13,7 @@ import type { Locale } from "@/lib/settings/types";
 interface RecordRowProps {
   href: string;
   coverUrl: string | null;
+  compactUrl?: string | null;
   title: string;
   artist: string;
   year?: number | null;
@@ -27,6 +28,7 @@ interface RecordRowProps {
 export function RecordRow({
   href,
   coverUrl,
+  compactUrl = null,
   title,
   artist,
   year = null,
@@ -48,14 +50,22 @@ export function RecordRow({
     <div className="flex min-h-14 items-center gap-3 rounded-rs-md py-2">
       <Link
         href={href}
+        prefetch={false}
         data-record-link=""
         className="w-16 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
       >
-        <CoverArt url={coverUrl} alt={coverAlt(locale, title, artist)} sizes="64px" priority={priority} />
+        <CoverArt
+          url={coverUrl}
+          compactUrl={compactUrl}
+          alt={coverAlt(locale, title, artist)}
+          sizes="64px"
+          priority={priority}
+        />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <Link
           href={href}
+          prefetch={false}
           className={`truncate ${recordTitleClass} outline-none focus-visible:ring-2 focus-visible:ring-border-strong`}
         >
           <PressingText>{title}</PressingText>

@@ -185,6 +185,7 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
         <div className={confirmCoverStickyClass}>
           <CoverArt
             url={preview.coverUrl}
+            compactUrl={preview.coverThumbUrl}
             alt={coverAlt(locale, preview.title, preview.artist)}
             sizes="(max-width: 640px) 80vw, 256px"
             priority
@@ -199,6 +200,7 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
             artist={preview.artist}
             title={preview.title}
             coverUrl={preview.coverUrl}
+            compactUrl={preview.coverThumbUrl}
             locale={locale}
           />
           <ConfirmShelf copies={{ owned, waiting }} title={preview.title} from={query.from} locale={locale} />

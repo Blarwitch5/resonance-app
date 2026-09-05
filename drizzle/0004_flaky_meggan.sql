@@ -1,0 +1,1 @@
+ALTER TABLE "collection_item" ADD COLUMN "cover_thumb_url" text;

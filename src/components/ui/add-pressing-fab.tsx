@@ -1,25 +1,28 @@
 "use client";
 
-import { FaceSlightlySmilingPlus, PenLine, ScanBarcode, X } from "lucide-react";
+import { PenLine, ScanBarcode, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
 import { useBarcodeScan } from "@/app/explorer/barcode-scanner";
 import { useT } from "@/components/locale-provider";
-import { shouldShowAddPressing } from "@/lib/collection/add-pressing";
+import { FormatPlusIcon } from "@/components/ui/format-plus-icon";
+import { addPressingFormatGlyph, shouldShowAddPressing } from "@/lib/collection/add-pressing";
+import type { MediaFormat } from "@/lib/collection/types";
 
 interface AddPressingFabProps {
   isSignedIn: boolean;
+  defaultFormat?: MediaFormat | null;
 }
 
 const fabClass =
-  "flex size-14 items-center justify-center rounded-full bg-primary text-on-primary outline-none standalone:size-12 hover:bg-primary-hover active:bg-primary-active focus-visible:ring-2 focus-visible:ring-border-strong";
+  "group flex size-14 items-center justify-center rounded-full bg-primary text-on-primary outline-none standalone:size-12 hover:bg-primary-hover active:bg-primary-active focus-visible:ring-2 focus-visible:ring-border-strong";
 
 const satelliteClass =
   "flex size-12 items-center justify-center rounded-full border border-border bg-surface-elevated text-text outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong";
 
-export function AddPressingFab({ isSignedIn }: AddPressingFabProps) {
+export function AddPressingFab({ isSignedIn, defaultFormat = null }: AddPressingFabProps) {
   const t = useT();
   const pathname = usePathname();
   const openScan = useBarcodeScan();
@@ -111,7 +114,7 @@ export function AddPressingFab({ isSignedIn }: AddPressingFabProps) {
         {isOpen ? (
           <X className="size-6" aria-hidden />
         ) : (
-          <FaceSlightlySmilingPlus className="size-6" aria-hidden />
+          <FormatPlusIcon format={addPressingFormatGlyph(defaultFormat)} />
         )}
       </button>
     </div>

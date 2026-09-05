@@ -1,7 +1,10 @@
 import Image from "next/image";
 
+import { coverDisplaySrc, coverSlotFromSizes, isBlobCoverUrl } from "@/lib/collection/cover-src";
+
 interface CoverArtProps {
   url: string | null;
+  compactUrl?: string | null;
   alt: string;
   sizes?: string;
   className?: string;
@@ -11,6 +14,7 @@ interface CoverArtProps {
 
 export function CoverArt({
   url,
+  compactUrl = null,
   alt,
   sizes = "(max-width: 768px) 50vw, 200px",
   className = "w-full",
@@ -20,22 +24,31 @@ export function CoverArt({
   const listenClass = isInteractive
     ? "motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105"
     : "";
+  const stillClass = `absolute inset-0 size-full object-cover ${listenClass}`.trim();
 
   return (
     <div
       className={`relative aspect-square overflow-hidden rounded-rs-sm bg-surface-pressed ${className}`.trim()}
     >
-      {url ? (
+      {url && isBlobCoverUrl(url) ? (
         <Image
           src={url}
           alt={alt}
           width={600}
           height={600}
           sizes={sizes}
-          unoptimized
           priority={priority}
           loading={priority ? "eager" : "lazy"}
-          className={`absolute inset-0 size-full object-cover ${listenClass}`.trim()}
+          className={stillClass}
+        />
+      ) : url ? (
+        <CoverStill
+          url={url}
+          compactUrl={compactUrl}
+          alt={alt}
+          sizes={sizes}
+          priority={priority}
+          className={stillClass}
         />
       ) : (
         <div
@@ -46,5 +59,40 @@ export function CoverArt({
         </div>
       )}
     </div>
+  );
+}
+
+function CoverStill({
+  url,
+  compactUrl,
+  alt,
+  sizes,
+  priority,
+  className,
+}: {
+  url: string;
+  compactUrl: string | null;
+  alt: string;
+  sizes: string;
+  priority: boolean;
+  className: string;
+}) {
+  const display = coverDisplaySrc({ url, compactUrl, slot: coverSlotFromSizes(sizes) });
+
+  return (
+    // Discogs signs each size. Next cannot fetch or resize those URLs.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={display.src}
+      srcSet={display.srcSet}
+      sizes={sizes}
+      alt={alt}
+      width={600}
+      height={600}
+      loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
+      decoding="async"
+      className={className}
+    />
   );
 }

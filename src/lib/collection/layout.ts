@@ -24,7 +24,7 @@ export function shelfArriveProps(index: number): { className: string; style: { a
 
 /** List-row hover: inset from neighbors, with room beside the cover and the heart. */
 export const shelfListHitClass =
-  "rounded-rs-md px-3 hover:bg-surface-pressed group-data-[menu=open]:bg-surface-pressed";
+  "rounded-rs-md px-3 hover:bg-surface-pressed group-data-[menu=open]:bg-surface-pressed group-data-[record-swipe=open]:bg-surface-pressed group-data-[record-swipe=dragging]:bg-surface-pressed";
 
 /** Cover stays beside the journal once the page is two columns. One column: it scrolls away. */
 export const journalCoverStickyClass = "lg:sticky lg:top-6";

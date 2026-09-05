@@ -95,25 +95,27 @@ export function ProfileFeed({
               <RecordRow
                 href={href}
                 coverUrl={item.coverUrl}
+                compactUrl={item.coverThumbUrl}
                 title={item.title}
                 artist={item.artist}
                 year={item.year}
                 format={item.format}
                 threads={threads}
                 locale={locale}
-                priority={index < 8}
+                priority={index < 4}
               />
             ) : (
               <RecordTile
                 href={href}
                 coverUrl={item.coverUrl}
+                compactUrl={item.coverThumbUrl}
                 title={item.title}
                 artist={item.artist}
                 year={item.year}
                 format={item.format}
                 locale={locale}
                 threads={threads}
-                priority={index < 8}
+                priority={index < 4}
               />
             );
 

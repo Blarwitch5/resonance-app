@@ -17,6 +17,7 @@ export interface ResonanceBackupItem {
   label: string | null;
   genres: string[];
   coverUrl: string | null;
+  coverThumbUrl: string | null;
   barcode: string | null;
   catalogNumber: string | null;
   condition: MediaCondition | null;
@@ -38,6 +39,7 @@ export interface ResonanceBackupRecord {
   label: string | null;
   genres: string[];
   coverUrl: string | null;
+  coverThumbUrl: string | null;
   barcode: string | null;
   catalogNumber: string | null;
   condition: MediaCondition | null;
@@ -96,6 +98,7 @@ export function toResonanceBackup(input: {
       label: item.label,
       genres: item.genres,
       coverUrl: item.coverUrl,
+      coverThumbUrl: item.coverThumbUrl,
       barcode: item.barcode,
       catalogNumber: item.catalogNumber,
       condition: item.condition,
@@ -127,6 +130,7 @@ const backupRecordSchema = z.object({
   label: z.string().trim().max(200).nullable(),
   genres: z.array(z.string().trim().min(1).max(80)).max(12),
   coverUrl: z.union([httpsUrl, z.null()]),
+  coverThumbUrl: z.union([httpsUrl, z.null()]).optional().transform((value) => value ?? null),
   barcode: z.string().trim().max(64).nullable(),
   catalogNumber: z.string().trim().max(40).nullable().optional().transform((value) => value ?? null),
   condition: z.enum(MEDIA_CONDITIONS).nullable(),

@@ -57,9 +57,16 @@ function usableCoverUrl(url: string | undefined): string | null {
   return url;
 }
 
+function coverPair(
+  full?: string,
+  compact?: string,
+): { coverUrl: string | null; coverThumbUrl: string | null } {
+  const coverUrl = usableCoverUrl(full) ?? usableCoverUrl(compact);
+  return { coverUrl, coverThumbUrl: usableCoverUrl(compact) };
+}
+
 export function toReleaseDraftFromSearch(hit: DiscogsSearchHit): ReleaseDraft {
   const split = splitSearchTitle(hit.title);
-  const cover = usableCoverUrl(hit.cover_image) ?? usableCoverUrl(hit.thumb);
 
   return {
     discogsId: hit.id,
@@ -69,7 +76,7 @@ export function toReleaseDraftFromSearch(hit: DiscogsSearchHit): ReleaseDraft {
     year: parseYear(hit.year),
     label: hit.label?.[0] ?? null,
     genres: hit.genre ?? [],
-    coverUrl: cover,
+    ...coverPair(hit.cover_image, hit.thumb),
     barcode: hit.barcode?.[0] ?? null,
     catalogNumber: clipCatalogNumber(hit.catno),
   };
@@ -96,7 +103,7 @@ export function toReleaseDraft(release: DiscogsRelease): ReleaseDraft {
     year: release.year ?? null,
     label: release.labels?.[0]?.name ?? null,
     genres: [...(release.genres ?? []), ...(release.styles ?? [])],
-    coverUrl: usableCoverUrl(primaryCover?.uri),
+    ...coverPair(primaryCover?.uri, primaryCover?.uri150),
     barcode: barcode?.value ?? null,
     catalogNumber: catalogNumberFromRelease(release),
   };
@@ -167,7 +174,7 @@ function draftFromBasicInformation(info: DiscogsBasicInformation): ReleaseDraft 
     year: info.year ?? null,
     label: info.labels?.[0]?.name?.trim() || null,
     genres: [...(info.genres ?? []), ...(info.styles ?? [])],
-    coverUrl: usableCoverUrl(info.cover_image) ?? usableCoverUrl(info.thumb),
+    ...coverPair(info.cover_image, info.thumb),
     barcode: null,
     catalogNumber: clipCatalogNumber(info.labels?.[0]?.catno),
   };

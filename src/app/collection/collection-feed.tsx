@@ -157,6 +157,7 @@ function ShelfRecordList({
                     <RecordRow
                       href={href}
                       coverUrl={item.coverUrl}
+                      compactUrl={item.coverThumbUrl}
                       title={item.title}
                       artist={item.artist}
                       year={sort === "found" || arrived !== undefined ? null : item.year}
@@ -165,12 +166,13 @@ function ShelfRecordList({
                       memory={memoryExcerpt(item.notes)}
                       threads={threads}
                       locale={locale}
-                      priority={index < 8}
+                      priority={index < 4}
                     />
                   ) : (
                     <RecordTile
                       href={href}
                       coverUrl={item.coverUrl}
+                      compactUrl={item.coverThumbUrl}
                       title={item.title}
                       artist={item.artist}
                       year={sort === "found" || arrived !== undefined ? (foundOn ?? null) : item.year}
@@ -178,7 +180,7 @@ function ShelfRecordList({
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       threads={threads}
                       locale={locale}
-                      priority={index < 8}
+                      priority={index < 4}
                     />
                   )}
                 </KeptCloseSlot>

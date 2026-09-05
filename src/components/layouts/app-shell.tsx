@@ -18,7 +18,8 @@ import { ProfileNav } from "@/components/ui/profile-nav";
 import { Sidebar } from "@/components/ui/sidebar";
 import { SignOutButton } from "@/components/ui/sign-out-button";
 import { PALETTE_RECORD_MAX, type PaletteRecord } from "@/lib/collection/palette";
-import { listCollectionItems } from "@/lib/collection/repository";
+import { listPaletteRecords } from "@/lib/collection/repository";
+import type { MediaFormat } from "@/lib/collection/types";
 import { getSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
 import { enabledFormats, type Locale } from "@/lib/settings/types";
@@ -27,28 +28,27 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-async function loadShelfChrome(userId: string): Promise<[ReturnType<typeof enabledFormats>, PaletteRecord[], Locale]> {
-  const [settings, items] = await Promise.all([
+async function loadShelfChrome(
+  userId: string,
+): Promise<[ReturnType<typeof enabledFormats>, PaletteRecord[], Locale, MediaFormat | null]> {
+  const [settings, records] = await Promise.all([
     getUserSettings(userId),
-    listCollectionItems(userId, { kind: "owned", pageSize: PALETTE_RECORD_MAX }),
+    listPaletteRecords(userId, PALETTE_RECORD_MAX),
   ]);
 
   return [
     enabledFormats(settings),
-    items.map((item) => ({
-      id: item.id,
-      artist: item.artist,
-      title: item.title,
-    })),
+    records,
     settings.locale,
+    settings.defaultFormat,
   ];
 }
 
 export async function AppShell({ children }: AppShellProps) {
   const session = await getSession();
-  const [formats, records, locale] = session
+  const [formats, records, locale, defaultFormat] = session
     ? await loadShelfChrome(session.user.id)
-    : [[], [], "en" as const];
+    : [[], [], "en" as const, null];
 
   return (
     <LocaleProvider locale={locale}>
@@ -93,7 +93,7 @@ export async function AppShell({ children }: AppShellProps) {
           <Suspense fallback={null}>
             <RememberReturn />
           </Suspense>
-          <AddPressingFab isSignedIn={session !== null} />
+          <AddPressingFab isSignedIn={session !== null} defaultFormat={defaultFormat} />
         </div>
       </BarcodeScanProvider>
     </LocaleProvider>

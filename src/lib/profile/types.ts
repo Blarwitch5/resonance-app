@@ -204,6 +204,7 @@ export interface ProfileShelfItem {
   label: string | null;
   genres: string[];
   coverUrl: string | null;
+  coverThumbUrl: string | null;
   isFavorite: boolean;
   format: MediaFormat;
   discogsId: number | null;
@@ -223,6 +224,7 @@ export function toProfileShelfItem(item: ProfileShelfItem): ProfileShelfItem {
     label: item.label,
     genres: item.genres,
     coverUrl: item.coverUrl,
+    coverThumbUrl: item.coverThumbUrl,
     isFavorite: item.isFavorite,
     format: item.format,
     discogsId: item.discogsId,

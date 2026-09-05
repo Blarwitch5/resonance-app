@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 import { t } from "@/lib/i18n/translate";
-import { parseLocale, type Locale } from "@/lib/settings/types";
+import type { Locale } from "@/lib/settings/types";
 
 const LocaleContext = createContext<Locale | null>(null);
 
@@ -12,25 +12,12 @@ interface LocaleProviderProps {
   children: ReactNode;
 }
 
-function subscribeDocumentLang(onChange: () => void): () => void {
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
-  return () => observer.disconnect();
-}
-
-function readDocumentLang(): Locale {
-  return parseLocale(document.documentElement.lang) ?? "en";
-}
-
 export function LocaleProvider({ locale, children }: LocaleProviderProps) {
   return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>;
 }
 
 export function useLocale(): Locale {
-  const fromContext = useContext(LocaleContext);
-  const fromDocument = useSyncExternalStore(subscribeDocumentLang, readDocumentLang, () => fromContext ?? "en");
-
-  return fromContext ?? fromDocument;
+  return useContext(LocaleContext) ?? "en";
 }
 
 export function useT() {

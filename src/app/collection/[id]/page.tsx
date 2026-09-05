@@ -26,7 +26,7 @@ import { pickShelfKin, SHELF_KIN_LIMIT } from "@/lib/collection/kin";
 import { journalCoverStickyClass } from "@/lib/collection/layout";
 import { toPressingThreads } from "@/lib/collection/pressing-threads";
 import { getCollectionItem, listCollectionItems, listShelfNeighbors, updateCollectionItem } from "@/lib/collection/repository";
-import { decadeFromYear } from "@/lib/collection/types";
+import { decadeFromYear, foundDateLabel } from "@/lib/collection/types";
 import { loadDeezerPreviews } from "@/lib/deezer/client";
 import { attachDeezerPreviews } from "@/lib/deezer/preview";
 import { getMarketplaceAsk, getReleaseListen } from "@/lib/discogs/client";
@@ -219,7 +219,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
             notes={item.notes}
             condition={item.condition}
             purchaseLocation={item.purchaseLocation}
-            purchaseDate={item.purchaseDate ? item.purchaseDate.toISOString().slice(0, 10) : null}
+            purchaseDate={foundDateLabel(item.purchaseDate) ?? null}
           />
           <ReleaseRecordForm id={item.id} title={item.title} />
         </div>

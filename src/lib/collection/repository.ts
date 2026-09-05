@@ -6,6 +6,7 @@ import { getDb } from "@/db";
 import { collectionItem } from "@/db/schema";
 import { backupRecordKey, freshBackupRecords, type ResonanceBackupRecord } from "@/lib/collection/backup";
 import type { ShelfCopy } from "@/lib/collection/confirm";
+import { isMissingCoverThumbColumn, isUniqueViolation, postgresCode } from "@/lib/collection/db-error";
 import { createCollectionItem } from "@/lib/collection/factory";
 import type { CollectionStatItem } from "@/lib/collection/stats";
 import type {
@@ -74,18 +75,6 @@ const collectionItemWithoutThumb = {
   coverThumbUrl: sql<string | null>`cast(null as text)`.as("cover_thumb_url"),
 };
 
-function errorText(error: unknown): string {
-  if (!(error instanceof Error)) {
-    return String(error);
-  }
-
-  return error.cause ? `${error.message} ${errorText(error.cause)}` : error.message;
-}
-
-function isMissingCoverThumbColumn(error: unknown): boolean {
-  return errorText(error).includes("cover_thumb_url");
-}
-
 async function selectCollectionRows<T>(
   run: (columns: typeof collectionItemWithThumb | typeof collectionItemWithoutThumb) => Promise<T>,
 ): Promise<T> {
@@ -97,6 +86,74 @@ async function selectCollectionRows<T>(
     }
 
     return run(collectionItemWithoutThumb);
+  }
+}
+
+type CollectionInsert = typeof collectionItem.$inferInsert;
+
+function withoutCoverThumb<T extends { coverThumbUrl?: string | null }>(
+  value: T,
+): Omit<T, "coverThumbUrl"> {
+  const { coverThumbUrl: _thumb, ...rest } = value;
+  return rest;
+}
+
+async function insertCollectionRows(
+  values: CollectionInsert[],
+  returning: typeof collectionItemWithThumb | { id: typeof collectionItem.id } = collectionItemWithThumb,
+  ignoreConflict = false,
+) {
+  try {
+    const query = getDb().insert(collectionItem).values(values);
+    const next = ignoreConflict ? query.onConflictDoNothing() : query;
+    return await next.returning(returning);
+  } catch (error) {
+    if (!isMissingCoverThumbColumn(error)) {
+      throw error;
+    }
+
+    const query = getDb().insert(collectionItem).values(values.map(withoutCoverThumb));
+    const next = ignoreConflict ? query.onConflictDoNothing() : query;
+    return next.returning(returning === collectionItemWithThumb ? collectionItemWithoutThumb : returning);
+  }
+}
+
+async function updateCollectionRow(
+  userId: string,
+  id: string,
+  patch: {
+    notes?: string | null;
+    condition?: MediaCondition | null;
+    isFavorite?: boolean;
+    isWishlist?: boolean;
+    purchaseLocation?: string | null;
+    purchaseDate?: Date | null;
+    catalogNumber?: string | null;
+    coverThumbUrl?: string | null;
+  },
+) {
+  try {
+    return await getDb()
+      .update(collectionItem)
+      .set({
+        ...patch,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
+      .returning(collectionItemWithThumb);
+  } catch (error) {
+    if (!isMissingCoverThumbColumn(error)) {
+      throw error;
+    }
+
+    return getDb()
+      .update(collectionItem)
+      .set({
+        ...withoutCoverThumb(patch),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
+      .returning(collectionItemWithoutThumb);
   }
 }
 
@@ -300,13 +357,7 @@ export async function addCollectionItem(
   const item = createCollectionItem({ draft, kind, notes });
 
   try {
-    const [created] = await getDb()
-      .insert(collectionItem)
-      .values({
-        userId,
-        ...item,
-      })
-      .returning();
+    const [created] = await insertCollectionRows([{ userId, ...item }]);
 
     if (!created) {
       throw new DatabaseError("The record could not be added to your collection.");
@@ -322,19 +373,11 @@ export async function addCollectionItem(
       throw new ValidationError("This pressing is already on your shelf.");
     }
 
+    console.error("Resonance add collection item failed", { code: postgresCode(error) });
     throw new DatabaseError("The record could not be added to your collection.", {
       cause: error,
     });
   }
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  if (typeof error !== "object" || error === null) {
-    return false;
-  }
-
-  const candidate = error as { code?: string; cause?: { code?: string } };
-  return candidate.code === "23505" || candidate.cause?.code === "23505";
 }
 
 function escapeIlike(value: string): string {
@@ -498,14 +541,7 @@ export async function updateCollectionItem(
   },
 ) {
   try {
-    const [updated] = await getDb()
-      .update(collectionItem)
-      .set({
-        ...patch,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
-      .returning();
+    const [updated] = await updateCollectionRow(userId, id, patch);
 
     if (!updated) {
       throw new NotFoundError("This record is not in your collection.");
@@ -593,9 +629,7 @@ export async function addCollectionItems(
       userId,
       ...createCollectionItem({ draft: entry.draft, kind: entry.kind }),
     }));
-    const inserted = await getDb().insert(collectionItem).values(values).onConflictDoNothing().returning({
-      id: collectionItem.id,
-    });
+    const inserted = await insertCollectionRows(values, { id: collectionItem.id }, true);
 
     return { added: inserted.length, skipped: skipped + (fresh.length - inserted.length) };
   } catch (error) {
@@ -649,11 +683,7 @@ export async function restoreCollectionItems(
 
     for (let index = 0; index < values.length; index += RESTORE_CHUNK) {
       const slice = values.slice(index, index + RESTORE_CHUNK);
-      const inserted = await getDb()
-        .insert(collectionItem)
-        .values(slice)
-        .onConflictDoNothing()
-        .returning({ id: collectionItem.id });
+      const inserted = await insertCollectionRows(slice, { id: collectionItem.id }, true);
       added += inserted.length;
     }
 

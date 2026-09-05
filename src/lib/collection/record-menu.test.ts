@@ -9,6 +9,7 @@ import {
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
   recordSwipeActionClass,
+  recordSwipeToneCount,
   recordSwipeActions,
 } from "@/lib/collection/record-menu";
 
@@ -314,15 +315,27 @@ describe("recordSwipeActions", () => {
 });
 
 describe("recordSwipeActionClass", () => {
-  it("gives neighboring swipe actions different grounds", () => {
-    expect(recordSwipeActionClass("add")).toContain("from-primary");
-    expect(recordSwipeActionClass("share")).toContain("bg-primary");
-    expect(recordSwipeActionClass("share")).not.toContain("from-info");
-    expect(recordSwipeActionClass("hold")).toContain("from-secondary");
-    expect(recordSwipeActionClass("elsewhere")).toContain("from-info");
-    expect(recordSwipeActionClass("release")).toContain("from-error");
-    expect(recordSwipeActionClass("add")).not.toBe(recordSwipeActionClass("hold"));
-    expect(recordSwipeActionClass("hold")).not.toBe(recordSwipeActionClass("elsewhere"));
+  it("walks violet toward copper along the rail, and stays red when a record leaves", () => {
+    expect(recordSwipeActionClass("keep", 0)).toBe("bg-swipe text-on-primary");
+    expect(recordSwipeActionClass("share", 1)).toContain("bg-swipe-dim");
+    expect(recordSwipeActionClass("elsewhere", 2)).toContain("bg-swipe-deep");
+    expect(recordSwipeActionClass("add", 3)).toContain("bg-swipe-dark");
+    expect(recordSwipeActionClass("add", 3)).toContain("text-on-secondary");
+    expect(recordSwipeActionClass("release", 3)).toBe("bg-error text-on-error");
+  });
+
+  it("reaches copper on the last keep action when the rail is shorter", () => {
+    const rail = [
+      { id: "keep" as const, label: "Keep" },
+      { id: "share" as const, label: "Share" },
+      { id: "release" as const, label: "Let go" },
+    ];
+    const toneCount = recordSwipeToneCount(rail);
+
+    expect(toneCount).toBe(2);
+    expect(recordSwipeActionClass("keep", 0, toneCount)).toBe("bg-swipe text-on-primary");
+    expect(recordSwipeActionClass("share", 1, toneCount)).toBe("bg-swipe-dark text-on-secondary");
+    expect(recordSwipeActionClass("release", 2, toneCount)).toBe("bg-error text-on-error");
   });
 });
 

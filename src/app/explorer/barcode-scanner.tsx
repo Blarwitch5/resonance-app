@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/components/locale-provider";
 
 const BarcodeScanDialog = dynamic(
-  () => import("@/app/explorer/barcode-scan-dialog").then((module) => module.BarcodeScanDialog),
+  () =>
+    import("@/app/explorer/barcode-scan-dialog").then((module) => ({
+      default: module.BarcodeScanDialog,
+    })),
   { ssr: false },
 );
 

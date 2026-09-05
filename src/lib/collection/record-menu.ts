@@ -204,24 +204,36 @@ export function recordSwipeActions(actions: readonly RecordMenuAction[]): Record
   return actions.filter((action) => RECORD_SWIPE_ACTION_IDS.has(action.id));
 }
 
-export function recordSwipeActionClass(id: RecordMenuActionId): string {
-  if (id === "release" || id === "confirm-release") {
-    return "bg-gradient-to-b from-error to-error text-on-error";
+const SWIPE_TONE_STEPS = [
+  "bg-swipe text-on-primary",
+  "bg-swipe-dim text-on-primary",
+  "bg-swipe-deep text-on-secondary",
+  "bg-swipe-dark text-on-secondary",
+] as const;
+
+function isSwipeRelease(id: RecordMenuActionId): boolean {
+  return id === "release" || id === "confirm-release";
+}
+
+export function recordSwipeToneCount(actions: readonly RecordMenuAction[]): number {
+  return actions.filter((action) => !isSwipeRelease(action.id)).length;
+}
+
+export function recordSwipeActionClass(
+  id: RecordMenuActionId,
+  index = 0,
+  toneCount = SWIPE_TONE_STEPS.length,
+): string {
+  if (isSwipeRelease(id)) {
+    return "bg-error text-on-error";
   }
 
-  if (id === "share") {
-    return "bg-primary text-on-primary";
+  if (toneCount <= 1) {
+    return SWIPE_TONE_STEPS[0];
   }
 
-  if (id === "keep" || id === "keep-shelf" || id === "add") {
-    return "bg-gradient-to-b from-primary to-primary-active text-on-primary";
-  }
-
-  if (id === "hold" || id === "shelf") {
-    return "bg-gradient-to-b from-secondary to-secondary-active text-on-secondary";
-  }
-
-  return "bg-gradient-to-b from-info to-cd text-on-primary";
+  const step = Math.round((index / (toneCount - 1)) * (SWIPE_TONE_STEPS.length - 1));
+  return SWIPE_TONE_STEPS[Math.min(Math.max(step, 0), SWIPE_TONE_STEPS.length - 1)];
 }
 
 export function recordMenuMoreClass(isOpen: boolean, placement: "cover" | "row" = "cover"): string {

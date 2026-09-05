@@ -31,6 +31,7 @@ import {
   recordMenuReleasePrompt,
   recordSwipeActionClass,
   recordSwipeActions,
+  recordSwipeToneCount,
   type RecordMenuActionId,
 } from "@/lib/collection/record-menu";
 import { browserShareHost, offerPressingShare } from "@/lib/collection/share-pressing";
@@ -170,6 +171,7 @@ export function RecordMenu({
       });
   const visibleActions = isConfirmingRelease ? recordMenuReleaseConfirm(locale) : actions;
   const swipeActions = recordSwipeActions(visibleActions);
+  const swipeToneCount = recordSwipeToneCount(swipeActions);
   const reveal = swipeRevealWidth(swipeActions.length);
   const showSwipe = canSwipe && swipeActions.length > 0;
   const morePlacement = layout === "list" ? "row" : "cover";
@@ -653,10 +655,10 @@ export function RecordMenu({
             {recordMenuReleasePrompt(title, locale)}
           </p>
         ) : null}
-        {swipeActions.map((action) => {
+        {swipeActions.map((action, index) => {
           const Icon = ACTION_ICONS[action.id];
           const formAttr = FORM_ACTIONS[action.id];
-          const className = `flex h-full min-h-12 flex-col items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-strong ${recordSwipeActionClass(action.id)}`;
+          const className = `flex h-full min-h-12 cursor-pointer flex-col items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-strong ${recordSwipeActionClass(action.id, index, swipeToneCount)}`;
           const style = { width: SWIPE_ACTION_WIDTH };
 
           if (action.id === "share") {

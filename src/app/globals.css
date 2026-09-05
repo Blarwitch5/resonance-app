@@ -15,6 +15,10 @@
   --color-primary: var(--rs-primary);
   --color-primary-hover: var(--rs-primary-hover);
   --color-primary-active: var(--rs-primary-active);
+  --color-swipe: var(--rs-primary);
+  --color-swipe-dim: color-mix(in oklch, var(--rs-primary) 66%, var(--rs-secondary));
+  --color-swipe-deep: color-mix(in oklch, var(--rs-primary) 33%, var(--rs-secondary));
+  --color-swipe-dark: var(--rs-secondary);
   --color-on-primary: var(--rs-on-primary);
   --color-primary-soft: var(--rs-primary-soft);
   --color-on-primary-soft: var(--rs-on-primary-soft);

@@ -1,1 +1,1 @@
-ALTER TABLE "collection_item" ADD COLUMN "cover_thumb_url" text;
+ALTER TABLE "collection_item" ADD COLUMN IF NOT EXISTS "cover_thumb_url" text;

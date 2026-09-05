@@ -1,1 +1,1 @@
-ALTER TABLE "user_settings" ADD COLUMN "onboarded_at" timestamp;
+ALTER TABLE "user_settings" ADD COLUMN IF NOT EXISTS "onboarded_at" timestamp;

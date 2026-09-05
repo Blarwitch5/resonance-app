@@ -6,7 +6,13 @@ import { getDb } from "@/db";
 import { collectionItem } from "@/db/schema";
 import { backupRecordKey, freshBackupRecords, type ResonanceBackupRecord } from "@/lib/collection/backup";
 import type { ShelfCopy } from "@/lib/collection/confirm";
-import { isMissingCoverThumbColumn, isUniqueViolation, postgresCode, postgresDetail } from "@/lib/collection/db-error";
+import {
+  isUniqueViolation,
+  missingOptionalInsertField,
+  postgresCode,
+  postgresDetail,
+  type OptionalInsertField,
+} from "@/lib/collection/db-error";
 import { createCollectionItem } from "@/lib/collection/factory";
 import type { CollectionStatItem } from "@/lib/collection/stats";
 import type {
@@ -65,28 +71,41 @@ const collectionItemColumns = {
   updatedAt: collectionItem.updatedAt,
 };
 
-const collectionItemWithThumb = {
-  ...collectionItemColumns,
-  coverThumbUrl: collectionItem.coverThumbUrl,
-};
+function collectionSelectColumns(missing: ReadonlySet<OptionalInsertField>) {
+  return {
+    ...collectionItemColumns,
+    catalogNumber: missing.has("catalogNumber")
+      ? sql<string | null>`cast(null as text)`.as("catalog_number")
+      : collectionItem.catalogNumber,
+    coverThumbUrl: missing.has("coverThumbUrl")
+      ? sql<string | null>`cast(null as text)`.as("cover_thumb_url")
+      : collectionItem.coverThumbUrl,
+  };
+}
 
-const collectionItemWithoutThumb = {
-  ...collectionItemColumns,
-  coverThumbUrl: sql<string | null>`cast(null as text)`.as("cover_thumb_url"),
-};
+const collectionItemWithThumb = collectionSelectColumns(new Set());
+const collectionItemWithoutThumb = collectionSelectColumns(new Set(["coverThumbUrl"]));
 
 async function selectCollectionRows<T>(
-  run: (columns: typeof collectionItemWithThumb | typeof collectionItemWithoutThumb) => Promise<T>,
+  run: (columns: ReturnType<typeof collectionSelectColumns>) => Promise<T>,
 ): Promise<T> {
-  try {
-    return await run(collectionItemWithThumb);
-  } catch (error) {
-    if (!isMissingCoverThumbColumn(error)) {
-      throw error;
-    }
+  const missing = new Set<OptionalInsertField>();
 
-    return run(collectionItemWithoutThumb);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await run(collectionSelectColumns(missing));
+    } catch (error) {
+      const field = missingOptionalInsertField(error);
+
+      if (!field || missing.has(field)) {
+        throw error;
+      }
+
+      missing.add(field);
+    }
   }
+
+  throw new DatabaseError("Your collection could not be loaded.");
 }
 
 type CollectionInsert = typeof collectionItem.$inferInsert;
@@ -98,24 +117,43 @@ function withoutCoverThumb<T extends { coverThumbUrl?: string | null }>(
   return rest;
 }
 
+function omitInsertField(value: CollectionInsert, field: "coverThumbUrl" | "catalogNumber"): CollectionInsert {
+  if (field === "coverThumbUrl") {
+    return withoutCoverThumb(value);
+  }
+
+  const { catalogNumber: _catalog, ...rest } = value;
+  return rest;
+}
+
 async function insertCollectionRows(
   values: CollectionInsert[],
   returning: typeof collectionItemWithThumb | { id: typeof collectionItem.id } = collectionItemWithThumb,
   ignoreConflict = false,
 ) {
-  try {
-    const query = getDb().insert(collectionItem).values(values);
-    const next = ignoreConflict ? query.onConflictDoNothing() : query;
-    return await next.returning(returning);
-  } catch (error) {
-    if (!isMissingCoverThumbColumn(error)) {
-      throw error;
-    }
+  let rows = values;
 
-    const query = getDb().insert(collectionItem).values(values.map(withoutCoverThumb));
-    const next = ignoreConflict ? query.onConflictDoNothing() : query;
-    return next.returning(returning === collectionItemWithThumb ? collectionItemWithoutThumb : returning);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const query = getDb().insert(collectionItem).values(rows);
+      const next = ignoreConflict ? query.onConflictDoNothing() : query;
+      return await next.returning(
+        returning === collectionItemWithThumb && rows.every((row) => !("coverThumbUrl" in row))
+          ? collectionItemWithoutThumb
+          : returning,
+      );
+    } catch (error) {
+      const field = missingOptionalInsertField(error);
+
+      if (!field) {
+        throw error;
+      }
+
+      rows = rows.map((row) => omitInsertField(row, field));
+    }
   }
+
+  throw new DatabaseError("The record could not be added to your collection.");
 }
 
 async function updateCollectionRow(
@@ -132,29 +170,37 @@ async function updateCollectionRow(
     coverThumbUrl?: string | null;
   },
 ) {
-  try {
-    return await getDb()
-      .update(collectionItem)
-      .set({
-        ...patch,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
-      .returning(collectionItemWithThumb);
-  } catch (error) {
-    if (!isMissingCoverThumbColumn(error)) {
-      throw error;
-    }
+  let nextPatch: typeof patch = patch;
+  const missing = new Set<OptionalInsertField>();
 
-    return getDb()
-      .update(collectionItem)
-      .set({
-        ...withoutCoverThumb(patch),
-        updatedAt: new Date(),
-      })
-      .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
-      .returning(collectionItemWithoutThumb);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await getDb()
+        .update(collectionItem)
+        .set({
+          ...nextPatch,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
+        .returning(collectionSelectColumns(missing));
+    } catch (error) {
+      const field = missingOptionalInsertField(error);
+
+      if (!field || missing.has(field)) {
+        throw error;
+      }
+
+      missing.add(field);
+      nextPatch = field === "coverThumbUrl" ? withoutCoverThumb(nextPatch) : omitCatalogNumber(nextPatch);
+    }
   }
+
+  throw new DatabaseError("This record could not be updated.");
+}
+
+function omitCatalogNumber<T extends { catalogNumber?: string | null }>(value: T): Omit<T, "catalogNumber"> {
+  const { catalogNumber: _catalog, ...rest } = value;
+  return rest;
 }
 
 function collectionWhere(userId: string, filters: ListFilters): SQL[] {
@@ -355,14 +401,15 @@ export async function addCollectionItem(
   notes?: string | null,
 ) {
   const item = createCollectionItem({ draft, kind, notes });
-  const { coverThumbUrl, ...row } = item;
+  const { coverThumbUrl, catalogNumber, ...row } = item;
 
   try {
     if (item.discogsId !== null) {
       const copies = await listShelfCopies(userId, item.discogsId);
+      const sameFormat = copies.find((copy) => copy.format === item.format);
 
-      if (copies.some((copy) => copy.format === item.format)) {
-        throw new ValidationError("This pressing is already on your shelf.");
+      if (sameFormat) {
+        return { id: sameFormat.id };
       }
     }
 
@@ -372,11 +419,14 @@ export async function addCollectionItem(
       throw new DatabaseError("The record could not be added to your collection.");
     }
 
-    if (coverThumbUrl) {
+    if (coverThumbUrl || catalogNumber) {
       try {
-        await updateCollectionRow(userId, created.id, { coverThumbUrl });
+        await updateCollectionRow(userId, created.id, {
+          ...(coverThumbUrl ? { coverThumbUrl } : {}),
+          ...(catalogNumber ? { catalogNumber } : {}),
+        });
       } catch {
-        // The compact sleeve is optional; the pressing is already on the shelf.
+        // Later columns are optional; the pressing is already on the shelf.
       }
     }
 
@@ -386,7 +436,15 @@ export async function addCollectionItem(
       throw error;
     }
 
-    if (isUniqueViolation(error)) {
+    if (isUniqueViolation(error) && item.discogsId !== null) {
+      const existing = (await listShelfCopies(userId, item.discogsId)).find(
+        (copy) => copy.format === item.format,
+      );
+
+      if (existing) {
+        return { id: existing.id };
+      }
+
       throw new ValidationError("This pressing is already on your shelf.");
     }
 

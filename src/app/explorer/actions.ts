@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { addDiscogsRelease } from "@/lib/collection/add-release";
 import { readCoverUpload } from "@/lib/collection/cover";
 import { keepCover, restCover } from "@/lib/collection/cover-blob";
 import type { FeedLoadResult } from "@/lib/collection/feed";
@@ -73,16 +74,13 @@ export async function addReleaseAction(
     }
 
     const kind = parseKind(formData.get("kind"));
-    const release = await getDiscogsRelease(discogsId);
-    const created = await addCollectionItem(
-      session.user.id,
-      {
-        ...toReleaseDraft(release),
-        format: parseFormatOrThrow(formData.get("format")),
-      },
+    const created = await addDiscogsRelease({
+      userId: session.user.id,
+      discogsId,
+      format: parseFormatOrThrow(formData.get("format")),
       kind,
-      String(formData.get("notes") ?? ""),
-    );
+      notes: String(formData.get("notes") ?? ""),
+    });
 
     createdId = created.id;
     isOwned = kind === "owned";

@@ -1,1 +1,1 @@
-ALTER TABLE "account" ADD COLUMN "issuer" text DEFAULT 'local:credential' NOT NULL;
+ALTER TABLE "account" ADD COLUMN IF NOT EXISTS "issuer" text DEFAULT 'local:credential' NOT NULL;

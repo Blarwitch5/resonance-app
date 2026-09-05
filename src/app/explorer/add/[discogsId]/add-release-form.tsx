@@ -1,7 +1,7 @@
 "use client";
 
 import { BookmarkPlus, FaceSlightlySmilingPlus, Library } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 
 import { addReleaseAction, type AddReleaseState } from "@/app/explorer/actions";
 import { Button } from "@/components/ui/button";
@@ -25,16 +25,49 @@ interface AddReleaseFormProps {
 
 export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddReleaseFormProps) {
   const t = useT();
-  const [state, formAction, isPending] = useActionState(addReleaseAction, initialState);
+  const [actionState, formAction, isActionPending] = useActionState(addReleaseAction, initialState);
+  const [fetchState, setFetchState] = useState<AddReleaseState>(initialState);
+  const [isFetching, setIsFetching] = useState(false);
+  const state = fetchState.href || fetchState.error ? fetchState : actionState;
   const isLeaving = useJournalLeave(state.href);
-  const isBusy = isPending || isLeaving;
+  const isBusy = isActionPending || isFetching || isLeaving;
   const available = formats.length > 0 ? formats : [...MEDIA_FORMATS];
   const selected = available.includes(defaultFormat) ? defaultFormat : (available[0] ?? "vinyl");
   const [format, setFormat] = useState<MediaFormat>(selected);
   const [kind, setKind] = useState<CollectionKind>("owned");
 
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isBusy) {
+      return;
+    }
+
+    setIsFetching(true);
+    setFetchState(initialState);
+
+    try {
+      const response = await fetch("/api/resonance/releases", {
+        method: "POST",
+        body: new FormData(event.currentTarget),
+      });
+      const payload = (await response.json()) as { href?: string; error?: string };
+
+      if (!response.ok || !payload.href) {
+        setFetchState({ error: payload.error ?? t("error.recordAdd"), href: null });
+        return;
+      }
+
+      setFetchState({ error: null, href: payload.href });
+    } catch {
+      setFetchState({ error: t("error.recordAdd"), href: null });
+    } finally {
+      setIsFetching(false);
+    }
+  }
+
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
       <input type="hidden" name="discogsId" value={discogsId} />
       <input type="hidden" name="format" value={format} />
       <input type="hidden" name="kind" value={kind} />

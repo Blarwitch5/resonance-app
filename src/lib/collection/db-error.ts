@@ -47,22 +47,36 @@ export function postgresDetail(error: unknown): string | undefined {
   return undefined;
 }
 
-export function isMissingCoverThumbColumn(error: unknown): boolean {
+const OPTIONAL_INSERT_COLUMNS = {
+  cover_thumb_url: "coverThumbUrl",
+  catalog_number: "catalogNumber",
+} as const;
+
+export type OptionalInsertField = (typeof OPTIONAL_INSERT_COLUMNS)[keyof typeof OPTIONAL_INSERT_COLUMNS];
+
+export function missingOptionalInsertField(error: unknown): OptionalInsertField | null {
   for (const current of walkCauses(error)) {
     const code =
       typeof current === "object" && current !== null && "code" in current && typeof current.code === "string"
         ? current.code
         : undefined;
     const message = current instanceof Error ? current.message : "";
+    const column =
+      /column ["']([^"']+)["']/.exec(message)?.[1] ??
+      /column ([a-z_]+) does not exist/i.exec(message)?.[1];
 
-    if (code === "42703" && message.includes("cover_thumb_url")) {
-      return true;
+    if (!column || !(column in OPTIONAL_INSERT_COLUMNS)) {
+      continue;
     }
 
-    if (/column ["']cover_thumb_url["'].*does not exist/i.test(message)) {
-      return true;
+    if (code === "42703" || /does not exist/i.test(message)) {
+      return OPTIONAL_INSERT_COLUMNS[column as keyof typeof OPTIONAL_INSERT_COLUMNS];
     }
   }
 
-  return false;
+  return null;
+}
+
+export function isMissingCoverThumbColumn(error: unknown): boolean {
+  return missingOptionalInsertField(error) === "coverThumbUrl";
 }

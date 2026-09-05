@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { isMissingCoverThumbColumn, isUniqueViolation, postgresCode } from "@/lib/collection/db-error";
+import {
+  isMissingCoverThumbColumn,
+  isUniqueViolation,
+  missingOptionalInsertField,
+  postgresCode,
+} from "@/lib/collection/db-error";
 
 describe("postgresCode", () => {
   it("reads a nested Neon code through Drizzle", () => {
@@ -20,6 +25,20 @@ describe("postgresCode", () => {
     });
 
     expect(postgresCode(error)).toBeUndefined();
+  });
+});
+
+describe("missingOptionalInsertField", () => {
+  it("reads catalog_number from a Neon 42703", () => {
+    const neon = Object.assign(new Error('column "catalog_number" of relation "collection_item" does not exist'), {
+      code: "42703",
+    });
+    const wrapped = Object.assign(new Error('Failed query: insert into "collection_item" ("catalog_number")'), {
+      cause: neon,
+    });
+
+    expect(missingOptionalInsertField(wrapped)).toBe("catalogNumber");
+    expect(isMissingCoverThumbColumn(wrapped)).toBe(false);
   });
 });
 

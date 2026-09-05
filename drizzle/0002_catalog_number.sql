@@ -1,1 +1,1 @@
-ALTER TABLE "collection_item" ADD COLUMN "catalog_number" text;
+ALTER TABLE "collection_item" ADD COLUMN IF NOT EXISTS "catalog_number" text;

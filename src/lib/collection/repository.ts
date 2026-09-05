@@ -6,7 +6,7 @@ import { getDb } from "@/db";
 import { collectionItem } from "@/db/schema";
 import { backupRecordKey, freshBackupRecords, type ResonanceBackupRecord } from "@/lib/collection/backup";
 import type { ShelfCopy } from "@/lib/collection/confirm";
-import { isMissingCoverThumbColumn, isUniqueViolation, postgresCode } from "@/lib/collection/db-error";
+import { isMissingCoverThumbColumn, isUniqueViolation, postgresCode, postgresDetail } from "@/lib/collection/db-error";
 import { createCollectionItem } from "@/lib/collection/factory";
 import type { CollectionStatItem } from "@/lib/collection/stats";
 import type {
@@ -358,7 +358,15 @@ export async function addCollectionItem(
   const { coverThumbUrl, ...row } = item;
 
   try {
-    const [created] = await insertCollectionRows([{ userId, ...row }], collectionItemWithoutThumb);
+    if (item.discogsId !== null) {
+      const copies = await listShelfCopies(userId, item.discogsId);
+
+      if (copies.some((copy) => copy.format === item.format)) {
+        throw new ValidationError("This pressing is already on your shelf.");
+      }
+    }
+
+    const [created] = await insertCollectionRows([{ userId, ...row }], { id: collectionItem.id });
 
     if (!created) {
       throw new DatabaseError("The record could not be added to your collection.");
@@ -382,7 +390,10 @@ export async function addCollectionItem(
       throw new ValidationError("This pressing is already on your shelf.");
     }
 
-    console.error("Resonance add collection item failed", { code: postgresCode(error) });
+    console.error("Resonance add collection item failed", {
+      code: postgresCode(error),
+      detail: postgresDetail(error),
+    });
     throw new DatabaseError("The record could not be added to your collection.", {
       cause: error,
     });

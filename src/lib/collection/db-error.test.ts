@@ -46,4 +46,11 @@ describe("isMissingCoverThumbColumn", () => {
     expect(isMissingCoverThumbColumn(wrapped)).toBe(false);
     expect(isUniqueViolation(wrapped)).toBe(true);
   });
+
+  it("reads a unique conflict from the Neon message alone", () => {
+    const neon = new Error('duplicate key value violates unique constraint "collection_item_user_discogs_format_idx"');
+    neon.name = "NeonDbError";
+
+    expect(isUniqueViolation(Object.assign(new Error("Failed query"), { cause: neon }))).toBe(true);
+  });
 });

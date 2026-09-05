@@ -23,7 +23,28 @@ export function postgresCode(error: unknown): string | undefined {
 }
 
 export function isUniqueViolation(error: unknown): boolean {
-  return postgresCode(error) === "23505";
+  if (postgresCode(error) === "23505") {
+    return true;
+  }
+
+  return walkCauses(error).some((current) => {
+    const message = current instanceof Error ? current.message : "";
+    return /duplicate key value/i.test(message);
+  });
+}
+
+export function postgresDetail(error: unknown): string | undefined {
+  for (const current of walkCauses(error)) {
+    if (typeof current === "object" && current !== null && "detail" in current && typeof current.detail === "string") {
+      return current.detail.slice(0, 180);
+    }
+
+    if (current instanceof Error && current.name === "NeonDbError") {
+      return current.message.slice(0, 180);
+    }
+  }
+
+  return undefined;
 }
 
 export function isMissingCoverThumbColumn(error: unknown): boolean {

@@ -67,5 +67,14 @@ const KNOWN_ERRORS: Record<string, string> = {
 export function localizedError(locale: Locale, error: unknown): string {
   const message = error instanceof AppError ? error.message : toErrorMessage(error);
   const key = KNOWN_ERRORS[message];
-  return key ? t(locale, key) : t(locale, "error.generic");
+
+  if (key) {
+    return t(locale, key);
+  }
+
+  if (message.startsWith("Discogs request failed")) {
+    return t(locale, "error.discogsDown");
+  }
+
+  return t(locale, "error.generic");
 }

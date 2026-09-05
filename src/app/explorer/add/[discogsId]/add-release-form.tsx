@@ -47,9 +47,12 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
     setFetchState(initialState);
 
     try {
+      const notes = String(new FormData(event.currentTarget).get("notes") ?? "");
       const response = await fetch("/api/resonance/releases", {
         method: "POST",
-        body: new FormData(event.currentTarget),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ discogsId, format, kind, notes }),
       });
       const payload = (await response.json()) as { href?: string; error?: string };
 

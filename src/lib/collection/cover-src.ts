@@ -36,6 +36,15 @@ export function isBlobCoverUrl(url: string): boolean {
   }
 }
 
+export function canOptimizeCoverUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+
 export function coverDisplaySrc(input: {
   url: string;
   compactUrl?: string | null;

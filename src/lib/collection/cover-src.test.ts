@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { coverDisplaySrc, coverSlotFromSizes, isBlobCoverUrl } from "@/lib/collection/cover-src";
+import {
+  canOptimizeCoverUrl,
+  coverDisplaySrc,
+  coverSlotFromSizes,
+  isBlobCoverUrl,
+} from "@/lib/collection/cover-src";
 
 describe("coverSlotFromSizes", () => {
   it("maps the shelf and player slots", () => {
@@ -17,6 +22,14 @@ describe("isBlobCoverUrl", () => {
     expect(isBlobCoverUrl("https://abc.public.blob.vercel-storage.com/covers/user.webp")).toBe(true);
     expect(isBlobCoverUrl("https://i.discogs.com/cover.jpeg")).toBe(false);
     expect(isBlobCoverUrl("http://abc.public.blob.vercel-storage.com/covers/user.webp")).toBe(false);
+  });
+});
+
+describe("canOptimizeCoverUrl", () => {
+  it("lets next/image fetch only public blob hosts", () => {
+    expect(canOptimizeCoverUrl("https://abc.public.blob.vercel-storage.com/covers/user.webp")).toBe(true);
+    expect(canOptimizeCoverUrl("https://abc.blob.vercel-storage.com/covers/user.webp")).toBe(false);
+    expect(canOptimizeCoverUrl("https://i.discogs.com/cover.jpeg")).toBe(false);
   });
 });
 

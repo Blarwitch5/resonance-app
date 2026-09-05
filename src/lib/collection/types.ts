@@ -354,6 +354,14 @@ export interface ShelfCard {
   createdAt: Date | string;
 }
 
+function toShelfWhen(value: Date | string): string {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? value.toString() : value.toISOString();
+  }
+
+  return value;
+}
+
 export function toShelfCard(item: ShelfCard): ShelfCard {
   return {
     id: item.id,
@@ -370,10 +378,10 @@ export function toShelfCard(item: ShelfCard): ShelfCard {
     notes: item.notes,
     isFavorite: item.isFavorite,
     discogsId: item.discogsId,
-    purchaseDate: item.purchaseDate,
+    purchaseDate: item.purchaseDate ? toShelfWhen(item.purchaseDate) : null,
     purchaseLocation: item.purchaseLocation,
     condition: item.condition,
-    createdAt: item.createdAt,
+    createdAt: toShelfWhen(item.createdAt),
   };
 }
 

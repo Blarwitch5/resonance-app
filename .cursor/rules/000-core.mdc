@@ -23,6 +23,7 @@ APIs Next 16 : lire `node_modules/next/dist/docs/` avant d’utiliser une API in
 - `src/lib/collection` factory + repository
 - `src/lib/discogs` adapter + client
 - `src/lib/auth.ts` serveur · `auth-client.ts` client
+- `src/lib/release` semver (`package.json` + `current.ts`)
 - `.cursor/rules` seule source de conventions agent. Pas de `CLAUDE.md` ni `AGENTS.md` — Cursor only.
 
 ## Navigation produit

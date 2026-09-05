@@ -1,0 +1,28 @@
+---
+description: Semver Resonance — major, minor, patch
+alwaysApply: true
+---
+
+# Version
+
+Semver `MAJOR.MINOR.PATCH` dans `package.json` et `src/lib/release/current.ts`. Historique : `CHANGELOG.md`.
+
+## Quand bumper
+
+- **patch** (`0.2.0` → `0.2.1`) : correctif, pas d’API / schéma / parcours nouveau.
+- **minor** (`0.2.0` → `0.3.0`) : feature visible, nouveau parcours, colonne optionnelle.
+- **major** (`0.2.0` → `1.0.0`) : rupture (auth, schéma obligatoire, parcours retiré).
+
+Un commit de release = un bump. Pas de version à la main dans un seul des deux fichiers.
+
+```bash
+pnpm version:patch -- "Keep the swipe rail under the finger."
+pnpm version:minor -- "Show the app version on Profile."
+pnpm version:major -- "Require a new collection schema."
+```
+
+Le script met à jour `package.json`, `current.ts` et préfixe `CHANGELOG.md`.
+
+## Prod
+
+Un deploy Vercel applique `drizzle-kit migrate` (`pnpm build`). Colonne manquante en base = faire tourner `pnpm db:migrate` sur la `DATABASE_URL` **Vercel**, pas seulement `.env` local.

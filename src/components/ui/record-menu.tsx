@@ -39,6 +39,8 @@ import type { ShelfPresence } from "@/lib/collection/types";
 import {
   clampSwipeOffset,
   shouldArmSwipe,
+  shouldLockPagePan,
+  shouldRestSwipeOnScroll,
   snapSwipeOffset,
   SWIPE_ACTION_WIDTH,
   swipeAxis,
@@ -146,6 +148,7 @@ export function RecordMenu({
   const swipeAxisRef = useRef<SwipeAxis>("undecided");
   const swipeOffsetRef = useRef(0);
   const ignoreSwipeClose = useRef(false);
+  const swipeTouchMove = useRef<((event: TouchEvent) => void) | null>(null);
   const actions = presence
     ? explorerMenuActions({
         title,
@@ -186,13 +189,46 @@ export function RecordMenu({
     }
   }, []);
 
+  const releaseSwipeTouchLock = useCallback(() => {
+    if (!swipeTouchMove.current) {
+      return;
+    }
+
+    document.removeEventListener("touchmove", swipeTouchMove.current);
+    swipeTouchMove.current = null;
+  }, []);
+
   const restSwipe = useCallback(() => {
+    releaseSwipeTouchLock();
     applySwipeOffset(0);
     setSwipeOffset(0);
     setIsSwipeDragging(false);
     setIsConfirmingRelease(false);
     wrapperRef.current?.style.removeProperty("touch-action");
-  }, [applySwipeOffset]);
+  }, [applySwipeOffset, releaseSwipeTouchLock]);
+
+  const armSwipeTouchLock = useCallback(() => {
+    releaseSwipeTouchLock();
+
+    const onTouchMove = (event: TouchEvent) => {
+      const origin = swipeOrigin.current;
+      const touch = event.touches[0];
+
+      if (!origin || !touch || !event.cancelable) {
+        return;
+      }
+
+      const dx = touch.clientX - origin.x;
+      const dy = touch.clientY - origin.y;
+
+      if (swipeAxisRef.current === "horizontal" || shouldLockPagePan(dx, dy)) {
+        event.preventDefault();
+      }
+    };
+
+    swipeTouchMove.current = onTouchMove;
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+  }, [releaseSwipeTouchLock]);
 
   const restSwipeRef = useRef(restSwipe);
   restSwipeRef.current = restSwipe;
@@ -339,8 +375,10 @@ export function RecordMenu({
       if (pressTimer.current) {
         window.clearTimeout(pressTimer.current);
       }
+
+      releaseSwipeTouchLock();
     };
-  }, []);
+  }, [releaseSwipeTouchLock]);
 
   useEffect(() => {
     function onScroll() {
@@ -360,10 +398,20 @@ export function RecordMenu({
       return;
     }
 
-    window.addEventListener("scroll", onScroll, true);
+    const openedAt = window.scrollY;
+
+    function onWindowScroll() {
+      if (!shouldRestSwipeOnScroll(openedAt, window.scrollY)) {
+        return;
+      }
+
+      onScroll();
+    }
+
+    window.addEventListener("scroll", onWindowScroll);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("scroll", onWindowScroll);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [isSwipeDragging, swipeOffset]);
@@ -417,6 +465,13 @@ export function RecordMenu({
       swipeOrigin.current = { x: event.clientX, y: event.clientY };
       swipeStartOffset.current = swipeOffsetRef.current;
       swipeAxisRef.current = "undecided";
+      armSwipeTouchLock();
+
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // Pointer capture is best-effort; the row still follows the finger.
+      }
     }
 
     if (!shouldArmLongPress({ isDesktop: isDesktopViewport(), button: event.button }) || actions.length === 0) {
@@ -463,6 +518,15 @@ export function RecordMenu({
       if (axis === "vertical") {
         swipeOrigin.current = null;
         swipeAxisRef.current = "vertical";
+        releaseSwipeTouchLock();
+        wrapperRef.current?.style.removeProperty("touch-action");
+
+        try {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        } catch {
+          // The capture may already have been released with the pointer.
+        }
+
         return;
       }
 
@@ -472,12 +536,6 @@ export function RecordMenu({
       close();
       suppressClick.current = true;
       setIsSwipeDragging(true);
-
-      try {
-        event.currentTarget.setPointerCapture(event.pointerId);
-      } catch {
-        // Pointer capture is best-effort; the row still follows the finger.
-      }
     }
 
     if (swipeAxisRef.current !== "horizontal") {
@@ -487,11 +545,13 @@ export function RecordMenu({
     applySwipeOffset(swipeOffsetFromPointer(swipeFrom.x, event.clientX, swipeStartOffset.current, reveal));
   }
 
-  function onPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
+  function endSwipe(event: ReactPointerEvent<HTMLDivElement>, didCancel: boolean) {
     clearPress();
+    releaseSwipeTouchLock();
 
     const wasDragging = swipeAxisRef.current === "horizontal";
     const tappedClosed =
+      !didCancel &&
       !wasDragging &&
       swipeOffsetRef.current > 0 &&
       !(event.target instanceof Element && event.target.closest("[data-swipe-action]"));
@@ -508,12 +568,12 @@ export function RecordMenu({
       if (snapped === 0) {
         setIsConfirmingRelease(false);
       }
+    }
 
-      try {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      } catch {
-        // The capture may already have been released with the pointer.
-      }
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // The capture may already have been released with the pointer.
     }
 
     wrapperRef.current?.style.removeProperty("touch-action");
@@ -752,17 +812,17 @@ export function RecordMenu({
       className={`group relative touch-callout-none touch-manipulation select-none lg:select-text${
         layout === "list" ? " flex items-center gap-2" : ""
       }${
-        showSwipe
-          ? isSwipeDragging
-            ? " touch-none lg:touch-auto"
-            : " touch-pan-y lg:touch-auto"
-          : ""
+        showSwipe ? " touch-pan-y lg:touch-auto" : ""
       }`}
       onContextMenu={onContextMenu}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerUp={(event) => {
+        endSwipe(event, false);
+      }}
+      onPointerCancel={(event) => {
+        endSwipe(event, true);
+      }}
       onClickCapture={onClickCapture}
       onKeyDown={onKeyDownCapture}
     >

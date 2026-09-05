@@ -4,8 +4,12 @@ import {
   clampSwipeOffset,
   snapSwipeOffset,
   SWIPE_ACTION_WIDTH,
+  SWIPE_LOCK_PAN_PX,
+  SWIPE_SCROLL_SLOP_PX,
   SWIPE_SLOP_PX,
   shouldArmSwipe,
+  shouldLockPagePan,
+  shouldRestSwipeOnScroll,
   swipeAxis,
   swipeOffsetFromPointer,
   swipeRevealWidth,
@@ -81,5 +85,34 @@ describe("swipeOffsetFromPointer", () => {
 
   it("closes as the finger travels right from an open row", () => {
     expect(swipeOffsetFromPointer(100, 160, 168, 168)).toBe(108);
+  });
+});
+
+describe("shouldLockPagePan", () => {
+  it("waits through a small tremor", () => {
+    expect(shouldLockPagePan(0, 0)).toBe(false);
+    expect(shouldLockPagePan(SWIPE_LOCK_PAN_PX - 1, 0)).toBe(false);
+  });
+
+  it("holds the page once the finger is travelling sideways", () => {
+    expect(shouldLockPagePan(SWIPE_LOCK_PAN_PX, 2)).toBe(true);
+    expect(shouldLockPagePan(-20, 12)).toBe(true);
+  });
+
+  it("leaves a downward scroll to the shelf", () => {
+    expect(shouldLockPagePan(4, 16)).toBe(false);
+    expect(shouldLockPagePan(10, 20)).toBe(false);
+  });
+});
+
+describe("shouldRestSwipeOnScroll", () => {
+  it("ignores a one-pixel chrome shift", () => {
+    expect(shouldRestSwipeOnScroll(80, 81)).toBe(false);
+    expect(shouldRestSwipeOnScroll(80, 80 + SWIPE_SCROLL_SLOP_PX - 1)).toBe(false);
+  });
+
+  it("closes after the shelf really moved", () => {
+    expect(shouldRestSwipeOnScroll(80, 80 + SWIPE_SCROLL_SLOP_PX)).toBe(true);
+    expect(shouldRestSwipeOnScroll(40, 20)).toBe(true);
   });
 });

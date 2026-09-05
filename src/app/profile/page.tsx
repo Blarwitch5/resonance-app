@@ -30,8 +30,9 @@ import { summarizeCollection } from "@/lib/collection/stats";
 import { MAX_COLLECTION_PAGE, parseCollectionPage } from "@/lib/collection/types";
 import { explorerSearchHref } from "@/lib/discogs/href";
 import { profileDocumentTitle } from "@/lib/document-title";
-import { t } from "@/lib/i18n/translate";
 import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
+import { APP_VERSION } from "@/lib/release/version";
 import {
   parseProfileTab,
   parseSettingsFlag,
@@ -157,6 +158,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                     <ChangePasswordForm />
                   </SheetSection>
                   <SignOutButton />
+                  <p className="text-xs leading-5 text-text-tertiary">
+                    {t(settings.locale, "profile.version", { version: APP_VERSION })}
+                  </p>
                 </>
               ) : null}
             </ProfileSettingsSheet>

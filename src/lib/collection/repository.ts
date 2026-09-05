@@ -355,12 +355,21 @@ export async function addCollectionItem(
   notes?: string | null,
 ) {
   const item = createCollectionItem({ draft, kind, notes });
+  const { coverThumbUrl, ...row } = item;
 
   try {
-    const [created] = await insertCollectionRows([{ userId, ...item }]);
+    const [created] = await insertCollectionRows([{ userId, ...row }], collectionItemWithoutThumb);
 
     if (!created) {
       throw new DatabaseError("The record could not be added to your collection.");
+    }
+
+    if (coverThumbUrl) {
+      try {
+        await updateCollectionRow(userId, created.id, { coverThumbUrl });
+      } catch {
+        // The compact sleeve is optional; the pressing is already on the shelf.
+      }
     }
 
     return created;

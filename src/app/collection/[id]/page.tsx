@@ -32,7 +32,7 @@ import { attachDeezerPreviews } from "@/lib/deezer/preview";
 import { getMarketplaceAsk, getReleaseListen } from "@/lib/discogs/client";
 import { marketplaceVoice } from "@/lib/discogs/market";
 import { journalDocumentTitle } from "@/lib/document-title";
-import { DiscogsError, NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/errors";
 import { coverAlt, decadeName } from "@/lib/i18n/labels";
 import { getLocale } from "@/lib/i18n/locale";
 import { t } from "@/lib/i18n/translate";
@@ -99,7 +99,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
         })
       : Promise.resolve([]),
     settings.marketValueEnabled && item.discogsId !== null
-      ? getMarketplaceAsk(item.discogsId)
+      ? getMarketplaceAsk(item.discogsId).catch(() => null)
       : Promise.resolve(null),
   ]);
   const marketLine = marketAsk ? marketplaceVoice(settings.locale, marketAsk) : null;
@@ -257,18 +257,14 @@ async function loadPressingListen(discogsId: number | null) {
 
   try {
     return await getReleaseListen(discogsId);
-  } catch (error) {
-    if (error instanceof DiscogsError) {
-      return {
-        sides: [],
-        country: null,
-        catalogNumber: null,
-        formatNames: [],
-        creditLine: null,
-        coverThumbUrl: null,
-      };
-    }
-
-    throw error;
+  } catch {
+    return {
+      sides: [],
+      country: null,
+      catalogNumber: null,
+      formatNames: [],
+      creditLine: null,
+      coverThumbUrl: null,
+    };
   }
 }

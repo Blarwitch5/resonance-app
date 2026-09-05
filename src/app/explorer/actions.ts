@@ -93,7 +93,7 @@ export async function addReleaseAction(
   revalidatePath("/collection");
   revalidatePath("/explorer");
   revalidatePath("/profile");
-  return { error: null, href: journalHref(createdId, isOwned) };
+  redirect(journalHref(createdId, isOwned));
 }
 
 export async function addManualReleaseAction(
@@ -143,7 +143,7 @@ export async function addManualReleaseAction(
   revalidatePath("/collection");
   revalidatePath("/explorer");
   revalidatePath("/profile");
-  return { error: null, href: journalHref(createdId, isOwned) };
+  redirect(journalHref(createdId, isOwned));
 }
 
 export interface AddWishlistState {

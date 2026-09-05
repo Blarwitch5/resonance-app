@@ -21,6 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
   display: "swap",
+  preload: false,
 });
 
 export async function generateMetadata(): Promise<Metadata> {

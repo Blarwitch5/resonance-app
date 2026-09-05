@@ -284,6 +284,7 @@ const en = {
     pressings: "{count} pressings",
     signOut: "Sign out",
     leaving: "Leaving…",
+    version: "Version {version}",
   },
   journal: {
     title: "Journal",
@@ -927,6 +928,7 @@ const fr: typeof en = {
     pressings: "{count} pressages",
     signOut: "Se déconnecter",
     leaving: "On part…",
+    version: "Version {version}",
   },
   journal: {
     title: "Journal",

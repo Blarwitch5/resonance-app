@@ -1,7 +1,7 @@
 "use client";
 
 import { BookmarkPlus, FaceSlightlySmilingPlus, Library } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { addReleaseAction, type AddReleaseState } from "@/app/explorer/actions";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { BusyGlyph } from "@/components/ui/listening-wave";
 import { Notice } from "@/components/ui/notice";
 import { useJournalLeave } from "@/components/ui/use-journal-leave";
 import { useT } from "@/components/locale-provider";
-import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
+import { MEDIA_FORMATS, type CollectionKind, type MediaFormat } from "@/lib/collection/types";
 
 const initialState: AddReleaseState = { error: null, href: null };
 
@@ -30,28 +30,35 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
   const isBusy = isPending || isLeaving;
   const available = formats.length > 0 ? formats : [...MEDIA_FORMATS];
   const selected = available.includes(defaultFormat) ? defaultFormat : (available[0] ?? "vinyl");
+  const [format, setFormat] = useState<MediaFormat>(selected);
+  const [kind, setKind] = useState<CollectionKind>("owned");
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
       <input type="hidden" name="discogsId" value={discogsId} />
+      <input type="hidden" name="format" value={format} />
+      <input type="hidden" name="kind" value={kind} />
 
       <fieldset className={fieldsetClass}>
         <legend className={legendClass}>{t("format.legend")}</legend>
         <div className="flex flex-wrap gap-2">
-          {available.map((format) => {
-            const Icon = formatIcons[format];
+          {available.map((value) => {
+            const Icon = formatIcons[value];
 
             return (
-              <label key={format} className={`${choiceChipClass} capitalize`}>
+              <label key={value} className={`${choiceChipClass} capitalize`}>
                 <input
                   type="radio"
-                  name="format"
-                  value={format}
-                  defaultChecked={format === selected}
+                  name="formatChoice"
+                  value={value}
+                  checked={format === value}
+                  onChange={() => {
+                    setFormat(value);
+                  }}
                   className="sr-only"
                 />
                 <Icon className="size-4 shrink-0" aria-hidden />
-                {t(`format.${format}`)}
+                {t(`format.${value}`)}
               </label>
             );
           })}
@@ -62,12 +69,30 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
         <legend className={legendClass}>{t("explorer.shelf")}</legend>
         <div className="flex flex-wrap gap-2">
           <label className={choiceChipClass}>
-            <input type="radio" name="kind" value="owned" defaultChecked className="sr-only" />
+            <input
+              type="radio"
+              name="kindChoice"
+              value="owned"
+              checked={kind === "owned"}
+              onChange={() => {
+                setKind("owned");
+              }}
+              className="sr-only"
+            />
             <Library className="size-4 shrink-0" aria-hidden />
             {t("nav.collection")}
           </label>
           <label className={choiceChipClass}>
-            <input type="radio" name="kind" value="wishlist" className="sr-only" />
+            <input
+              type="radio"
+              name="kindChoice"
+              value="wishlist"
+              checked={kind === "wishlist"}
+              onChange={() => {
+                setKind("wishlist");
+              }}
+              className="sr-only"
+            />
             <BookmarkPlus className="size-4 shrink-0" aria-hidden />
             {t("explorer.wishlist")}
           </label>

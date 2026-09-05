@@ -414,6 +414,7 @@ export async function addCollectionItem(
   const item = createCollectionItem({ draft, kind, notes });
   const core: CollectionInsert = {
     userId,
+    discogsId: item.discogsId,
     title: item.title,
     artist: item.artist,
     format: item.format,
@@ -421,7 +422,6 @@ export async function addCollectionItem(
     isWishlist: item.isWishlist,
   };
   const extras: CollectionPatch = {
-    discogsId: item.discogsId,
     year: item.year,
     label: item.label,
     genres: item.genres,

@@ -33,12 +33,14 @@ export function createCollectionItem(input: {
 
   const written = parseCollectionWrite({
     ...input.draft,
-    title,
-    artist,
-    genres: input.draft.genres.filter((genre) => genre.trim().length > 0),
+    title: title.slice(0, 500),
+    artist: artist.slice(0, 500),
+    genres: input.draft.genres.filter((genre) => typeof genre === "string" && genre.trim().length > 0),
     label: input.draft.label?.trim() || null,
     catalogNumber: input.draft.catalogNumber?.trim() || null,
+    coverUrl: input.draft.coverUrl ?? null,
     coverThumbUrl: input.draft.coverThumbUrl ?? null,
+    barcode: input.draft.barcode ?? null,
     notes: input.notes?.trim() || null,
     isFavorite: input.kind === "favorite",
     isWishlist: input.kind === "wishlist",

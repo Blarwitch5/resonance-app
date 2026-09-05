@@ -26,6 +26,21 @@ describe("parseCollectionWrite", () => {
     expect(written?.catalogNumber).toBe("CL 1355");
     expect(written?.notes).toBeNull();
   });
+
+  it("still writes when optional sleeve fields are missing", () => {
+    expect(
+      parseCollectionWrite({
+        discogsId: 249504,
+        format: "vinyl",
+        title: "Kind of Blue",
+        artist: "Miles Davis",
+        year: 1959,
+        genres: ["Jazz"],
+        isFavorite: false,
+        isWishlist: false,
+      })?.title,
+    ).toBe("Kind of Blue");
+  });
 });
 
 describe("parseAddReleaseInput", () => {

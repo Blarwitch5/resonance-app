@@ -87,6 +87,12 @@ export async function POST(request: Request) {
     });
 
     const status = error instanceof AppError && error.statusCode < 500 ? error.statusCode : 400;
-    return NextResponse.json({ error: localizedError(locale, error) }, { status });
+    return NextResponse.json(
+      {
+        error: localizedError(locale, error),
+        code: error instanceof AppError ? error.code : (postgresCode(error) ?? "UNKNOWN"),
+      },
+      { status },
+    );
   }
 }

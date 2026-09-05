@@ -43,6 +43,13 @@
       "when": 1788620400000,
       "tag": "0005_heal_collection_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788621300000,
+      "tag": "0006_heal_collection_types",
+      "breakpoints": true
     }
   ]
 }

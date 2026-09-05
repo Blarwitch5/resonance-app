@@ -40,6 +40,14 @@ describe("missingOptionalInsertField", () => {
     expect(missingOptionalInsertField(wrapped)).toBe("catalogNumber");
     expect(isMissingCoverThumbColumn(wrapped)).toBe(false);
   });
+
+  it("reads a genres type mismatch", () => {
+    const neon = Object.assign(new Error('column "genres" is of type text but expression is of type text[]'), {
+      code: "42804",
+    });
+
+    expect(missingOptionalInsertField(neon)).toBe("genres");
+  });
 });
 
 describe("isMissingCoverThumbColumn", () => {

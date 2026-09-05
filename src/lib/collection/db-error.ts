@@ -47,30 +47,48 @@ export function postgresDetail(error: unknown): string | undefined {
   return undefined;
 }
 
-const OPTIONAL_INSERT_COLUMNS = {
+export const COLLECTION_COLUMNS = {
+  discogs_id: "discogsId",
+  format: "format",
+  year: "year",
+  label: "label",
+  genres: "genres",
+  cover_url: "coverUrl",
   cover_thumb_url: "coverThumbUrl",
+  barcode: "barcode",
   catalog_number: "catalogNumber",
+  condition: "condition",
+  purchase_location: "purchaseLocation",
+  purchase_date: "purchaseDate",
+  notes: "notes",
+  is_favorite: "isFavorite",
+  is_wishlist: "isWishlist",
 } as const;
 
-export type OptionalInsertField = (typeof OPTIONAL_INSERT_COLUMNS)[keyof typeof OPTIONAL_INSERT_COLUMNS];
+export type OptionalInsertField = (typeof COLLECTION_COLUMNS)[keyof typeof COLLECTION_COLUMNS];
+
+function sqlColumnName(message: string): string | undefined {
+  return (
+    /column ["']([^"']+)["']/.exec(message)?.[1] ??
+    /column ([a-z_]+) does not exist/i.exec(message)?.[1] ??
+    /["']([a-z_]+)["'] is of type/i.exec(message)?.[1]
+  );
+}
 
 export function missingOptionalInsertField(error: unknown): OptionalInsertField | null {
-  for (const current of walkCauses(error)) {
-    const code =
-      typeof current === "object" && current !== null && "code" in current && typeof current.code === "string"
-        ? current.code
-        : undefined;
-    const message = current instanceof Error ? current.message : "";
-    const column =
-      /column ["']([^"']+)["']/.exec(message)?.[1] ??
-      /column ([a-z_]+) does not exist/i.exec(message)?.[1];
+  const code = postgresCode(error);
+  const skippable = code === "42703" || code === "42804";
 
-    if (!column || !(column in OPTIONAL_INSERT_COLUMNS)) {
+  for (const current of walkCauses(error)) {
+    const message = current instanceof Error ? current.message : "";
+    const column = sqlColumnName(message);
+
+    if (!column || !(column in COLLECTION_COLUMNS)) {
       continue;
     }
 
-    if (code === "42703" || /does not exist/i.test(message)) {
-      return OPTIONAL_INSERT_COLUMNS[column as keyof typeof OPTIONAL_INSERT_COLUMNS];
+    if (skippable || /does not exist/i.test(message) || /is of type/i.test(message)) {
+      return COLLECTION_COLUMNS[column as keyof typeof COLLECTION_COLUMNS];
     }
   }
 

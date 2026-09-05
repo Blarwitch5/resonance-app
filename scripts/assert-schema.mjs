@@ -71,8 +71,17 @@ if (!databaseUrl) {
 }
 
 const sql = neon(databaseUrl);
+const EXPECTED_TYPES = {
+  "collection_item.genres": "_text",
+  "collection_item.format": "media_format",
+  "collection_item.cover_thumb_url": "text",
+  "collection_item.catalog_number": "text",
+  "collection_item.discogs_id": "int4",
+  "collection_item.year": "int4",
+};
+
 const columns = await sql`
-  SELECT table_name, column_name
+  SELECT table_name, column_name, udt_name
   FROM information_schema.columns
   WHERE table_schema = 'public'
     AND table_name = ANY(${Object.keys(EXPECTED)})
@@ -99,8 +108,15 @@ for (const [table, expected] of Object.entries(EXPECTED)) {
   }
 }
 
-if (missing.length > 0) {
-  console.error(`Resonance schema is incomplete: ${missing.join(", ")}`);
+const types = new Map(columns.map((row) => [`${row.table_name}.${row.column_name}`, row.udt_name]));
+const wrongType = Object.entries(EXPECTED_TYPES)
+  .filter(([key, udt]) => types.get(key) && types.get(key) !== udt)
+  .map(([key, udt]) => `${key} (${types.get(key)} ≠ ${udt})`);
+
+if (missing.length > 0 || wrongType.length > 0) {
+  console.error(
+    `Resonance schema is incomplete: ${[...missing, ...wrongType].join(", ")}`,
+  );
   process.exit(1);
 }
 

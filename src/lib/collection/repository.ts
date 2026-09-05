@@ -59,6 +59,7 @@ const collectionItemColumns = {
   label: collectionItem.label,
   genres: collectionItem.genres,
   coverUrl: collectionItem.coverUrl,
+  coverThumbUrl: collectionItem.coverThumbUrl,
   barcode: collectionItem.barcode,
   catalogNumber: collectionItem.catalogNumber,
   condition: collectionItem.condition,
@@ -71,16 +72,36 @@ const collectionItemColumns = {
   updatedAt: collectionItem.updatedAt,
 };
 
+const SELECT_FALLBACKS: Partial<Record<OptionalInsertField, unknown>> = {
+  discogsId: sql<number | null>`cast(null as integer)`.as("discogs_id"),
+  format: sql<typeof collectionItem.format>`cast('vinyl' as media_format)`.as("format"),
+  year: sql<number | null>`cast(null as integer)`.as("year"),
+  label: sql<string | null>`cast(null as text)`.as("label"),
+  genres: sql<string[]>`cast('{}' as text[])`.as("genres"),
+  coverUrl: sql<string | null>`cast(null as text)`.as("cover_url"),
+  coverThumbUrl: sql<string | null>`cast(null as text)`.as("cover_thumb_url"),
+  barcode: sql<string | null>`cast(null as text)`.as("barcode"),
+  catalogNumber: sql<string | null>`cast(null as text)`.as("catalog_number"),
+  condition: sql<string | null>`cast(null as text)`.as("condition"),
+  purchaseLocation: sql<string | null>`cast(null as text)`.as("purchase_location"),
+  purchaseDate: sql<Date | null>`cast(null as timestamp)`.as("purchase_date"),
+  notes: sql<string | null>`cast(null as text)`.as("notes"),
+  isFavorite: sql<boolean>`false`.as("is_favorite"),
+  isWishlist: sql<boolean>`false`.as("is_wishlist"),
+};
+
 function collectionSelectColumns(missing: ReadonlySet<OptionalInsertField>) {
-  return {
-    ...collectionItemColumns,
-    catalogNumber: missing.has("catalogNumber")
-      ? sql<string | null>`cast(null as text)`.as("catalog_number")
-      : collectionItem.catalogNumber,
-    coverThumbUrl: missing.has("coverThumbUrl")
-      ? sql<string | null>`cast(null as text)`.as("cover_thumb_url")
-      : collectionItem.coverThumbUrl,
-  };
+  const columns = { ...collectionItemColumns };
+
+  for (const field of missing) {
+    const fallback = SELECT_FALLBACKS[field];
+
+    if (fallback) {
+      Object.assign(columns, { [field]: fallback });
+    }
+  }
+
+  return columns;
 }
 
 const collectionItemWithThumb = collectionSelectColumns(new Set());
@@ -91,7 +112,7 @@ async function selectCollectionRows<T>(
 ): Promise<T> {
   const missing = new Set<OptionalInsertField>();
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 16; attempt += 1) {
     try {
       return await run(collectionSelectColumns(missing));
     } catch (error) {
@@ -110,20 +131,10 @@ async function selectCollectionRows<T>(
 
 type CollectionInsert = typeof collectionItem.$inferInsert;
 
-function withoutCoverThumb<T extends { coverThumbUrl?: string | null }>(
-  value: T,
-): Omit<T, "coverThumbUrl"> {
-  const { coverThumbUrl: _thumb, ...rest } = value;
-  return rest;
-}
-
-function omitInsertField(value: CollectionInsert, field: "coverThumbUrl" | "catalogNumber"): CollectionInsert {
-  if (field === "coverThumbUrl") {
-    return withoutCoverThumb(value);
-  }
-
-  const { catalogNumber: _catalog, ...rest } = value;
-  return rest;
+function omitField<T extends object>(value: T, field: string): T {
+  const next = { ...value };
+  delete (next as Record<string, unknown>)[field];
+  return next;
 }
 
 async function insertCollectionRows(
@@ -133,7 +144,7 @@ async function insertCollectionRows(
 ) {
   let rows = values;
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 16; attempt += 1) {
     try {
       const query = getDb().insert(collectionItem).values(rows);
       const next = ignoreConflict ? query.onConflictDoNothing() : query;
@@ -149,31 +160,36 @@ async function insertCollectionRows(
         throw error;
       }
 
-      rows = rows.map((row) => omitInsertField(row, field));
+      rows = rows.map((row) => omitField(row, field));
     }
   }
 
   throw new DatabaseError("The record could not be added to your collection.");
 }
 
-async function updateCollectionRow(
-  userId: string,
-  id: string,
-  patch: {
-    notes?: string | null;
-    condition?: MediaCondition | null;
-    isFavorite?: boolean;
-    isWishlist?: boolean;
-    purchaseLocation?: string | null;
-    purchaseDate?: Date | null;
-    catalogNumber?: string | null;
-    coverThumbUrl?: string | null;
-  },
-) {
-  let nextPatch: typeof patch = patch;
+type CollectionPatch = {
+  notes?: string | null;
+  condition?: MediaCondition | null;
+  isFavorite?: boolean;
+  isWishlist?: boolean;
+  purchaseLocation?: string | null;
+  purchaseDate?: Date | null;
+  catalogNumber?: string | null;
+  coverThumbUrl?: string | null;
+  coverUrl?: string | null;
+  barcode?: string | null;
+  discogsId?: number | null;
+  year?: number | null;
+  label?: string | null;
+  genres?: string[];
+  format?: MediaFormat;
+};
+
+async function updateCollectionRow(userId: string, id: string, patch: CollectionPatch) {
+  let nextPatch: CollectionPatch = patch;
   const missing = new Set<OptionalInsertField>();
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 16; attempt += 1) {
     try {
       return await getDb()
         .update(collectionItem)
@@ -191,16 +207,11 @@ async function updateCollectionRow(
       }
 
       missing.add(field);
-      nextPatch = field === "coverThumbUrl" ? withoutCoverThumb(nextPatch) : omitCatalogNumber(nextPatch);
+      nextPatch = omitField(nextPatch, field);
     }
   }
 
   throw new DatabaseError("This record could not be updated.");
-}
-
-function omitCatalogNumber<T extends { catalogNumber?: string | null }>(value: T): Omit<T, "catalogNumber"> {
-  const { catalogNumber: _catalog, ...rest } = value;
-  return rest;
 }
 
 function collectionWhere(userId: string, filters: ListFilters): SQL[] {
@@ -401,11 +412,36 @@ export async function addCollectionItem(
   notes?: string | null,
 ) {
   const item = createCollectionItem({ draft, kind, notes });
-  const { coverThumbUrl, catalogNumber, ...row } = item;
+  const core: CollectionInsert = {
+    userId,
+    title: item.title,
+    artist: item.artist,
+    format: item.format,
+    isFavorite: item.isFavorite,
+    isWishlist: item.isWishlist,
+  };
+  const extras: CollectionPatch = {
+    discogsId: item.discogsId,
+    year: item.year,
+    label: item.label,
+    genres: item.genres,
+    coverUrl: item.coverUrl,
+    coverThumbUrl: item.coverThumbUrl,
+    barcode: item.barcode,
+    catalogNumber: item.catalogNumber,
+    notes: item.notes,
+  };
 
   try {
     if (item.discogsId !== null) {
-      const copies = await listShelfCopies(userId, item.discogsId);
+      let copies: ShelfCopy[] = [];
+
+      try {
+        copies = await listShelfCopies(userId, item.discogsId);
+      } catch {
+        copies = [];
+      }
+
       const sameFormat = copies.find((copy) => copy.format === item.format);
 
       if (sameFormat) {
@@ -413,21 +449,16 @@ export async function addCollectionItem(
       }
     }
 
-    const [created] = await insertCollectionRows([{ userId, ...row }], { id: collectionItem.id });
+    const [created] = await insertCollectionRows([core], { id: collectionItem.id });
 
     if (!created) {
       throw new DatabaseError("The record could not be added to your collection.");
     }
 
-    if (coverThumbUrl || catalogNumber) {
-      try {
-        await updateCollectionRow(userId, created.id, {
-          ...(coverThumbUrl ? { coverThumbUrl } : {}),
-          ...(catalogNumber ? { catalogNumber } : {}),
-        });
-      } catch {
-        // Later columns are optional; the pressing is already on the shelf.
-      }
+    try {
+      await updateCollectionRow(userId, created.id, extras);
+    } catch {
+      // Later columns are optional; the pressing is already on the shelf.
     }
 
     return created;
@@ -437,12 +468,16 @@ export async function addCollectionItem(
     }
 
     if (isUniqueViolation(error) && item.discogsId !== null) {
-      const existing = (await listShelfCopies(userId, item.discogsId)).find(
-        (copy) => copy.format === item.format,
-      );
+      try {
+        const existing = (await listShelfCopies(userId, item.discogsId)).find(
+          (copy) => copy.format === item.format,
+        );
 
-      if (existing) {
-        return { id: existing.id };
+        if (existing) {
+          return { id: existing.id };
+        }
+      } catch {
+        // The unique conflict is enough to stop a second copy.
       }
 
       throw new ValidationError("This pressing is already on your shelf.");

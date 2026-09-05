@@ -33,7 +33,15 @@ async function readAddReleaseInput(request: Request) {
 
 export async function POST(request: Request) {
   const session = await getSession();
-  const locale = session ? (await loadUserSettings(session.user.id)).locale : await getLocale();
+  let locale = await getLocale();
+
+  if (session) {
+    try {
+      locale = (await loadUserSettings(session.user.id)).locale;
+    } catch {
+      // Cookie locale is enough to answer; a settings read must not block add.
+    }
+  }
 
   if (!session) {
     return NextResponse.json({ error: t(locale, "error.signIn") }, { status: 401 });
@@ -78,7 +86,7 @@ export async function POST(request: Request) {
       detail: postgresDetail(error),
     });
 
-    const status = error instanceof AppError ? error.statusCode : 400;
+    const status = error instanceof AppError && error.statusCode < 500 ? error.statusCode : 400;
     return NextResponse.json({ error: localizedError(locale, error) }, { status });
   }
 }

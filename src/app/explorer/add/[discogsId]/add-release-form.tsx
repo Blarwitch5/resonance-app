@@ -54,12 +54,13 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ discogsId, format, kind, notes }),
       });
-      const payload = (await response.json()) as { href?: string; error?: string; code?: string };
+      const payload = (await response.json()) as { href?: string; error?: string; code?: string; detail?: string };
 
       if (!response.ok || !payload.href) {
         const message = payload.error ?? t("error.recordAdd");
+        const hint = [payload.code, payload.detail].filter(Boolean).join(" · ");
         setFetchState({
-          error: payload.code && payload.code !== "VALIDATION" ? `${message} (${payload.code})` : message,
+          error: hint ? `${message} (${hint})` : message,
           href: null,
         });
         return;

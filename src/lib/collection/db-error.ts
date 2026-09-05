@@ -29,7 +29,7 @@ export function isUniqueViolation(error: unknown): boolean {
 
   return walkCauses(error).some((current) => {
     const message = current instanceof Error ? current.message : "";
-    return /duplicate key value/i.test(message);
+    return /duplicate key value/i.test(message) || /unique constraint/i.test(message);
   });
 }
 
@@ -41,6 +41,14 @@ export function postgresDetail(error: unknown): string | undefined {
 
     if (current instanceof Error && current.name === "NeonDbError") {
       return current.message.slice(0, 180);
+    }
+  }
+
+  for (const current of walkCauses(error)) {
+    const message = current instanceof Error ? current.message : "";
+
+    if (/column |duplicate key|violates |does not exist|is of type/i.test(message)) {
+      return message.slice(0, 180);
     }
   }
 

@@ -167,6 +167,64 @@ async function insertCollectionRows(
   throw new DatabaseError("The record could not be added to your collection.");
 }
 
+function readInsertedId(result: unknown): string | undefined {
+  const rows = Array.isArray(result)
+    ? result
+    : result && typeof result === "object" && "rows" in result && Array.isArray(result.rows)
+      ? result.rows
+      : [];
+  const first = rows[0] as { id?: unknown } | undefined;
+  return typeof first?.id === "string" ? first.id : undefined;
+}
+
+async function insertCorePressing(input: {
+  userId: string;
+  discogsId: number | null;
+  format: MediaFormat;
+  title: string;
+  artist: string;
+  isFavorite: boolean;
+  isWishlist: boolean;
+}): Promise<{ id: string }> {
+  const statements = [
+    sql`
+      insert into "collection_item" ("user_id", "discogs_id", "format", "title", "artist", "is_favorite", "is_wishlist")
+      values (${input.userId}, ${input.discogsId}, ${input.format}, ${input.title}, ${input.artist}, ${input.isFavorite}, ${input.isWishlist})
+      returning "id"
+    `,
+    sql`
+      insert into "collection_item" ("user_id", "discogs_id", "title", "artist", "is_favorite", "is_wishlist")
+      values (${input.userId}, ${input.discogsId}, ${input.title}, ${input.artist}, ${input.isFavorite}, ${input.isWishlist})
+      returning "id"
+    `,
+    sql`
+      insert into "collection_item" ("user_id", "title", "artist")
+      values (${input.userId}, ${input.title}, ${input.artist})
+      returning "id"
+    `,
+  ];
+
+  let lastError: unknown;
+
+  for (const statement of statements) {
+    try {
+      const id = readInsertedId(await getDb().execute(statement));
+
+      if (id) {
+        return { id };
+      }
+    } catch (error) {
+      lastError = error;
+
+      if (isUniqueViolation(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError ?? new DatabaseError("The record could not be added to your collection.");
+}
+
 type CollectionPatch = {
   notes?: string | null;
   condition?: MediaCondition | null;
@@ -412,7 +470,7 @@ export async function addCollectionItem(
   notes?: string | null,
 ) {
   const item = createCollectionItem({ draft, kind, notes });
-  const core: CollectionInsert = {
+  const core = {
     userId,
     discogsId: item.discogsId,
     title: item.title,
@@ -449,7 +507,7 @@ export async function addCollectionItem(
       }
     }
 
-    const [created] = await insertCollectionRows([core], { id: collectionItem.id });
+    const created = await insertCorePressing(core);
 
     if (!created) {
       throw new DatabaseError("The record could not be added to your collection.");

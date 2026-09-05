@@ -81,16 +81,21 @@ export async function POST(request: Request) {
       href: journalHref(created.id, parsed.kind === "owned"),
     });
   } catch (error) {
+    const pgCode = postgresCode(error);
+    const detail = postgresDetail(error);
+
     console.error("Resonance add release failed", {
-      code: error instanceof AppError ? error.code : postgresCode(error),
-      detail: postgresDetail(error),
+      code: error instanceof AppError ? error.code : pgCode,
+      pgCode,
+      detail,
     });
 
     const status = error instanceof AppError && error.statusCode < 500 ? error.statusCode : 400;
     return NextResponse.json(
       {
         error: localizedError(locale, error),
-        code: error instanceof AppError ? error.code : (postgresCode(error) ?? "UNKNOWN"),
+        code: pgCode ?? (error instanceof AppError ? error.code : "UNKNOWN"),
+        detail,
       },
       { status },
     );

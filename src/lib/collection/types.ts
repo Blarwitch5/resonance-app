@@ -369,7 +369,7 @@ export function toShelfCard(item: ShelfCard): ShelfCard {
     artist: item.artist,
     year: item.year,
     label: item.label,
-    genres: item.genres,
+    genres: item.genres ?? [],
     barcode: item.barcode,
     catalogNumber: item.catalogNumber,
     format: item.format,

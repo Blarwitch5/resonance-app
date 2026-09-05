@@ -7,11 +7,13 @@ import { useT } from "@/components/locale-provider";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
-  retry: () => void;
+  retry?: () => void;
+  reset?: () => void;
 }
 
-export default function ErrorPage({ retry }: ErrorPageProps) {
+export default function ErrorPage({ retry, reset }: ErrorPageProps) {
   const t = useT();
+  const onRetry = retry ?? reset ?? (() => window.location.assign("/explorer"));
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-6">
@@ -19,15 +21,13 @@ export default function ErrorPage({ retry }: ErrorPageProps) {
         <ResonanceMark size="md" className="mx-auto" />
         <p className={`mt-4 ${eyebrowClass}`}>Resonance</p>
         <h1 className={`mt-3 ${displayTitleClass}`}>{t("errorPage.title")}</h1>
-        <p className={`mt-2 ${bodyClass}`}>
-          {t("errorPage.body")}
-        </p>
+        <p className={`mt-2 ${bodyClass}`}>{t("errorPage.body")}</p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button type="button" onClick={() => retry()}>
+          <Button type="button" onClick={() => onRetry()}>
             {t("errorPage.retry")}
           </Button>
-          <ButtonLink href="/collection" variant="ghost">
-            {t("back.collection")}
+          <ButtonLink href="/explorer" variant="ghost">
+            {t("nav.explorer")}
           </ButtonLink>
         </div>
       </div>

@@ -1,6 +1,4 @@
-import Image from "next/image";
-
-import { canOptimizeCoverUrl, coverDisplaySrc, coverSlotFromSizes } from "@/lib/collection/cover-src";
+import { coverDisplaySrc, coverSlotFromSizes } from "@/lib/collection/cover-src";
 
 interface CoverArtProps {
   url: string | null;
@@ -30,18 +28,7 @@ export function CoverArt({
     <div
       className={`relative aspect-square overflow-hidden rounded-rs-sm bg-surface-pressed ${className}`.trim()}
     >
-      {url && canOptimizeCoverUrl(url) ? (
-        <Image
-          src={url}
-          alt={alt}
-          width={600}
-          height={600}
-          sizes={sizes}
-          priority={priority}
-          loading={priority ? "eager" : "lazy"}
-          className={stillClass}
-        />
-      ) : url ? (
+      {url ? (
         <CoverStill
           url={url}
           compactUrl={compactUrl}

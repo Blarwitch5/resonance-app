@@ -41,6 +41,65 @@ interface ListFilters {
 
 export const SHELF_PAGE_SIZE = 48;
 
+const collectionItemColumns = {
+  id: collectionItem.id,
+  userId: collectionItem.userId,
+  discogsId: collectionItem.discogsId,
+  format: collectionItem.format,
+  title: collectionItem.title,
+  artist: collectionItem.artist,
+  year: collectionItem.year,
+  label: collectionItem.label,
+  genres: collectionItem.genres,
+  coverUrl: collectionItem.coverUrl,
+  barcode: collectionItem.barcode,
+  catalogNumber: collectionItem.catalogNumber,
+  condition: collectionItem.condition,
+  purchaseLocation: collectionItem.purchaseLocation,
+  purchaseDate: collectionItem.purchaseDate,
+  notes: collectionItem.notes,
+  isFavorite: collectionItem.isFavorite,
+  isWishlist: collectionItem.isWishlist,
+  createdAt: collectionItem.createdAt,
+  updatedAt: collectionItem.updatedAt,
+};
+
+const collectionItemWithThumb = {
+  ...collectionItemColumns,
+  coverThumbUrl: collectionItem.coverThumbUrl,
+};
+
+const collectionItemWithoutThumb = {
+  ...collectionItemColumns,
+  coverThumbUrl: sql<string | null>`cast(null as text)`.as("cover_thumb_url"),
+};
+
+function errorText(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+
+  return error.cause ? `${error.message} ${errorText(error.cause)}` : error.message;
+}
+
+function isMissingCoverThumbColumn(error: unknown): boolean {
+  return errorText(error).includes("cover_thumb_url");
+}
+
+async function selectCollectionRows<T>(
+  run: (columns: typeof collectionItemWithThumb | typeof collectionItemWithoutThumb) => Promise<T>,
+): Promise<T> {
+  try {
+    return await run(collectionItemWithThumb);
+  } catch (error) {
+    if (!isMissingCoverThumbColumn(error)) {
+      throw error;
+    }
+
+    return run(collectionItemWithoutThumb);
+  }
+}
+
 function collectionWhere(userId: string, filters: ListFilters): SQL[] {
   const conditions: SQL[] = [eq(collectionItem.userId, userId)];
 
@@ -149,17 +208,19 @@ export async function listCollectionItems(userId: string, filters: ListFilters =
 
     const pageSize = filters.pageSize;
     const page = filters.page && filters.page > 0 ? filters.page : 1;
-    const listing = getDb()
-      .select()
-      .from(collectionItem)
-      .where(and(...conditions))
-      .orderBy(...order);
+    return await selectCollectionRows(async (columns) => {
+      const listing = getDb()
+        .select(columns)
+        .from(collectionItem)
+        .where(and(...conditions))
+        .orderBy(...order);
 
-    if (pageSize && pageSize > 0) {
-      return await listing.limit(pageSize).offset((page - 1) * pageSize);
-    }
+      if (pageSize && pageSize > 0) {
+        return listing.limit(pageSize).offset((page - 1) * pageSize);
+      }
 
-    return await listing;
+      return listing;
+    });
   } catch (error) {
     throw new DatabaseError("Your collection could not be loaded.", { cause: error });
   }
@@ -386,11 +447,13 @@ export async function listShelfNeighbors(
 
 export async function getCollectionItem(userId: string, id: string) {
   try {
-    const [item] = await getDb()
-      .select()
-      .from(collectionItem)
-      .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
-      .limit(1);
+    const [item] = await selectCollectionRows((columns) =>
+      getDb()
+        .select(columns)
+        .from(collectionItem)
+        .where(and(eq(collectionItem.id, id), eq(collectionItem.userId, userId)))
+        .limit(1),
+    );
 
     if (!item) {
       throw new NotFoundError("This record is not in your collection.");

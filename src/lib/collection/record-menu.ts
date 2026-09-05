@@ -222,7 +222,7 @@ export function recordSwipeToneCount(actions: readonly RecordMenuAction[]): numb
 export function recordSwipeActionClass(
   id: RecordMenuActionId,
   index = 0,
-  toneCount = SWIPE_TONE_STEPS.length,
+  toneCount: number = SWIPE_TONE_STEPS.length,
 ): string {
   if (isSwipeRelease(id)) {
     return "bg-error text-on-error";
@@ -232,8 +232,9 @@ export function recordSwipeActionClass(
     return SWIPE_TONE_STEPS[0];
   }
 
-  const step = Math.round((index / (toneCount - 1)) * (SWIPE_TONE_STEPS.length - 1));
-  return SWIPE_TONE_STEPS[Math.min(Math.max(step, 0), SWIPE_TONE_STEPS.length - 1)];
+  const last = SWIPE_TONE_STEPS.length - 1;
+  const step = Math.min(Math.max(Math.round((index / (toneCount - 1)) * last), 0), last);
+  return SWIPE_TONE_STEPS[step] ?? SWIPE_TONE_STEPS[0];
 }
 
 export function recordMenuMoreClass(isOpen: boolean, placement: "cover" | "row" = "cover"): string {

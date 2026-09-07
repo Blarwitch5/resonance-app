@@ -104,7 +104,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
     settings.marketValueEnabled && item.discogsId !== null
       ? getMarketplaceAsk(item.discogsId).catch(() => null)
       : Promise.resolve(null),
-    getSharedPressingTokenForItem(session.user.id, item.id),
+    getSharedPressingTokenForItem(session.user.id, item.id).catch(() => null),
   ]);
   const marketLine = marketAsk ? marketplaceVoice(settings.locale, marketAsk) : null;
   const kin = pickShelfKin({

@@ -71,7 +71,12 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
   }
 
   return (
-    <form action={formAction} onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
+    <form
+      id="add-release-form"
+      action={formAction}
+      onSubmit={(event) => void handleSubmit(event)}
+      className="flex flex-col gap-5"
+    >
       <input type="hidden" name="discogsId" value={discogsId} />
       <input type="hidden" name="format" value={format} />
       <input type="hidden" name="kind" value={kind} />
@@ -147,7 +152,7 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
       <ConfirmSubmitBar>
-        <Button type="submit" disabled={isBusy} className="w-full">
+        <Button type="submit" form="add-release-form" disabled={isBusy} className="w-full">
           <BusyGlyph isBusy={isBusy}>
             <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
           </BusyGlyph>

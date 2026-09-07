@@ -30,8 +30,8 @@ export function ConfirmSubmitBar({ children }: ConfirmSubmitBarProps) {
         setIsDocked(Boolean(entry?.isIntersecting));
       },
       {
-        threshold: 0.55,
-        rootMargin: "0px 0px -10% 0px",
+        threshold: 0.01,
+        rootMargin: "0px 0px -18% 0px",
       },
     );
 
@@ -43,11 +43,15 @@ export function ConfirmSubmitBar({ children }: ConfirmSubmitBarProps) {
   }, []);
 
   return (
-    <div ref={slotRef}>
+    <>
+      <div
+        ref={slotRef}
+        className={isDocked ? undefined : confirmSubmitSlotClass}
+        aria-hidden={isDocked ? undefined : true}
+      />
       <div className={isDocked ? confirmSubmitDockClass : confirmSubmitFixedClass}>
         <div className={`rounded-full ${confirmSubmitGlowClass}`}>{children}</div>
       </div>
-      {isDocked ? null : <div className={confirmSubmitSlotClass} aria-hidden />}
-    </div>
+    </>
   );
 }

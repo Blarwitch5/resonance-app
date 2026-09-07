@@ -171,7 +171,8 @@ export async function getSharedPressingTokenForItem(
 
     return row?.token ?? null;
   } catch (error) {
-    throw new DatabaseError("This pressing could not be heard.", { cause: error });
+    console.error("Resonance shared pressing token read failed", error);
+    return null;
   }
 }
 

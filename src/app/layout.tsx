@@ -67,12 +67,17 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={locale}
       className={`${poppins.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      style={{ backgroundColor: "#f6f4f8" }}
       suppressHydrationWarning
     >
       <head>
         <ThemeScript />
       </head>
-      <body className="min-h-full bg-background font-sans text-text" suppressHydrationWarning>
+      <body
+        className="min-h-full bg-background font-sans text-text"
+        style={{ backgroundColor: "#f6f4f8" }}
+        suppressHydrationWarning
+      >
         <ServiceWorkerRegister enabled={process.env.NODE_ENV === "production"} />
         <LocaleProvider locale={locale}>{children}</LocaleProvider>
       </body>

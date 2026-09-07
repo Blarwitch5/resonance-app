@@ -1,14 +1,15 @@
 "use strict";
 
 // Keep path rules aligned with src/lib/offline/shelf-cache.ts
-const SHELL_CACHE = "resonance-shell-v7";
-const SHELF_CACHE = "resonance-shelf-v1";
-const STATIC_CACHE = "resonance-static-v1";
+const SHELL_CACHE = "resonance-shell-v9";
+const SHELF_CACHE = "resonance-shelf-v3";
+const STATIC_CACHE = "resonance-static-v2";
 const COVER_CACHE = "resonance-covers-v1";
 const KNOWN_CACHES = new Set([SHELL_CACHE, SHELF_CACHE, STATIC_CACHE, COVER_CACHE]);
 
 const PRECACHE_URLS = [
   "/offline.html",
+  "/boot.html",
   "/logo-resonance.svg",
   "/icon.svg",
   "/icon-192.png",
@@ -59,7 +60,8 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (kind === "shelf") {
-    event.respondWith(networkFirst(SHELF_CACHE, event.request));
+    // Network first — never serve a stale Next document ahead of RSC (breaks prod navigations).
+    event.respondWith(networkFirstShelf(event.request));
     return;
   }
 
@@ -97,8 +99,13 @@ function offlineFetchKind(url, request) {
     return "static";
   }
 
-  if (isOfflineShelfPath(url.pathname)) {
+  // Only full document navigations for shelf paths — let soft RSC / data fetches hit the network.
+  if (isOfflineShelfPath(url.pathname) && isDocumentRequest(request)) {
     return "shelf";
+  }
+
+  if (isOfflineShelfPath(url.pathname)) {
+    return "bypass";
   }
 
   return "network";
@@ -142,8 +149,8 @@ async function activateCaches() {
   await self.clients.claim();
 }
 
-async function networkFirst(cacheName, request) {
-  const cache = await caches.open(cacheName);
+async function networkFirstShelf(request) {
+  const cache = await caches.open(SHELF_CACHE);
 
   try {
     const response = await fetch(request);
@@ -164,7 +171,7 @@ async function networkFirst(cacheName, request) {
       return cached;
     }
 
-    return fallbackDocument(request);
+    return documentFallback();
   }
 }
 
@@ -195,7 +202,8 @@ async function cacheFirst(cacheName, request) {
       return fallback;
     }
 
-    return fallbackDocument(request);
+    // Never invent a 503 for scripts/images — let the browser treat it as a network failure.
+    return Response.error();
   }
 }
 
@@ -230,7 +238,7 @@ async function staleWhileRevalidate(event, cacheName, request) {
     return response;
   }
 
-  return fallbackDocument(request);
+  return Response.error();
 }
 
 async function networkOnlyWithOfflinePage(request) {
@@ -247,20 +255,28 @@ async function networkOnlyWithOfflinePage(request) {
       return cached;
     }
 
-    return fallbackDocument(request);
+    if (isDocumentRequest(request)) {
+      return documentFallback();
+    }
+
+    return Response.error();
   }
 }
 
-async function fallbackDocument(request) {
-  if (isDocumentRequest(request)) {
-    const offline = await caches.match("/offline.html");
+async function documentFallback() {
+  const boot = await caches.match("/boot.html");
 
-    if (offline) {
-      return offline;
-    }
+  if (boot) {
+    return boot;
   }
 
-  return unavailableResponse();
+  const offline = await caches.match("/offline.html");
+
+  if (offline) {
+    return offline;
+  }
+
+  return Response.error();
 }
 
 function isFlightRequest(request, url) {
@@ -280,6 +296,12 @@ function isFlightRequest(request, url) {
     return true;
   }
 
+  const accept = request.headers.get("Accept") || "";
+
+  if (accept.includes("text/x-component")) {
+    return true;
+  }
+
   return false;
 }
 
@@ -289,10 +311,6 @@ function isAbortError(error) {
 
 function canceledResponse() {
   return new Response(null, { status: 204, statusText: "canceled" });
-}
-
-function unavailableResponse() {
-  return new Response(null, { status: 503, statusText: "offline", headers: { "Cache-Control": "no-store" } });
 }
 
 function canRememberShelf(request, response) {

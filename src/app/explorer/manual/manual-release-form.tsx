@@ -34,7 +34,7 @@ export function ManualReleaseForm({ defaultFormat, formats }: ManualReleaseFormP
   const selected = available.includes(defaultFormat) ? defaultFormat : (available[0] ?? "vinyl");
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form id="manual-release-form" action={formAction} className="flex flex-col gap-5">
       <TextField
         id="manual-artist"
         name="artist"
@@ -135,7 +135,7 @@ export function ManualReleaseForm({ defaultFormat, formats }: ManualReleaseFormP
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
       <ConfirmSubmitBar>
-        <Button type="submit" disabled={isBusy} className="w-full">
+        <Button type="submit" form="manual-release-form" disabled={isBusy} className="w-full">
           <BusyGlyph isBusy={isBusy}>
             <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
           </BusyGlyph>

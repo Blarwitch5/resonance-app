@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useId, type ReactNode } from "react";
 
@@ -46,7 +46,7 @@ export function ProfileSettingsSheet({ isOpen, href, closeHref, children }: Prof
         onClick={toggle}
         className="group inline-flex size-11 shrink-0 items-center justify-center rounded-full text-text-secondary outline-none hover:bg-surface-pressed hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
       >
-        <Settings className="size-5 motion-safe:group-hover:vibrato" aria-hidden />
+        <Settings2 className="size-5 motion-safe:group-hover:vibrato" aria-hidden />
       </button>
       {isOpen ? (
         <BottomSheet

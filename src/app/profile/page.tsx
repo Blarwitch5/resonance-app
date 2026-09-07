@@ -1,4 +1,4 @@
-import { Bookmark, ChevronLeft, Download, FolderDown, Heart, KeyRound, Settings, type LucideIcon } from "lucide-react";
+import { Bookmark, ChevronLeft, Download, FolderDown, Heart, KeyRound, Settings2, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
@@ -150,7 +150,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                     <ExportResonanceLink />
                     <RestoreResonanceForm />
                   </SheetSection>
-                  <SheetSection icon={Settings} title={t(settings.locale, "settings.title")}>
+                  <SheetSection icon={Settings2} title={t(settings.locale, "settings.title")}>
                     <ProfileSettingsForm name={session.user.name} image={session.user.image} settings={settings} />
                   </SheetSection>
                   <SheetSection icon={KeyRound} title={t(settings.locale, "settings.password")}>

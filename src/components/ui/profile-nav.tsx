@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, Heart, Library, Settings, type LucideIcon } from "lucide-react";
+import { Bookmark, Heart, Library, Settings2, type LucideIcon } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 import { SidebarSubLink, SidebarSubNav } from "@/components/ui/sidebar-sub-nav";
@@ -28,7 +28,7 @@ export function ProfileNav() {
     { id: "resonance", label: t("profile.resonance"), icon: Library },
     { id: "close", label: t("profile.keptClose"), icon: Heart },
     { id: "waiting", label: t("profile.waiting"), icon: Bookmark },
-    { id: "settings", label: t("settings.title"), icon: Settings },
+    { id: "settings", label: t("settings.title"), icon: Settings2 },
   ];
 
   return (

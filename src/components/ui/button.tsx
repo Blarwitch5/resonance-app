@@ -45,6 +45,7 @@ interface ButtonLinkProps {
   variant?: ButtonVariant;
   className?: string;
   "aria-label"?: string;
+  title?: string;
   isRecordLink?: boolean;
 }
 
@@ -54,12 +55,14 @@ export function ButtonLink({
   variant = "primary",
   className = "",
   "aria-label": ariaLabel,
+  title,
   isRecordLink = false,
 }: ButtonLinkProps) {
   return (
     <Link
       href={href}
       aria-label={ariaLabel}
+      title={title}
       data-record-link={isRecordLink ? "" : undefined}
       className={`${buttonClass} ${variants[variant]} ${className}`}
     >

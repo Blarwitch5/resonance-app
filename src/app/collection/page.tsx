@@ -1,4 +1,4 @@
-import { ChevronLeft, Disc3, FaceSlightlySmilingPlus, Heart, MoonStar, ScanSearch, SearchX } from "lucide-react";
+import { AudioLines, ChevronLeft, Disc3, FaceSlightlySmilingPlus, Heart, ScanSearch, SearchX } from "lucide-react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -182,10 +182,11 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
                 href="/collection/tonight"
                 variant="ghost"
                 aria-label={t(settings.locale, "collection.tonightAria")}
-                className="size-11 shrink-0 px-0 sm:size-12 lg:h-auto lg:min-h-12 lg:w-auto lg:px-6"
+                title={t(settings.locale, "collection.tonightAria")}
+                className="size-11 shrink-0 px-0 sm:h-12 sm:w-auto sm:px-4 lg:min-h-12 lg:px-6"
               >
-                <MoonStar className="size-4 shrink-0" aria-hidden />
-                <span className="hidden lg:inline">{t(settings.locale, "collection.tonight")}</span>
+                <AudioLines className="size-4 shrink-0" aria-hidden />
+                <span className="hidden sm:inline">{t(settings.locale, "collection.tonight")}</span>
               </ButtonLink>
             ) : null}
             <div className="hidden lg:contents">

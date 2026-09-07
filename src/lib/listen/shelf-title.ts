@@ -1,11 +1,15 @@
 import type { CollectionQuery } from "@/lib/collection/types";
-import { conditionLabel, decadeName } from "@/lib/i18n/labels";
+import { conditionLabel, decadeName, formatLabel } from "@/lib/i18n/labels";
 import { t } from "@/lib/i18n/translate";
 import type { Locale } from "@/lib/settings/types";
 
 /** Public headline for a shared shelf snapshot (filters only — no private notes). */
 export function sharedShelfHeadline(listen: CollectionQuery, locale: Locale): string {
   const thread: string[] = [];
+
+  if (listen.format) {
+    thread.push(formatLabel(locale, listen.format));
+  }
 
   if (listen.artist) {
     thread.push(listen.artist);

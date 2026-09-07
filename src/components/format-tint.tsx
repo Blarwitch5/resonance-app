@@ -10,6 +10,7 @@ interface FormatTintProps {
   formats: MediaFormat[];
 }
 
+/** Ties `?format=` to a soft color wash — same listen as the format filter. */
 export function FormatTint({ formats }: FormatTintProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();

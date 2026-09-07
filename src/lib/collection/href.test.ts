@@ -9,6 +9,7 @@ import {
   journalFromHref,
   journalHref,
   parseWaveFlag,
+  toggleMediaFormat,
 } from "@/lib/collection/href";
 
 describe("collectionHref", () => {
@@ -88,7 +89,7 @@ describe("parseWaveFlag", () => {
 });
 
 describe("formatListenFromLocation", () => {
-  it("tints only the shelf list", () => {
+  it("reads the shelf format filter from the collection URL", () => {
     expect(formatListenFromLocation("/collection", "vinyl")).toBe("vinyl");
     expect(formatListenFromLocation("/collection", "cassette")).toBe("cassette");
     expect(formatListenFromLocation("/collection", undefined)).toBeUndefined();
@@ -96,6 +97,14 @@ describe("formatListenFromLocation", () => {
     expect(formatListenFromLocation("/explorer", "vinyl")).toBeUndefined();
     expect(formatListenFromLocation("/collection", "cassette", ["vinyl", "cd"])).toBeUndefined();
     expect(formatListenFromLocation("/collection", "vinyl", ["vinyl", "cd"])).toBe("vinyl");
+  });
+});
+
+describe("toggleMediaFormat", () => {
+  it("clears the active format on a second click", () => {
+    expect(toggleMediaFormat(undefined, "vinyl")).toBe("vinyl");
+    expect(toggleMediaFormat("vinyl", "vinyl")).toBeUndefined();
+    expect(toggleMediaFormat("vinyl", "cd")).toBe("cd");
   });
 });
 

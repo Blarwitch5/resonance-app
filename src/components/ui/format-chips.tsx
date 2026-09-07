@@ -2,6 +2,7 @@ import { Layers } from "lucide-react";
 
 import { ChipLink } from "@/components/ui/chip";
 import { formatIcons } from "@/components/ui/format-tokens";
+import { toggleMediaFormat } from "@/lib/collection/href";
 import { MEDIA_FORMATS, type MediaFormat } from "@/lib/collection/types";
 import { t } from "@/lib/i18n/translate";
 import type { Locale } from "@/lib/settings/types";
@@ -35,22 +36,32 @@ export function FormatChips({
 
   return (
     <nav aria-label={t(locale, "format.legend")} className={`flex flex-wrap gap-2 ${className}`.trim()}>
-      <ChipLink href={buildHref()} isActive={!active} className="group">
+      <ChipLink
+        href={buildHref()}
+        isActive={!active}
+        className="group max-lg:gap-0 max-lg:px-2.5"
+        aria-label={t(locale, "format.all")}
+      >
         <Layers className="size-4 shrink-0 motion-safe:group-hover:vibrato" aria-hidden />
-        {t(locale, "format.all")}
+        <span className="sr-only lg:not-sr-only">{t(locale, "format.all")}</span>
       </ChipLink>
       {formats.map((format) => {
         const Icon = formatIcons[format];
+        const isActive = active === format;
+        const label = t(locale, `format.${format}`);
 
         return (
           <ChipLink
             key={format}
-            href={buildHref(format)}
-            isActive={active === format}
-            className={`group capitalize ${formatClass[format]}`}
+            href={buildHref(toggleMediaFormat(active, format))}
+            isActive={isActive}
+            className={`group capitalize max-lg:gap-0 max-lg:px-2.5 ${formatClass[format]}`}
+            aria-label={
+              isActive ? t(locale, "format.clearAria", { format: label }) : label
+            }
           >
             <Icon className="size-4 shrink-0 motion-safe:group-hover:vibrato" aria-hidden />
-            {t(locale, `format.${format}`)}
+            <span className="sr-only lg:not-sr-only">{label}</span>
           </ChipLink>
         );
       })}

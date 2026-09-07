@@ -16,6 +16,12 @@ import {
 } from "@/lib/collection/db-error";
 import { createCollectionItem } from "@/lib/collection/factory";
 import {
+  emptyCollectionFacets,
+  FACET_PICK_LIMIT,
+  type CollectionFacets,
+  type FacetScope,
+} from "@/lib/collection/facets";
+import {
   decadeSpanFromYears,
   emptyCollectionInsight,
   type CollectionInsight,
@@ -628,6 +634,83 @@ function readNamedCounts(result: unknown): Array<{ name: string; count: number }
 
     return [{ name, count: countValue }];
   });
+}
+
+/** Facet options for Collection filters — scoped without artist/genre/label/year so picks stay switchable. */
+export async function listCollectionFacets(userId: string, scope: FacetScope = {}): Promise<CollectionFacets> {
+  try {
+    const db = getDb();
+    const conditions = collectionWhere(userId, {
+      kind: "owned",
+      format: scope.format,
+      keptClose: scope.keptClose,
+      query: scope.query,
+      found: scope.found,
+      when: scope.when,
+      arrived: scope.arrived,
+      condition: scope.condition,
+    });
+    const where = and(...conditions);
+
+    const [artistRows, labelRows, yearRows, genreResult] = await Promise.all([
+      db
+        .select({
+          name: collectionItem.artist,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(where)
+        .groupBy(collectionItem.artist)
+        .orderBy(sql`count(*) desc`, asc(collectionItem.artist))
+        .limit(FACET_PICK_LIMIT),
+      db
+        .select({
+          name: collectionItem.label,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(and(where, sql`${collectionItem.label} is not null`))
+        .groupBy(collectionItem.label)
+        .orderBy(sql`count(*) desc`, asc(collectionItem.label))
+        .limit(FACET_PICK_LIMIT),
+      db
+        .select({
+          year: collectionItem.year,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(and(where, sql`${collectionItem.year} is not null`))
+        .groupBy(collectionItem.year)
+        .orderBy(desc(collectionItem.year))
+        .limit(FACET_PICK_LIMIT),
+      db.execute(sql`
+        select trim(g) as name, count(*)::int as count
+        from collection_item, unnest(genres) as g
+        where ${and(...conditions)}
+          and length(trim(g)) > 0
+        group by trim(g)
+        order by count desc, name asc
+        limit ${FACET_PICK_LIMIT}
+      `),
+    ]);
+
+    const artists = artistRows.map((row) => ({ name: row.name, count: Number(row.count) }));
+    const labels = labelRows.flatMap((row) =>
+      row.name ? [{ name: row.name, count: Number(row.count) }] : [],
+    );
+    const years = yearRows.flatMap((row) =>
+      row.year !== null ? [{ year: row.year, count: Number(row.count) }] : [],
+    );
+    const genres = readNamedCounts(genreResult);
+
+    if (artists.length === 0 && labels.length === 0 && years.length === 0 && genres.length === 0) {
+      return emptyCollectionFacets();
+    }
+
+    return { artists, genres, labels, years };
+  } catch (error) {
+    throw new DatabaseError("Your collection could not be loaded.", { cause: error });
+  }
 }
 
 export async function addCollectionItem(

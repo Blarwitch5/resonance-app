@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { formatIcons } from "@/components/ui/format-icon";
 import { useT } from "@/components/locale-provider";
 import { SidebarSubLink, SidebarSubNav } from "@/components/ui/sidebar-sub-nav";
-import { collectionFormatNavHref } from "@/lib/collection/href";
+import { collectionFormatNavHref, toggleMediaFormat } from "@/lib/collection/href";
 import { parseMediaFormat, type MediaFormat } from "@/lib/collection/types";
 
 interface CollectionFormatNavProps {
@@ -29,15 +29,22 @@ export function CollectionFormatNav({ formats }: CollectionFormatNavProps) {
         icon={Layers}
         label={t("nav.all")}
       />
-      {formats.map((format) => (
-        <SidebarSubLink
-          key={format}
-          href={collectionFormatNavHref(pathname, search, format)}
-          isActive={active === format}
-          icon={formatIcons[format]}
-          label={t(`format.${format}`)}
-        />
-      ))}
+      {formats.map((format) => {
+        const isActive = active === format;
+
+        return (
+          <SidebarSubLink
+            key={format}
+            href={collectionFormatNavHref(pathname, search, toggleMediaFormat(active, format))}
+            isActive={isActive}
+            icon={formatIcons[format]}
+            label={t(`format.${format}`)}
+            aria-label={
+              isActive ? t("format.clearAria", { format: t(`format.${format}`) }) : undefined
+            }
+          />
+        );
+      })}
     </SidebarSubNav>
   );
 }

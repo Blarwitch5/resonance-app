@@ -28,6 +28,12 @@ export const formatSwatchClasses: Record<MediaFormat, string> = {
   cd: "bg-cd",
 };
 
+export const formatTextClasses: Record<MediaFormat, string> = {
+  vinyl: "text-vinyl",
+  cassette: "text-cassette",
+  cd: "text-cd",
+};
+
 export const formatRingClasses: Record<MediaFormat, string> = {
   vinyl: "border-vinyl",
   cassette: "border-cassette",

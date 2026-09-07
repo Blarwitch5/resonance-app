@@ -115,6 +115,14 @@ export function formatListenFromLocation(
   return parsed;
 }
 
+/** Clicking the active format again clears the filter (and the wash). */
+export function toggleMediaFormat(
+  active: MediaFormat | undefined,
+  next: MediaFormat,
+): MediaFormat | undefined {
+  return active === next ? undefined : next;
+}
+
 export function collectionFormatHref(search: string, format?: MediaFormat): string {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
 

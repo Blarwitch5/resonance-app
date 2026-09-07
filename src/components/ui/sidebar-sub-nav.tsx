@@ -20,13 +20,21 @@ interface SidebarSubLinkProps {
   isActive: boolean;
   icon: LucideIcon;
   label: string;
+  "aria-label"?: string;
 }
 
-export function SidebarSubLink({ href, isActive, icon: Icon, label }: SidebarSubLinkProps) {
+export function SidebarSubLink({
+  href,
+  isActive,
+  icon: Icon,
+  label,
+  "aria-label": ariaLabel,
+}: SidebarSubLinkProps) {
   return (
     <Link
       href={href}
       aria-current={isActive ? "page" : undefined}
+      aria-label={ariaLabel}
       className={`group flex min-h-11 items-center gap-2 rounded-rs-sm px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-border-strong ${
         isActive
           ? "bg-primary-soft text-on-primary-soft"

@@ -1,10 +1,11 @@
-import { Calendar, CalendarPlus, CircleDot, Hourglass, MapPin, Music, Tag, UserRound } from "lucide-react";
+import { Calendar, CalendarPlus, CircleDot, Disc3, Hourglass, MapPin, Music, Tag, UserRound } from "lucide-react";
 
 import { ChipLink } from "@/components/ui/chip";
+import { formatIcons } from "@/components/ui/format-tokens";
 import { PressingText } from "@/components/ui/pressing-text";
 import { collectionHref } from "@/lib/collection/href";
 import type { CollectionQuery } from "@/lib/collection/types";
-import { decadeName } from "@/lib/i18n/labels";
+import { decadeName, formatLabel } from "@/lib/i18n/labels";
 import { t } from "@/lib/i18n/translate";
 import type { Locale } from "@/lib/settings/types";
 
@@ -14,8 +15,16 @@ interface FacetChipsProps {
 }
 
 export function FacetChips({ listen, locale = "en" }: FacetChipsProps) {
+  const FormatIcon = listen.format ? formatIcons[listen.format] : Disc3;
+
   return (
     <>
+      {listen.format ? (
+        <ChipLink href={collectionHref({ ...listen, format: undefined })} isActive>
+          <FormatIcon className="size-4 shrink-0" aria-hidden />
+          {formatLabel(locale, listen.format)}
+        </ChipLink>
+      ) : null}
       {listen.artist ? (
         <ChipLink href={collectionHref({ ...listen, artist: undefined })} isActive>
           <UserRound className="size-4 shrink-0" aria-hidden />

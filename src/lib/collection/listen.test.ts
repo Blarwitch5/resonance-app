@@ -1,35 +1,32 @@
 import { describe, expect, it } from "vitest";
 
-import { collectionListenCount, collectionShelfHref } from "@/lib/collection/listen";
+import {
+  collectionFiltersClearHref,
+  collectionListenCount,
+  collectionShelfHref,
+} from "@/lib/collection/listen";
 
 describe("collectionListenCount", () => {
-  it("ignores format, search, and the default sort", () => {
+  it("ignores format, search, facets, and the default sort", () => {
     expect(
       collectionListenCount({
         format: "vinyl",
         query: "Blue",
         sort: "recent",
         page: 2,
+        artist: "Miles Davis",
       }),
     ).toBe(0);
   });
 
-  it("counts the threads hidden behind Listen", () => {
+  it("counts a non-default sort behind Sort", () => {
     expect(
       collectionListenCount({
         sort: "found",
         keptClose: true,
         artist: "Miles Davis",
-        genre: "Jazz",
-        label: "Columbia",
-        found: "Reckless",
-        when: 2024,
-        arrived: 2025,
-        condition: "near_mint",
-        decade: 1950,
-        year: 1959,
       }),
-    ).toBe(11);
+    ).toBe(1);
   });
 });
 
@@ -45,5 +42,20 @@ describe("collectionShelfHref", () => {
         page: 3,
       }),
     ).toBe("/collection?format=vinyl&q=Blue");
+  });
+});
+
+describe("collectionFiltersClearHref", () => {
+  it("keeps search, sort, and kept close — drops format and facets", () => {
+    expect(
+      collectionFiltersClearHref({
+        format: "vinyl",
+        query: "Blue",
+        sort: "artist",
+        keptClose: true,
+        artist: "Miles Davis",
+        year: 1959,
+      }),
+    ).toBe("/collection?q=Blue&sort=artist&kept=1");
   });
 });

@@ -55,7 +55,7 @@ export function SearchField({
       </label>
       <span className={controlFrameClass}>
         <span className={controlIconSlotClass} aria-hidden>
-          <Search className={`size-4 ${isPending ? "text-primary motion-safe:search-pulse" : ""}`} />
+          <Search className={`size-3.5 sm:size-4 ${isPending ? "text-primary motion-safe:search-pulse" : ""}`} />
         </span>
         <input
           id={id}

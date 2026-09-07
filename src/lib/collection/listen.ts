@@ -2,58 +2,33 @@ import { collectionHref } from "@/lib/collection/href";
 import type { CollectionQuery } from "@/lib/collection/types";
 
 export function collectionListenCount(listen: CollectionQuery): number {
-  let count = 0;
-
   if (listen.sort && listen.sort !== "recent") {
-    count += 1;
+    return 1;
   }
 
-  if (listen.keptClose) {
-    count += 1;
-  }
-
-  if (listen.artist) {
-    count += 1;
-  }
-
-  if (listen.genre) {
-    count += 1;
-  }
-
-  if (listen.label) {
-    count += 1;
-  }
-
-  if (listen.found) {
-    count += 1;
-  }
-
-  if (listen.when !== undefined) {
-    count += 1;
-  }
-
-  if (listen.arrived !== undefined) {
-    count += 1;
-  }
-
-  if (listen.condition) {
-    count += 1;
-  }
-
-  if (listen.decade !== undefined) {
-    count += 1;
-  }
-
-  if (listen.year !== undefined) {
-    count += 1;
-  }
-
-  return count;
+  return 0;
 }
 
 export function collectionShelfHref(listen: CollectionQuery): string {
   return collectionHref({
     format: listen.format,
     query: listen.query,
+  });
+}
+
+/** Drop format + year / artist / style / label / thread facets; keep search, sort, kept close. */
+export function collectionFiltersClearHref(listen: CollectionQuery): string {
+  return collectionHref({
+    query: listen.query,
+    sort: listen.sort,
+    keptClose: listen.keptClose,
+  });
+}
+
+/** Reset sort only — used by the Sort sheet clear action. */
+export function collectionSortClearHref(listen: CollectionQuery): string {
+  return collectionHref({
+    ...listen,
+    sort: undefined,
   });
 }

@@ -8,18 +8,24 @@ import { AppShell } from "@/components/layouts/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { CollectionListenSheet } from "@/components/ui/listen-sheet";
 import { FacetChips } from "@/components/ui/facet-chips";
-import { FormatChips } from "@/components/ui/format-chips";
 import { KeptChip } from "@/components/ui/kept-chip";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchListenPane } from "@/components/ui/search-listen";
 import { ShareShelfButton } from "@/components/ui/share-shelf-button";
+import { ShelfFilterSheet } from "@/components/ui/shelf-filters";
 import { SortChips } from "@/components/ui/sort-chips";
 import { bodyClass, hintClass, sectionTitleClass } from "@/components/ui/type";
 import { ViewChips } from "@/components/ui/view-chips";
 import { feedPageCount } from "@/lib/collection/feed";
 import { collectionHref } from "@/lib/collection/href";
-import { collectionListenCount, collectionShelfHref } from "@/lib/collection/listen";
-import { countCollectionItems, hasShelfItems, listCollectionItems, SHELF_PAGE_SIZE } from "@/lib/collection/repository";
+import { collectionListenCount, collectionSortClearHref } from "@/lib/collection/listen";
+import {
+  countCollectionItems,
+  hasShelfItems,
+  listCollectionFacets,
+  listCollectionItems,
+  SHELF_PAGE_SIZE,
+} from "@/lib/collection/repository";
 import { sharedShelfHeadline } from "@/lib/listen/shelf-title";
 import {
   collectionListenFromParams,
@@ -35,7 +41,6 @@ import {
   parseWhenFilter,
   toShelfCard,
   whenListenFromParams,
-  type CollectionQuery,
 } from "@/lib/collection/types";
 import { explorerListenFromShelf, explorerSearchHref, hasExplorerListen } from "@/lib/discogs/href";
 import { collectionDocumentTitle } from "@/lib/document-title";
@@ -135,13 +140,22 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
     kind: "owned" as const,
     ...listen,
   };
-  const [rows, total] = await Promise.all([
+  const [rows, total, facets] = await Promise.all([
     listCollectionItems(session.user.id, {
       ...filters,
       page,
       pageSize: SHELF_PAGE_SIZE,
     }),
     countCollectionItems(session.user.id, filters),
+    listCollectionFacets(session.user.id, {
+      format,
+      keptClose,
+      query: query.length > 0 ? query : undefined,
+      found,
+      when,
+      arrived,
+      condition,
+    }),
   ]);
   const items = rows.map(toShelfCard);
   const pages = feedPageCount(total, SHELF_PAGE_SIZE, MAX_COLLECTION_PAGE);
@@ -149,7 +163,9 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
   const hasElsewhere = hasExplorerListen(elsewhereListen);
   const elsewhere = explorerSearchHref(elsewhereListen);
   const listenCount = collectionListenCount(listen);
-  const shelfHref = listenCount > 0 ? collectionShelfHref(listen) : undefined;
+  const sortClearHref = listenCount > 0 ? collectionSortClearHref(listen) : undefined;
+  const hasShelfFilter =
+    Boolean(format) || hasFacet || keptClose || hasQuery || listenCount > 0;
 
   return (
     <AppShell>
@@ -157,14 +173,16 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
         title={t(settings.locale, "collection.title")}
         description={sharedShelfHeadline(listen, settings.locale)}
         action={
-          <div className="flex shrink-0 items-center gap-2">
-            {total > 0 ? <ShareShelfButton listen={listen} /> : null}
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2">
+            {total > 0 ? (
+              <ShareShelfButton listen={listen} isFiltered={hasShelfFilter} />
+            ) : null}
             {total > 0 || hasQuery || hasFacet || keptClose ? (
               <ButtonLink
                 href="/collection/tonight"
                 variant="ghost"
                 aria-label={t(settings.locale, "collection.tonightAria")}
-                className="px-3 lg:px-6"
+                className="size-11 shrink-0 px-0 sm:size-12 lg:h-auto lg:min-h-12 lg:w-auto lg:px-6"
               >
                 <MoonStar className="size-4 shrink-0" aria-hidden />
                 <span className="hidden lg:inline">{t(settings.locale, "collection.tonight")}</span>
@@ -184,34 +202,23 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
         <CollectionSearch listen={listen} query={query}>
         <div className="flex flex-col gap-3">
           <div id="collection-listen" className="flex flex-wrap items-center gap-2">
-            <FormatChips
-              active={format}
-              enabled={enabled}
-              buildHref={(next) => collectionHref({ ...listen, format: next })}
-              className="lg:hidden"
-              locale={settings.locale}
-            />
-            <div className="hidden lg:contents">
-              <KeptChip listen={listen} />
-              <FacetChips listen={listen} locale={settings.locale} />
-            </div>
-            <CollectionListenSheet count={listenCount} clearHref={shelfHref}>
-              <KeptChip listen={listen} />
+            <CollectionListenSheet count={listenCount} clearHref={sortClearHref}>
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium text-text">{t(settings.locale, "sort.nav")}</p>
                 <SortChips active={sort} listen={listen} />
               </div>
             </CollectionListenSheet>
-            <div className="ms-auto lg:hidden">
+            <ShelfFilterSheet listen={listen} facets={facets} enabledFormats={enabled} />
+            <div className="ms-auto">
               <ViewChips active={settings.viewMode} next={collectionHref({ ...listen, page })} />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 lg:hidden">
+          <div className="flex flex-wrap gap-2">
+            {keptClose ? <KeptChip listen={listen} /> : null}
             <FacetChips listen={listen} locale={settings.locale} />
           </div>
-          <div className="hidden flex-wrap items-center justify-between gap-3 lg:flex">
+          <div className="hidden lg:block">
             <SortChips active={sort} listen={listen} />
-            <ViewChips active={settings.viewMode} next={collectionHref({ ...listen, page })} />
           </div>
         </div>
         <SearchListenPane>

@@ -70,13 +70,15 @@ export function CollectionSearch({ listen, query, children }: CollectionSearchPr
         />
         <Button
           type="submit"
-          className="shrink-0 px-4 sm:px-6"
+          className="size-11 shrink-0 px-0 sm:h-auto sm:min-h-12 sm:w-auto sm:px-6"
           aria-label={isListening ? t("common.listening") : t("common.search")}
         >
           <BusyGlyph isBusy={isListening}>
             <Search className="size-4 shrink-0" aria-hidden />
           </BusyGlyph>
-          <span>{isListening ? t("common.listening") : t("common.search")}</span>
+          <span className="hidden sm:inline">
+            {isListening ? t("common.listening") : t("common.search")}
+          </span>
         </Button>
       </form>
       <div className="flex flex-col gap-3">{children}</div>

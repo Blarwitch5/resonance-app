@@ -61,6 +61,22 @@ const EXPECTED = {
     "updated_at",
   ],
   verification: ["id", "identifier", "value", "expires_at", "created_at", "updated_at"],
+  shared_pressing: [
+    "token",
+    "user_id",
+    "collection_item_id",
+    "discogs_id",
+    "format",
+    "title",
+    "artist",
+    "year",
+    "label",
+    "genres",
+    "cover_url",
+    "cover_thumb_url",
+    "created_at",
+  ],
+  shared_shelf: ["token", "user_id", "headline", "items", "truncated", "created_at"],
 };
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -78,6 +94,9 @@ const EXPECTED_TYPES = {
   "collection_item.catalog_number": "text",
   "collection_item.discogs_id": "int4",
   "collection_item.year": "int4",
+  "shared_pressing.genres": "_text",
+  "shared_pressing.format": "media_format",
+  "shared_shelf.items": "jsonb",
 };
 
 const columns = await sql`

@@ -18,6 +18,7 @@ import { CoverArt } from "@/components/ui/cover-art";
 import { PressingLinks } from "@/components/ui/pressing-links";
 import { PressingThreads } from "@/components/ui/pressing-threads";
 import { RecordSides } from "@/components/ui/record-sides";
+import { SharePressingButton } from "@/components/ui/share-pressing-button";
 import { ShelfKin } from "@/components/ui/shelf-kin";
 import { ShelfNeighbors } from "@/components/ui/shelf-neighbors";
 import { catalogToRemember } from "@/lib/collection/factory";
@@ -36,6 +37,7 @@ import { NotFoundError } from "@/lib/errors";
 import { coverAlt, decadeName } from "@/lib/i18n/labels";
 import { getLocale } from "@/lib/i18n/locale";
 import { t } from "@/lib/i18n/translate";
+import { getSharedPressingTokenForItem } from "@/lib/listen/repository";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
 
@@ -82,7 +84,8 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
   const decade = decadeFromYear(item.year);
   const kinPageSize = SHELF_KIN_LIMIT + (item.isWishlist ? 0 : 1);
   const settings = await getUserSettings(session.user.id);
-  const [pressing, neighbors, previews, artistRecords, decadeRecords, marketAsk] = await Promise.all([
+  const [pressing, neighbors, previews, artistRecords, decadeRecords, marketAsk, shareToken] =
+    await Promise.all([
     loadPressingListen(item.discogsId),
     listShelfNeighbors(session.user.id, item.id, item.isWishlist, item.createdAt),
     loadDeezerPreviews(item.artist, item.title),
@@ -101,6 +104,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
     settings.marketValueEnabled && item.discogsId !== null
       ? getMarketplaceAsk(item.discogsId).catch(() => null)
       : Promise.resolve(null),
+    getSharedPressingTokenForItem(session.user.id, item.id),
   ]);
   const marketLine = marketAsk ? marketplaceVoice(settings.locale, marketAsk) : null;
   const kin = pickShelfKin({
@@ -175,14 +179,25 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
                 </StatusPill>
               </div>
             ) : null}
-            <KeptCloseForm id={item.id} isFavorite={item.isFavorite} />
+            <div className="flex flex-wrap items-center gap-2">
+              <KeptCloseForm id={item.id} isFavorite={item.isFavorite} />
+              <SharePressingButton
+                itemId={item.id}
+                title={item.title}
+                artist={item.artist}
+                appearance="button"
+                isShared={shareToken !== null}
+              />
+            </div>
             <PressingLinks
               href={threads.discogs?.href}
               releaseId={threads.discogs?.id}
+              itemId={item.id}
               title={threads.title}
               artist={threads.artist}
               elsewhereHref={threads.elsewhereHref}
               locale={settings.locale}
+              showShare={false}
             />
           </div>
           {item.isWishlist ? (

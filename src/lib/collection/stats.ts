@@ -31,6 +31,34 @@ export interface CollectionInsight {
   mostPresentArtist: { name: string; count: number } | null;
 }
 
+export function emptyCollectionInsight(): CollectionInsight {
+  return {
+    total: 0,
+    artistCount: 0,
+    labelCount: 0,
+    formats: [],
+    decades: [],
+    topArtists: [],
+    topGenres: [],
+    topLabels: [],
+    topPlaces: [],
+    topWhen: [],
+    topArrived: [],
+    decadeSpan: null,
+    oldestYear: null,
+    newestYear: null,
+    mostPresentArtist: null,
+  };
+}
+
+export function decadeSpanFromYears(oldestYear: number | null, newestYear: number | null): number | null {
+  if (oldestYear === null || newestYear === null) {
+    return null;
+  }
+
+  return Math.max(1, Math.floor(newestYear / 10) - Math.floor(oldestYear / 10) + 1);
+}
+
 export function summarizeCollection(items: CollectionStatItem[]): CollectionInsight {
   const artists = new Set<string>();
   const labels = new Set<string>();
@@ -91,10 +119,7 @@ export function summarizeCollection(items: CollectionStatItem[]): CollectionInsi
 
   const oldestYear = years.length > 0 ? Math.min(...years) : null;
   const newestYear = years.length > 0 ? Math.max(...years) : null;
-  const decadeSpan =
-    oldestYear !== null && newestYear !== null
-      ? Math.max(1, Math.floor(newestYear / 10) - Math.floor(oldestYear / 10) + 1)
-      : null;
+  const decadeSpan = decadeSpanFromYears(oldestYear, newestYear);
 
   let mostPresentArtist: CollectionInsight["mostPresentArtist"] = null;
   const topArtists = rankCounts(artistCounts, 5);

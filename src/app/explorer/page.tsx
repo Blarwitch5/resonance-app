@@ -22,8 +22,8 @@ import { getLocale } from "@/lib/i18n/locale";
 import { t } from "@/lib/i18n/translate";
 import type { Locale } from "@/lib/settings/types";
 import { collectionHref } from "@/lib/collection/href";
-import { listCollectionStatItems, listShelfPresence } from "@/lib/collection/repository";
-import { summarizeCollection, type CollectionInsight } from "@/lib/collection/stats";
+import { listShelfPresence, getCollectionInsight } from "@/lib/collection/repository";
+import type { CollectionInsight } from "@/lib/collection/stats";
 import {
   MEDIA_FORMATS,
   isCanonicalWhenParams,
@@ -151,17 +151,16 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
   }
 
   const hasListen = hasExplorerListen(listen);
-  const [searchOutcome, owned] = await Promise.all([
+  const [searchOutcome, insight] = await Promise.all([
     searchReleases(listen),
-    session ? listCollectionStatItems(session.user.id) : Promise.resolve([]),
+    session ? getCollectionInsight(session.user.id) : Promise.resolve(null),
   ]);
   const { results, error: searchError, page, pages } = searchOutcome;
-  const insight = summarizeCollection(owned);
-  const echo = !hasListen && session ? await loadEchoRange(session.user.id, insight, format) : null;
+  const echo = !hasListen && session && insight ? await loadEchoRange(session.user.id, insight, format) : null;
   const threadDrafts = results.length > 0 ? results : (echo?.drafts ?? []);
 
   const listenCount = explorerListenCount(listen);
-  const shelfInsight = session ? insight : null;
+  const shelfInsight = insight;
   const threadGroups = explorerThreadGroups({
     listen,
     insight: shelfInsight,

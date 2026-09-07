@@ -18,7 +18,6 @@ import { recordMenuElsewhereHref } from "@/lib/collection/record-menu";
 import { shelfCardDetails } from "@/lib/collection/shelf-threads";
 import type { ReleaseDraft, ShelfPresence } from "@/lib/collection/types";
 import {
-  discogsReleaseHref,
   explorerAddHref,
   explorerCardHref,
   type ExplorerQuery,
@@ -26,6 +25,7 @@ import {
 import { explorerCardThreads } from "@/lib/discogs/threads";
 import { coverAlt, formatLabel } from "@/lib/i18n/labels";
 import { t } from "@/lib/i18n/translate";
+import { listenDiscogsHref } from "@/lib/listen/href";
 import type { Locale, ViewMode } from "@/lib/settings/types";
 
 interface ExplorerReleaseCardProps {
@@ -162,7 +162,7 @@ export function ExplorerReleaseCard({
       presence={presence}
       addHref={addHref}
       canHold={canWishlist}
-      shareHref={draft.discogsId ? discogsReleaseHref(draft.discogsId) : null}
+      shareHref={draft.discogsId ? listenDiscogsHref(draft.discogsId) : null}
       barcode={draft.barcode}
       catalogNumber={draft.catalogNumber}
       elsewhereHref={elsewhereHref}

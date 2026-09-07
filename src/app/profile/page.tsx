@@ -23,10 +23,10 @@ import { ViewChips } from "@/components/ui/view-chips";
 import { feedPageCount } from "@/lib/collection/feed";
 import {
   countCollectionItems,
+  getCollectionInsight,
   listCollectionItems,
-  listCollectionStatItems,
 } from "@/lib/collection/repository";
-import { summarizeCollection } from "@/lib/collection/stats";
+import { emptyCollectionInsight } from "@/lib/collection/stats";
 import { MAX_COLLECTION_PAGE, parseCollectionPage } from "@/lib/collection/types";
 import { explorerSearchHref } from "@/lib/discogs/href";
 import { profileDocumentTitle } from "@/lib/document-title";
@@ -81,10 +81,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     favPage,
     wishPage,
   };
-  const [settings, owned, favorites, favoritesTotal, wishlist, wishlistTotal, keptCloseTotal, waitingTotal] =
+  const [settings, insight, favorites, favoritesTotal, wishlist, wishlistTotal, keptCloseTotal, waitingTotal] =
     await Promise.all([
       getUserSettings(session.user.id),
-      tab === "resonance" ? listCollectionStatItems(session.user.id) : Promise.resolve([]),
+      tab === "resonance" ? getCollectionInsight(session.user.id) : Promise.resolve(emptyCollectionInsight()),
       tab === "close"
         ? listCollectionItems(session.user.id, {
             kind: "favorite",
@@ -111,7 +111,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
       tab === "resonance" ? countCollectionItems(session.user.id, { kind: "wishlist" }) : Promise.resolve(0),
     ]);
 
-  const insight = summarizeCollection(owned);
   const engagement = profileEngagement({ keptClose: keptCloseTotal, waiting: waitingTotal }, settings.locale);
   const favoritePages = pageCount(favoritesTotal);
   const wishlistPages = pageCount(wishlistTotal);

@@ -15,7 +15,6 @@ import { shelfArriveProps, shelfListHitClass, shelfResultsClass } from "@/lib/co
 import { recordMenuElsewhereHref } from "@/lib/collection/record-menu";
 import { shelfCardThreads } from "@/lib/collection/shelf-threads";
 import { MAX_COLLECTION_PAGE } from "@/lib/collection/types";
-import { discogsReleaseHref } from "@/lib/discogs/href";
 import { t } from "@/lib/i18n/translate";
 import type { ProfileShelfItem } from "@/lib/profile/types";
 import type { Locale, ViewMode } from "@/lib/settings/types";
@@ -126,7 +125,7 @@ export function ProfileFeed({
                 title={item.title}
                 artist={item.artist}
                 elsewhereHref={recordMenuElsewhereHref(item.artist, item.title, item.format)}
-                shareHref={item.discogsId ? discogsReleaseHref(item.discogsId) : null}
+                shareItemId={item.id}
                 barcode={item.barcode}
                 catalogNumber={item.catalogNumber}
                 canKeepClose={canKeepClose}

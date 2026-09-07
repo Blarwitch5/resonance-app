@@ -23,7 +23,6 @@ import {
   type CollectionSort,
   type ShelfCard,
 } from "@/lib/collection/types";
-import { discogsReleaseHref } from "@/lib/discogs/href";
 import { t } from "@/lib/i18n/translate";
 import type { Locale, ViewMode } from "@/lib/settings/types";
 
@@ -142,7 +141,7 @@ function ShelfRecordList({
               title={item.title}
               artist={item.artist}
               elsewhereHref={recordMenuElsewhereHref(item.artist, item.title, item.format)}
-              shareHref={item.discogsId ? discogsReleaseHref(item.discogsId) : null}
+              shareItemId={item.id}
               barcode={item.barcode}
               catalogNumber={item.catalogNumber}
               canKeepClose

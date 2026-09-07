@@ -8,15 +8,21 @@ const columnPattern =
   /(?:text|integer|boolean|timestamp|uuid|mediaFormat|mediaCondition|themePreference|viewMode)\("([^"]+)"\)/g;
 
 describe("schema heal", () => {
-  it("mentions every schema column in the heal migration", () => {
+  it("mentions every schema column in a heal or create migration", () => {
     const schema = readFileSync(path.join(root, "src/db/schema.ts"), "utf8");
-    const heal = readFileSync(path.join(root, "drizzle/0005_heal_collection_columns.sql"), "utf8");
+    const migrations = [
+      "drizzle/0005_heal_collection_columns.sql",
+      "drizzle/0007_shared_pressing.sql",
+      "drizzle/0008_shared_shelf.sql",
+    ]
+      .map((relative) => readFileSync(path.join(root, relative), "utf8"))
+      .join("\n");
     const columns = [...schema.matchAll(columnPattern)].map((match) => match[1]);
 
     expect(columns.length).toBeGreaterThan(20);
 
     for (const column of columns) {
-      expect(heal, `heal migration is missing "${column}"`).toContain(`"${column}"`);
+      expect(migrations, `migrations are missing "${column}"`).toContain(`"${column}"`);
     }
   });
 });

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, asc, count, desc, eq, gt, gte, ilike, inArray, lt, ne, or, sql, type SQL } from "drizzle-orm";
+import { cache } from "react";
 
 import { getDb } from "@/db";
 import { collectionItem } from "@/db/schema";
@@ -14,15 +15,20 @@ import {
   type OptionalInsertField,
 } from "@/lib/collection/db-error";
 import { createCollectionItem } from "@/lib/collection/factory";
-import type { CollectionStatItem } from "@/lib/collection/stats";
-import type {
-  CollectionKind,
-  CollectionSort,
-  MediaCondition,
-  MediaFormat,
-  ReleaseDraft,
-  ShelfNeighbor,
-  ShelfPresence,
+import {
+  decadeSpanFromYears,
+  emptyCollectionInsight,
+  type CollectionInsight,
+} from "@/lib/collection/stats";
+import {
+  MEDIA_FORMATS,
+  type CollectionKind,
+  type CollectionSort,
+  type MediaCondition,
+  type MediaFormat,
+  type ReleaseDraft,
+  type ShelfNeighbor,
+  type ShelfPresence,
 } from "@/lib/collection/types";
 import { isBarcodeQuery, normalizeBarcode } from "@/lib/discogs/barcode";
 import { DatabaseError, NotFoundError, ValidationError } from "@/lib/errors";
@@ -443,24 +449,185 @@ export async function listPaletteRecords(userId: string, limit: number) {
   }
 }
 
-export async function listCollectionStatItems(userId: string): Promise<CollectionStatItem[]> {
+/** Aggregates shelf insight in SQL — avoids loading every owned row into the Node runtime. */
+export const getCollectionInsight = cache(async (userId: string): Promise<CollectionInsight> => {
   try {
-    return await getDb()
+    const db = getDb();
+    const owned = and(eq(collectionItem.userId, userId), eq(collectionItem.isWishlist, false));
+
+    const [totalsRow] = await db
       .select({
-        format: collectionItem.format,
-        artist: collectionItem.artist,
-        year: collectionItem.year,
-        label: collectionItem.label,
-        purchaseLocation: collectionItem.purchaseLocation,
-        purchaseDate: collectionItem.purchaseDate,
-        createdAt: collectionItem.createdAt,
-        genres: collectionItem.genres,
+        total: sql<number>`count(*)::int`,
+        artistCount: sql<number>`count(distinct ${collectionItem.artist})::int`,
+        labelCount: sql<number>`count(distinct ${collectionItem.label})::int`,
       })
       .from(collectionItem)
-      .where(and(...collectionWhere(userId, { kind: "owned" })));
+      .where(owned);
+
+    const total = Number(totalsRow?.total ?? 0);
+
+    if (total === 0) {
+      return emptyCollectionInsight();
+    }
+
+    const [
+      formatRows,
+      artistRows,
+      labelRows,
+      placeRows,
+      whenRows,
+      arrivedRows,
+      decadeRows,
+      yearBoundRows,
+      genreResult,
+    ] = await Promise.all([
+      db
+        .select({
+          format: collectionItem.format,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(owned)
+        .groupBy(collectionItem.format),
+      db
+        .select({
+          name: collectionItem.artist,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(owned)
+        .groupBy(collectionItem.artist)
+        .orderBy(sql`count(*) desc`, asc(collectionItem.artist))
+        .limit(5),
+      db
+        .select({
+          name: collectionItem.label,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(and(owned, sql`${collectionItem.label} is not null`))
+        .groupBy(collectionItem.label)
+        .orderBy(sql`count(*) desc`, asc(collectionItem.label))
+        .limit(5),
+      db
+        .select({
+          name: sql<string>`trim(${collectionItem.purchaseLocation})`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(and(owned, sql`length(trim(coalesce(${collectionItem.purchaseLocation}, ''))) > 0`))
+        .groupBy(sql`trim(${collectionItem.purchaseLocation})`)
+        .orderBy(sql`count(*) desc`, sql`trim(${collectionItem.purchaseLocation})`)
+        .limit(5),
+      db
+        .select({
+          year: sql<number>`extract(year from ${collectionItem.purchaseDate})::int`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(and(owned, sql`${collectionItem.purchaseDate} is not null`))
+        .groupBy(sql`extract(year from ${collectionItem.purchaseDate})`)
+        .orderBy(sql`count(*) desc`, sql`extract(year from ${collectionItem.purchaseDate}) desc`)
+        .limit(5),
+      db
+        .select({
+          year: sql<number>`extract(year from ${collectionItem.createdAt})::int`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(owned)
+        .groupBy(sql`extract(year from ${collectionItem.createdAt})`)
+        .orderBy(sql`extract(year from ${collectionItem.createdAt})`),
+      db
+        .select({
+          decade: sql<number>`(floor(${collectionItem.year} / 10) * 10)::int`,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(collectionItem)
+        .where(and(owned, sql`${collectionItem.year} is not null`))
+        .groupBy(sql`floor(${collectionItem.year} / 10) * 10`)
+        .orderBy(sql`floor(${collectionItem.year} / 10) * 10`),
+      db
+        .select({
+          oldestYear: sql<number | null>`min(${collectionItem.year})`,
+          newestYear: sql<number | null>`max(${collectionItem.year})`,
+        })
+        .from(collectionItem)
+        .where(and(owned, sql`${collectionItem.year} is not null`)),
+      db.execute(sql`
+        select trim(g) as name, count(*)::int as count
+        from collection_item, unnest(genres) as g
+        where user_id = ${userId}
+          and is_wishlist = false
+          and length(trim(g)) > 0
+        group by trim(g)
+        order by count desc, name asc
+        limit 5
+      `),
+    ]);
+
+    const formatCounts = Object.fromEntries(
+      formatRows.map((row) => [row.format, Number(row.count)]),
+    ) as Partial<Record<MediaFormat, number>>;
+
+    const topArtists = artistRows.map((row) => ({ name: row.name, count: Number(row.count) }));
+    const topLabels = labelRows.flatMap((row) =>
+      row.name ? [{ name: row.name, count: Number(row.count) }] : [],
+    );
+    const topPlaces = placeRows.map((row) => ({ name: row.name, count: Number(row.count) }));
+    const topWhen = whenRows.map((row) => ({ year: Number(row.year), count: Number(row.count) }));
+    const topArrived = arrivedRows.map((row) => ({ year: Number(row.year), count: Number(row.count) }));
+    const decades = decadeRows.map((row) => ({ decade: Number(row.decade), count: Number(row.count) }));
+    const oldestYear = yearBoundRows[0]?.oldestYear ?? null;
+    const newestYear = yearBoundRows[0]?.newestYear ?? null;
+    const topGenres = readNamedCounts(genreResult);
+
+    return {
+      total,
+      artistCount: Number(totalsRow?.artistCount ?? 0),
+      labelCount: Number(totalsRow?.labelCount ?? 0),
+      formats: MEDIA_FORMATS.map((format) => ({ format, count: formatCounts[format] ?? 0 })).filter(
+        (entry) => entry.count > 0,
+      ),
+      decades,
+      topArtists,
+      topGenres,
+      topLabels,
+      topPlaces,
+      topWhen,
+      topArrived,
+      decadeSpan: decadeSpanFromYears(oldestYear, newestYear),
+      oldestYear,
+      newestYear,
+      mostPresentArtist: topArtists[0] ?? null,
+    };
   } catch (error) {
     throw new DatabaseError("Your collection could not be loaded.", { cause: error });
   }
+});
+
+function readNamedCounts(result: unknown): Array<{ name: string; count: number }> {
+  const rows = Array.isArray(result)
+    ? result
+    : result && typeof result === "object" && "rows" in result && Array.isArray((result as { rows: unknown }).rows)
+      ? (result as { rows: unknown[] }).rows
+      : [];
+
+  return rows.flatMap((row) => {
+    if (!row || typeof row !== "object") {
+      return [];
+    }
+
+    const entry = row as { name?: unknown; count?: unknown };
+    const name = typeof entry.name === "string" ? entry.name : null;
+    const countValue = typeof entry.count === "number" ? entry.count : Number(entry.count);
+
+    if (!name || !Number.isFinite(countValue)) {
+      return [];
+    }
+
+    return [{ name, count: countValue }];
+  });
 }
 
 export async function addCollectionItem(

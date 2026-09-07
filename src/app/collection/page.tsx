@@ -12,6 +12,7 @@ import { FormatChips } from "@/components/ui/format-chips";
 import { KeptChip } from "@/components/ui/kept-chip";
 import { PageHeader } from "@/components/ui/page-header";
 import { SearchListenPane } from "@/components/ui/search-listen";
+import { ShareShelfButton } from "@/components/ui/share-shelf-button";
 import { SortChips } from "@/components/ui/sort-chips";
 import { bodyClass, hintClass, sectionTitleClass } from "@/components/ui/type";
 import { ViewChips } from "@/components/ui/view-chips";
@@ -19,6 +20,7 @@ import { feedPageCount } from "@/lib/collection/feed";
 import { collectionHref } from "@/lib/collection/href";
 import { collectionListenCount, collectionShelfHref } from "@/lib/collection/listen";
 import { countCollectionItems, hasShelfItems, listCollectionItems, SHELF_PAGE_SIZE } from "@/lib/collection/repository";
+import { sharedShelfHeadline } from "@/lib/listen/shelf-title";
 import {
   collectionListenFromParams,
   isCanonicalWhenParams,
@@ -37,12 +39,11 @@ import {
 } from "@/lib/collection/types";
 import { explorerListenFromShelf, explorerSearchHref, hasExplorerListen } from "@/lib/discogs/href";
 import { collectionDocumentTitle } from "@/lib/document-title";
-import { conditionLabel, decadeName } from "@/lib/i18n/labels";
 import { getLocale } from "@/lib/i18n/locale";
 import { t } from "@/lib/i18n/translate";
 import { requireSession } from "@/lib/session";
 import { getUserSettings } from "@/lib/settings/repository";
-import { enabledFormats, type Locale } from "@/lib/settings/types";
+import { enabledFormats } from "@/lib/settings/types";
 
 export async function generateMetadata({ searchParams }: CollectionPageProps): Promise<Metadata> {
   const params = await searchParams;
@@ -154,9 +155,10 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
     <AppShell>
       <PageHeader
         title={t(settings.locale, "collection.title")}
-        description={shelfDescription(listen, settings.locale)}
+        description={sharedShelfHeadline(listen, settings.locale)}
         action={
           <div className="flex shrink-0 items-center gap-2">
+            {total > 0 ? <ShareShelfButton listen={listen} /> : null}
             {total > 0 || hasQuery || hasFacet || keptClose ? (
               <ButtonLink
                 href="/collection/tonight"
@@ -321,54 +323,5 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
       </div>
     </AppShell>
   );
-}
-
-function shelfDescription(listen: CollectionQuery, locale: Locale): string {
-  const thread: string[] = [];
-
-  if (listen.artist) {
-    thread.push(listen.artist);
-  }
-
-  if (listen.label) {
-    thread.push(listen.label);
-  }
-
-  if (listen.found) {
-    thread.push(t(locale, "collection.foundIn", { place: listen.found }));
-  }
-
-  if (listen.when !== undefined) {
-    thread.push(listen.found ? String(listen.when) : t(locale, "collection.foundIn", { place: listen.when }));
-  }
-
-  if (listen.arrived !== undefined) {
-    thread.push(t(locale, "collection.arrivedIn", { year: listen.arrived }));
-  }
-
-  if (listen.condition) {
-    thread.push(conditionLabel(locale, listen.condition).toLowerCase());
-  }
-
-  if (listen.genre) {
-    thread.push(listen.genre);
-  }
-
-  if (listen.decade !== undefined) {
-    thread.push(t(locale, "collection.theDecade", { decade: decadeName(locale, listen.decade) }));
-  }
-
-  if (listen.year !== undefined) {
-    thread.push(String(listen.year));
-  }
-
-  if (thread.length > 0) {
-    const line = thread.join(" · ");
-    return listen.keptClose
-      ? t(locale, "collection.keptCloseLine", { line })
-      : t(locale, "collection.shelfLine", { line });
-  }
-
-  return listen.keptClose ? t(locale, "collection.keptClosest") : t(locale, "collection.recordsKeptClose");
 }
 

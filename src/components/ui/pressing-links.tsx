@@ -14,22 +14,29 @@ interface PressingLinksProps {
   artist: string;
   href?: string | null;
   releaseId?: number;
+  itemId?: string | null;
   elsewhereHref: string;
   locale?: Locale;
+  showShare?: boolean;
 }
 
-export function PressingLinks({ href, releaseId, title, artist, elsewhereHref, locale }: PressingLinksProps) {
+export function PressingLinks({
+  href,
+  releaseId,
+  itemId = null,
+  title,
+  artist,
+  elsewhereHref,
+  locale,
+  showShare = true,
+}: PressingLinksProps) {
   const contextLocale = useLocale();
   const lang = locale ?? contextLocale;
 
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-start sm:gap-x-6">
-      {href ? (
-        <>
-          <DiscogsPressingLink href={href} title={title} releaseId={releaseId} locale={lang} />
-          <SharePressingButton href={href} title={title} artist={artist} />
-        </>
-      ) : null}
+      {showShare ? <SharePressingButton itemId={itemId} title={title} artist={artist} /> : null}
+      {href ? <DiscogsPressingLink href={href} title={title} releaseId={releaseId} locale={lang} /> : null}
       <Link
         href={elsewhereHref}
         aria-label={t(lang, "thread.hearElsewhereBy", { title, artist })}

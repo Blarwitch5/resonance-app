@@ -28,6 +28,7 @@ export function recordMenuActions(input: {
   isFavorite: boolean;
   canKeepClose?: boolean;
   shareHref?: string | null;
+  shareItemId?: string | null;
   elsewhereHref?: string | null;
   barcode?: string | null;
   catalogNumber?: string | null;
@@ -47,7 +48,12 @@ export function recordMenuActions(input: {
   }
 
   appendCopyActions(actions, locale, input.barcode, input.catalogNumber);
-  appendTravelActions(actions, locale, input.shareHref, input.elsewhereHref);
+  appendTravelActions(
+    actions,
+    locale,
+    Boolean(input.shareHref || input.shareItemId),
+    input.elsewhereHref,
+  );
 
   if (input.canRelease) {
     actions.push({
@@ -65,6 +71,7 @@ export function explorerMenuActions(input: {
   addHref?: string | null;
   canHold?: boolean;
   shareHref?: string | null;
+  shareItemId?: string | null;
   elsewhereHref?: string | null;
   barcode?: string | null;
   catalogNumber?: string | null;
@@ -102,7 +109,12 @@ export function explorerMenuActions(input: {
   }
 
   appendCopyActions(actions, locale, input.barcode, input.catalogNumber);
-  appendTravelActions(actions, locale, input.shareHref, input.elsewhereHref);
+  appendTravelActions(
+    actions,
+    locale,
+    Boolean(input.shareHref || input.shareItemId),
+    input.elsewhereHref,
+  );
   return actions;
 }
 
@@ -151,10 +163,10 @@ function copyValue(value: string | null | undefined): string | undefined {
 function appendTravelActions(
   actions: RecordMenuAction[],
   locale: Locale,
-  shareHref?: string | null,
+  canShare: boolean,
   elsewhereHref?: string | null,
 ): void {
-  if (shareHref) {
+  if (canShare) {
     actions.push({
       id: "share",
       label: t(locale, "menu.share"),

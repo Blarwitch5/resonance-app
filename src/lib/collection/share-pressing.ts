@@ -1,12 +1,13 @@
 import { t } from "@/lib/i18n/translate";
+import { toAbsoluteShareUrl } from "@/lib/listen/href";
 import type { Locale } from "@/lib/settings/types";
 
 export const SHARE_PRESSING_ERROR = "This pressing could not travel just now.";
 
 export interface SharePressingPayload {
   title: string;
-  text: string;
   url: string;
+  text?: string;
 }
 
 export interface SharePressingVoice {
@@ -25,7 +26,13 @@ export type SharePressingOutcome = "shared" | "copied" | "aborted";
 export function sharePressingPayload(href: string, title: string, artist: string): SharePressingPayload {
   return {
     title: `${artist} — ${title}`,
-    text: `${title} by ${artist}`,
+    url: href,
+  };
+}
+
+export function shareLinkPayload(href: string, title: string): SharePressingPayload {
+  return {
+    title,
     url: href,
   };
 }
@@ -41,8 +48,28 @@ export function sharePressingVoice(title: string, copied: boolean, locale: Local
 export async function offerPressingShare(
   input: { href: string; title: string; artist: string },
   host: SharePressingHost,
+  origin?: string,
 ): Promise<SharePressingOutcome> {
-  const payload = sharePressingPayload(input.href, input.title, input.artist);
+  return offerLinkShare(
+    {
+      href: input.href,
+      title: `${input.artist} — ${input.title}`,
+    },
+    host,
+    origin,
+  );
+}
+
+export async function offerLinkShare(
+  input: { href: string; title: string },
+  host: SharePressingHost,
+  origin?: string,
+): Promise<SharePressingOutcome> {
+  const href =
+    origin && !input.href.startsWith("http://") && !input.href.startsWith("https://")
+      ? toAbsoluteShareUrl(input.href, origin)
+      : input.href;
+  const payload = shareLinkPayload(href, input.title);
 
   try {
     if (host.share) {
@@ -84,7 +111,15 @@ export function browserShareHost(): SharePressingHost {
   }
 
   return {
-    share: typeof navigator.share === "function" ? (data) => navigator.share(data) : undefined,
+    share:
+      typeof navigator.share === "function"
+        ? (data) =>
+            navigator.share({
+              title: data.title,
+              url: data.url,
+              ...(data.text ? { text: data.text } : {}),
+            })
+        : undefined,
     writeText: navigator.clipboard?.writeText.bind(navigator.clipboard),
   };
 }

@@ -32,22 +32,24 @@ export function createCollectionItem(input: {
   }
 
   const written = parseCollectionWrite({
-    ...input.draft,
-    title: title.slice(0, 500),
-    artist: artist.slice(0, 500),
-    genres: input.draft.genres.filter((genre) => typeof genre === "string" && genre.trim().length > 0),
-    label: input.draft.label?.trim() || null,
-    catalogNumber: input.draft.catalogNumber?.trim() || null,
-    coverUrl: input.draft.coverUrl ?? null,
+    discogsId: input.draft.discogsId,
+    format: input.draft.format,
+    title,
+    artist,
+    year: input.draft.year,
+    label: input.draft.label,
+    genres: input.draft.genres,
+    coverUrl: input.draft.coverUrl,
     coverThumbUrl: input.draft.coverThumbUrl ?? null,
-    barcode: input.draft.barcode ?? null,
-    notes: input.notes?.trim() || null,
+    barcode: input.draft.barcode,
+    catalogNumber: input.draft.catalogNumber,
+    notes: input.notes ?? null,
     isFavorite: input.kind === "favorite",
     isWishlist: input.kind === "wishlist",
   });
 
   if (!written) {
-    throw new ValidationError("A record needs both an artist and a title.");
+    throw new ValidationError("This release could not be added.");
   }
 
   return written;

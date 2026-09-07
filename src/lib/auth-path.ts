@@ -1,6 +1,6 @@
 const FALLBACK = "/collection";
 const MAX_NEXT_HREF = 512;
-const ALLOWED_PREFIXES = ["/collection", "/explorer", "/profile", "/welcome"] as const;
+const ALLOWED_PREFIXES = ["/collection", "/explorer", "/profile", "/welcome", "/listen"] as const;
 
 export const RESONANCE_PATH_HEADER = "x-resonance-path";
 

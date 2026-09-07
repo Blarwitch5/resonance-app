@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { decadeLabel, decadeStory, summarizeCollection, type CollectionStatItem } from "@/lib/collection/stats";
+import {
+  decadeLabel,
+  decadeSpanFromYears,
+  decadeStory,
+  summarizeCollection,
+  type CollectionStatItem,
+} from "@/lib/collection/stats";
 
 function item(partial: Partial<CollectionStatItem> = {}): CollectionStatItem {
   return {
@@ -56,6 +62,14 @@ describe("summarizeCollection", () => {
     expect(insight.topWhen[0]).toEqual({ year: 2024, count: 2 });
     expect(insight.topArrived).toEqual([{ year: 2024, count: 4 }]);
     expect(insight.topGenres[0]?.name).toBe("Jazz");
+  });
+});
+
+describe("decadeSpanFromYears", () => {
+  it("spans inclusive decades", () => {
+    expect(decadeSpanFromYears(null, null)).toBeNull();
+    expect(decadeSpanFromYears(1959, 1959)).toBe(1);
+    expect(decadeSpanFromYears(1959, 1971)).toBe(3);
   });
 });
 

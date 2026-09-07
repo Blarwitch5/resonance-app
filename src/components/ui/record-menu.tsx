@@ -17,6 +17,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+import { ensureSharedPressingAction } from "@/app/listen/actions";
 import { Notice } from "@/components/ui/notice";
 import { trapFocus } from "@/components/ui/trap-focus";
 import { useLocale, useT } from "@/components/locale-provider";
@@ -94,6 +95,7 @@ interface RecordMenuProps {
   artist?: string;
   elsewhereHref?: string | null;
   shareHref?: string | null;
+  shareItemId?: string | null;
   barcode?: string | null;
   catalogNumber?: string | null;
   canKeepClose?: boolean;
@@ -113,6 +115,7 @@ export function RecordMenu({
   artist = "",
   elsewhereHref = null,
   shareHref = null,
+  shareItemId = null,
   barcode = null,
   catalogNumber = null,
   canKeepClose = false,
@@ -156,6 +159,7 @@ export function RecordMenu({
         addHref,
         canHold,
         shareHref,
+        shareItemId,
         elsewhereHref,
         barcode,
         catalogNumber,
@@ -166,6 +170,7 @@ export function RecordMenu({
         isFavorite,
         canKeepClose,
         shareHref,
+        shareItemId,
         elsewhereHref,
         barcode,
         catalogNumber,
@@ -617,14 +622,35 @@ export function RecordMenu({
   }
 
   async function onShare(): Promise<void> {
-    if (!shareHref) {
+    if (!shareHref && !shareItemId) {
       return;
     }
 
     setNotice(null);
 
     try {
-      const outcome = await offerPressingShare({ href: shareHref, title, artist }, browserShareHost());
+      let href = shareHref;
+
+      if (shareItemId) {
+        const result = await ensureSharedPressingAction(shareItemId);
+
+        if (result.error || !result.href) {
+          setNotice(result.error ?? t("share.error"));
+          return;
+        }
+
+        href = result.href;
+      }
+
+      if (!href) {
+        return;
+      }
+
+      const outcome = await offerPressingShare(
+        { href, title, artist },
+        browserShareHost(),
+        window.location.origin,
+      );
 
       if (outcome === "copied") {
         setCopiedKind("share");

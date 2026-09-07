@@ -19,19 +19,14 @@ describe("parseAddReleaseInput", () => {
     });
   });
 
-  it("keeps the shelf when kind is omitted", () => {
+  it("rejects an empty kind", () => {
     expect(
       parseAddReleaseInput({
         discogsId: 249504,
         format: "cd",
         kind: "",
       }),
-    ).toEqual({
-      discogsId: 249504,
-      format: "cd",
-      kind: "owned",
-      notes: "",
-    });
+    ).toBeNull();
   });
 
   it("rejects a missing format or id", () => {

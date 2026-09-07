@@ -1,13 +1,27 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { offerPressingShare, sharePressingPayload, sharePressingVoice } from "@/lib/collection/share-pressing";
+import {
+  offerLinkShare,
+  offerPressingShare,
+  shareLinkPayload,
+  sharePressingPayload,
+  sharePressingVoice,
+} from "@/lib/collection/share-pressing";
 
 describe("sharePressingPayload", () => {
-  it("names the pressing that travels", () => {
-    expect(sharePressingPayload("https://www.discogs.com/release/2313422", "In Utero", "Nirvana")).toEqual({
+  it("names the pressing that travels without stuffing prose into the url", () => {
+    expect(sharePressingPayload("https://myresonance.vercel.app/listen/abc", "In Utero", "Nirvana")).toEqual({
       title: "Nirvana — In Utero",
-      text: "In Utero by Nirvana",
-      url: "https://www.discogs.com/release/2313422",
+      url: "https://myresonance.vercel.app/listen/abc",
+    });
+  });
+});
+
+describe("shareLinkPayload", () => {
+  it("shares only a title and url", () => {
+    expect(shareLinkPayload("https://myresonance.vercel.app/listen/shelf/abc", "A shelf on Resonance")).toEqual({
+      title: "A shelf on Resonance",
+      url: "https://myresonance.vercel.app/listen/shelf/abc",
     });
   });
 });
@@ -32,7 +46,7 @@ describe("sharePressingVoice", () => {
 
 describe("offerPressingShare", () => {
   const payload = {
-    href: "https://www.discogs.com/release/2313422",
+    href: "https://myresonance.vercel.app/listen/abc",
     title: "In Utero",
     artist: "Nirvana",
   };
@@ -41,7 +55,10 @@ describe("offerPressingShare", () => {
     const share = vi.fn().mockResolvedValue(undefined);
 
     await expect(offerPressingShare(payload, { share })).resolves.toBe("shared");
-    expect(share).toHaveBeenCalledWith(sharePressingPayload(payload.href, payload.title, payload.artist));
+    expect(share).toHaveBeenCalledWith({
+      title: "Nirvana — In Utero",
+      url: payload.href,
+    });
   });
 
   it("copies the link when no share sheet lives here", async () => {
@@ -68,7 +85,41 @@ describe("offerPressingShare", () => {
     expect(writeText).toHaveBeenCalledWith(payload.href);
   });
 
+  it("absolutizes relative Resonance listen links", async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      offerPressingShare(
+        { href: "/listen/abc", title: "In Utero", artist: "Nirvana" },
+        { share },
+        "https://myresonance.vercel.app",
+      ),
+    ).resolves.toBe("shared");
+    expect(share).toHaveBeenCalledWith({
+      title: "Nirvana — In Utero",
+      url: "https://myresonance.vercel.app/listen/abc",
+    });
+  });
+
   it("fails calmly when the pressing cannot travel", async () => {
     await expect(offerPressingShare(payload, {})).rejects.toThrow("This pressing could not travel just now.");
+  });
+});
+
+describe("offerLinkShare", () => {
+  it("shares a shelf without a prose text field", async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      offerLinkShare(
+        { href: "/listen/shelf/abc", title: "A shelf on Resonance" },
+        { share },
+        "https://myresonance.vercel.app",
+      ),
+    ).resolves.toBe("shared");
+    expect(share).toHaveBeenCalledWith({
+      title: "A shelf on Resonance",
+      url: "https://myresonance.vercel.app/listen/shelf/abc",
+    });
   });
 });

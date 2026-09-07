@@ -18,6 +18,8 @@ describe("safeNextHref", () => {
     expect(safeNextHref("/explorer/manual")).toBe("/explorer/manual");
     expect(safeNextHref("/profile?settings=1")).toBe("/profile?settings=1");
     expect(safeNextHref("/welcome")).toBe("/welcome");
+    expect(safeNextHref("/listen/abc_token-1234567890")).toBe("/listen/abc_token-1234567890");
+    expect(safeNextHref("/listen/d/2313422")).toBe("/listen/d/2313422");
   });
 
   it("refuses to leave the shelf", () => {

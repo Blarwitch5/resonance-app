@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -141,10 +142,66 @@ export const userSettings = pgTable("user_settings", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const sharedPressing = pgTable(
+  "shared_pressing",
+  {
+    token: text("token").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    collectionItemId: uuid("collection_item_id").references(() => collectionItem.id, {
+      onDelete: "set null",
+    }),
+    discogsId: integer("discogs_id"),
+    format: mediaFormat("format").notNull().default("vinyl"),
+    title: text("title").notNull(),
+    artist: text("artist").notNull(),
+    year: integer("year"),
+    label: text("label"),
+    genres: text("genres").array().notNull().default([]),
+    coverUrl: text("cover_url"),
+    coverThumbUrl: text("cover_thumb_url"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("shared_pressing_user_id_idx").on(table.userId),
+    uniqueIndex("shared_pressing_user_item_idx").on(table.userId, table.collectionItemId),
+  ],
+);
+
+export const sharedShelf = pgTable(
+  "shared_shelf",
+  {
+    token: text("token").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    headline: text("headline").notNull(),
+    items: jsonb("items").$type<SharedShelfItemJson[]>().notNull().default([]),
+    truncated: boolean("truncated").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [index("shared_shelf_user_id_idx").on(table.userId)],
+);
+
+type SharedShelfItemJson = {
+  discogsId: number | null;
+  format: "vinyl" | "cassette" | "cd";
+  title: string;
+  artist: string;
+  year: number | null;
+  label: string | null;
+  genres: string[];
+  coverUrl: string | null;
+  coverThumbUrl: string | null;
+};
+
 export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
   collectionItems: many(collectionItem),
+  sharedPressings: many(sharedPressing),
+  sharedShelves: many(sharedShelf),
   settings: one(userSettings),
 }));
 
@@ -162,9 +219,28 @@ export const accountRelations = relations(account, ({ one }) => ({
   }),
 }));
 
-export const collectionItemRelations = relations(collectionItem, ({ one }) => ({
+export const collectionItemRelations = relations(collectionItem, ({ one, many }) => ({
   user: one(user, {
     fields: [collectionItem.userId],
+    references: [user.id],
+  }),
+  sharedPressings: many(sharedPressing),
+}));
+
+export const sharedPressingRelations = relations(sharedPressing, ({ one }) => ({
+  user: one(user, {
+    fields: [sharedPressing.userId],
+    references: [user.id],
+  }),
+  collectionItem: one(collectionItem, {
+    fields: [sharedPressing.collectionItemId],
+    references: [collectionItem.id],
+  }),
+}));
+
+export const sharedShelfRelations = relations(sharedShelf, ({ one }) => ({
+  user: one(user, {
+    fields: [sharedShelf.userId],
     references: [user.id],
   }),
 }));

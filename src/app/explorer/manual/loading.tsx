@@ -1,14 +1,9 @@
-import { AppShell } from "@/components/layouts/app-shell";
-import { SectionLoader } from "@/components/ui/listening-wave";
-import { t } from "@/lib/i18n/translate";
+import { BootLoader } from "@/components/layouts/boot-shell";
 import { getLocale } from "@/lib/i18n/locale";
+import { t } from "@/lib/i18n/translate";
 
 export default async function Loading() {
   const locale = await getLocale();
 
-  return (
-    <AppShell>
-      <SectionLoader label={t(locale, "loading.confirm")} />
-    </AppShell>
-  );
+  return <BootLoader label={t(locale, "loading.confirm")} />;
 }

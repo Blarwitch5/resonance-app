@@ -1,6 +1,6 @@
 "use client";
 
-import { Share, Link2Off } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ensureSharedPressingAction, quietSharedPressingAction } from "@/app/listen/actions";
@@ -21,6 +21,8 @@ interface SharePressingButtonProps {
   appearance?: "button" | "link";
 }
 
+const shareOnlyClass = "size-11 shrink-0 px-0 sm:size-12";
+
 export function SharePressingButton({
   href = null,
   itemId = null,
@@ -35,6 +37,8 @@ export function SharePressingButton({
   const [error, setError] = useState<string | null>(null);
   const voice = sharePressingVoice(title, copied, locale);
   const canShare = Boolean(href || itemId);
+  const stopLabel = t(locale, "listen.stopShareQuiet");
+  const stopAria = t(locale, "listen.stopShareAria");
 
   useEffect(() => {
     setShared(isShared);
@@ -120,21 +124,51 @@ export function SharePressingButton({
     return null;
   }
 
-  const shareControl =
-    appearance === "button" ? (
-      <Button
+  const quietControl =
+    shared && itemId ? (
+      <button
         type="button"
-        variant="ghost"
         onClick={() => {
-          void onShare();
+          void onQuiet();
         }}
-        aria-label={voice.ariaLabel}
-        className="px-3 lg:px-6"
+        aria-label={stopAria}
+        className="text-xs font-medium text-text-tertiary outline-none hover:text-text-secondary focus-visible:ring-2 focus-visible:ring-border-strong"
       >
-        <Share className="size-4 shrink-0" aria-hidden />
-        {voice.label}
-      </Button>
-    ) : (
+        {stopLabel}
+      </button>
+    ) : null;
+
+  if (appearance === "button") {
+    return (
+      <div className="relative shrink-0">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            void onShare();
+          }}
+          aria-label={voice.ariaLabel}
+          title={voice.ariaLabel}
+          className={shareOnlyClass}
+        >
+          <Share2 className="size-4 shrink-0" aria-hidden />
+        </Button>
+        {quietControl ? (
+          <div className="absolute top-full left-0 z-20 mt-1 whitespace-nowrap rounded-rs-sm bg-surface-elevated px-2 py-1 ring-1 ring-border">
+            {quietControl}
+          </div>
+        ) : null}
+        {error ? (
+          <div className="absolute top-full left-0 z-20 mt-1 w-44">
+            <Notice tone="error">{error}</Notice>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col items-start gap-1">
       <button
         type="button"
         onClick={() => {
@@ -143,47 +177,10 @@ export function SharePressingButton({
         aria-label={voice.ariaLabel}
         className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-text-secondary outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
       >
-        <Share className="size-4 shrink-0" aria-hidden />
+        <Share2 className="size-4 shrink-0" aria-hidden />
         {voice.label}
       </button>
-    );
-
-  const quietControl =
-    shared && itemId ? (
-      appearance === "button" ? (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => {
-            void onQuiet();
-          }}
-          aria-label={t(locale, "listen.stopShareAria")}
-          className="px-3 lg:px-6"
-        >
-          <Link2Off className="size-4 shrink-0" aria-hidden />
-          {t(locale, "listen.stopShare")}
-        </Button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => {
-            void onQuiet();
-          }}
-          aria-label={t(locale, "listen.stopShareAria")}
-          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-text-secondary outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
-        >
-          <Link2Off className="size-4 shrink-0" aria-hidden />
-          {t(locale, "listen.stopShare")}
-        </button>
-      )
-    ) : null;
-
-  return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        {shareControl}
-        {quietControl}
-      </div>
+      {quietControl}
       {error ? <Notice tone="error">{error}</Notice> : null}
     </div>
   );

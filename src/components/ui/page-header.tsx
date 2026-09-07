@@ -14,14 +14,18 @@ interface PageHeaderProps {
 export function PageHeader({ title, description, extra, action }: PageHeaderProps) {
   return (
     <header className="flex min-w-0 flex-col gap-2">
-      <div className={`flex min-w-0 items-center gap-3 ${action ? "justify-between" : ""}`}>
+      <div className={`flex min-w-0 items-start gap-3 ${action ? "justify-between" : ""}`}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="lg:hidden">
             <ResonanceMark size="sm" />
           </div>
           <h1 className={pageTitleClass}>{title}</h1>
         </div>
-        {action}
+        {action ? (
+          <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2">
+            {action}
+          </div>
+        ) : null}
       </div>
       {description ? <p className={`${bodyClass} line-clamp-1 lg:line-clamp-none`}>{description}</p> : null}
       {extra}

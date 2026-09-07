@@ -1,6 +1,6 @@
 "use client";
 
-import { Share, Link2Off } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ensureSharedShelfAction, quietSharedShelfAction } from "@/app/listen/actions";
@@ -14,14 +14,28 @@ import { t } from "@/lib/i18n/translate";
 interface ShareShelfButtonProps {
   listen: CollectionQuery;
   disabled?: boolean;
+  isFiltered?: boolean;
 }
 
-export function ShareShelfButton({ listen, disabled = false }: ShareShelfButtonProps) {
+const shareOnlyClass = "size-11 shrink-0 px-0 sm:size-12";
+
+export function ShareShelfButton({
+  listen,
+  disabled = false,
+  isFiltered = false,
+}: ShareShelfButtonProps) {
   const locale = useLocale();
   const [copied, setCopied] = useState(false);
   const [activeToken, setActiveToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const label = copied ? t(locale, "share.copied") : t(locale, "listen.shareShelf");
+  const ariaLabel = copied
+    ? label
+    : isFiltered
+      ? t(locale, "listen.shareShelfFilteredAria")
+      : t(locale, "listen.shareShelfAria");
+  const stopLabel = t(locale, "listen.stopShareQuiet");
+  const stopAria = t(locale, "listen.stopShareAria");
 
   useEffect(() => {
     if (!copied) {
@@ -94,37 +108,37 @@ export function ShareShelfButton({ listen, disabled = false }: ShareShelfButtonP
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
+    <div className="relative shrink-0">
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={disabled}
+        onClick={() => {
+          void onShare();
+        }}
+        aria-label={ariaLabel}
+        title={ariaLabel}
+        className={shareOnlyClass}
+      >
+        <Share2 className="size-4 shrink-0" aria-hidden />
+      </Button>
+      {activeToken ? (
+        <button
           type="button"
-          variant="ghost"
-          disabled={disabled}
           onClick={() => {
-            void onShare();
+            void onQuiet();
           }}
-          aria-label={t(locale, "listen.shareShelfAria")}
-          className="px-3 lg:px-6"
+          aria-label={stopAria}
+          className="absolute top-full right-0 z-20 mt-1 whitespace-nowrap rounded-rs-sm bg-surface-elevated px-2 py-1 text-xs font-medium text-text-secondary outline-none ring-1 ring-border hover:text-text focus-visible:ring-2 focus-visible:ring-border-strong"
         >
-          <Share className="size-4 shrink-0" aria-hidden />
-          <span className="hidden sm:inline">{label}</span>
-        </Button>
-        {activeToken ? (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => {
-              void onQuiet();
-            }}
-            aria-label={t(locale, "listen.stopShareAria")}
-            className="px-3 lg:px-6"
-          >
-            <Link2Off className="size-4 shrink-0" aria-hidden />
-            <span className="hidden sm:inline">{t(locale, "listen.stopShare")}</span>
-          </Button>
-        ) : null}
-      </div>
-      {error ? <Notice tone="error">{error}</Notice> : null}
+          {stopLabel}
+        </button>
+      ) : null}
+      {error ? (
+        <div className="absolute top-full right-0 z-20 mt-1 w-44">
+          <Notice tone="error">{error}</Notice>
+        </div>
+      ) : null}
     </div>
   );
 }

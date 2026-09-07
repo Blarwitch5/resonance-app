@@ -135,7 +135,7 @@ export function ManualReleaseForm({ defaultFormat, formats }: ManualReleaseFormP
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
       <ConfirmSubmitBar>
-        <Button type="submit" form="manual-release-form" disabled={isBusy} className="w-full">
+        <Button type="submit" form="manual-release-form" disabled={isBusy} className="whitespace-nowrap px-5 sm:px-6">
           <BusyGlyph isBusy={isBusy}>
             <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
           </BusyGlyph>

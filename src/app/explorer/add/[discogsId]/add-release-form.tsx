@@ -152,7 +152,7 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
       <ConfirmSubmitBar>
-        <Button type="submit" form="add-release-form" disabled={isBusy} className="w-full">
+        <Button type="submit" form="add-release-form" disabled={isBusy} className="whitespace-nowrap px-5 sm:px-6">
           <BusyGlyph isBusy={isBusy}>
             <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
           </BusyGlyph>

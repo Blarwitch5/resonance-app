@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { CoverArt } from "@/components/ui/cover-art";
 import { PressingText } from "@/components/ui/pressing-text";
-import { formatIcons } from "@/components/ui/format-tokens";
+import { formatIcons, formatTextClasses } from "@/components/ui/format-tokens";
 import { ShelfThreadLine } from "@/components/ui/shelf-thread";
 import { hintClass, metaClass, recordTitleClass } from "@/components/ui/type";
 import { shelfCardDetails, type ShelfCardThreadView } from "@/lib/collection/shelf-threads";
@@ -40,11 +40,20 @@ export function RecordRow({
   priority = false,
 }: RecordRowProps) {
   const FormatGlyph = formatIcons[format];
+  const formatTone = formatTextClasses[format];
+  const formatName = formatLabel(locale, format);
   const artistThread = threads?.artist ?? { label: artist, href: null, ariaLabel: null };
   const yearThread =
     threads?.year ?? (foundOn || year ? { label: foundOn ?? String(year), href: null, ariaLabel: null } : null);
   const formatHref = threads?.format?.href;
   const formatAria = threads?.format?.ariaLabel;
+
+  const formatMark = (
+    <span className={`flex shrink-0 flex-col items-center gap-0.5 ${formatTone}`}>
+      <FormatGlyph className="size-3.5" aria-hidden />
+      <span className="text-[10px] leading-none font-medium">{formatName}</span>
+    </span>
+  );
 
   return (
     <div className="flex min-h-14 items-center gap-3 rounded-rs-md py-2">
@@ -83,13 +92,10 @@ export function RecordRow({
           aria-label={formatAria}
           className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-border-strong"
         >
-          <FormatGlyph className="size-3.5 text-text-tertiary" aria-hidden />
+          {formatMark}
         </Link>
       ) : (
-        <>
-          <FormatGlyph className="size-3.5 shrink-0 text-text-tertiary" aria-hidden />
-          <span className="sr-only">{formatLabel(locale, format)}</span>
-        </>
+        formatMark
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { Barcode, BookmarkPlus, BookOpen, CirclePlus, Ellipsis, Hash, Heart, Library, ScanSearch, Share, Trash2, type LucideIcon } from "lucide-react";
+import { Barcode, BookmarkPlus, BookOpen, CirclePlus, Ellipsis, Hash, Heart, Library, ScanSearch, Share2, Trash2, Undo2, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import {
   useCallback,
@@ -39,6 +39,7 @@ import { browserShareHost, offerPressingShare } from "@/lib/collection/share-pre
 import type { ShelfPresence } from "@/lib/collection/types";
 import {
   clampSwipeOffset,
+  isSwipeSheetControl,
   shouldArmSwipe,
   shouldLockPagePan,
   shouldRestSwipeOnScroll,
@@ -61,11 +62,11 @@ const ACTION_ICONS: Record<RecordMenuActionId, LucideIcon> = {
   add: CirclePlus,
   hold: BookmarkPlus,
   shelf: Library,
-  share: Share,
+  share: Share2,
   "copy-barcode": Barcode,
   "copy-catalog": Hash,
   release: Trash2,
-  "keep-shelf": Heart,
+  "keep-shelf": Undo2,
   "confirm-release": Trash2,
 };
 
@@ -178,7 +179,8 @@ export function RecordMenu({
         locale,
       });
   const visibleActions = isConfirmingRelease ? recordMenuReleaseConfirm(locale) : actions;
-  const swipeActions = recordSwipeActions(visibleActions);
+  const isOwnedOnShelf = canRelease || presence?.status === "owned";
+  const swipeActions = recordSwipeActions(visibleActions, { isOwned: isOwnedOnShelf });
   const swipeToneCount = recordSwipeToneCount(swipeActions);
   const reveal = swipeRevealWidth(swipeActions.length);
   const showSwipe = canSwipe && swipeActions.length > 0;
@@ -458,7 +460,10 @@ export function RecordMenu({
   }
 
   function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.target instanceof Element && event.target.closest("[data-swipe-action]")) {
+    if (isSwipeSheetControl(event.target)) {
+      ignoreSwipeClose.current = true;
+      window.dispatchEvent(new Event(CLOSE_SWIPE_EVENT));
+      ignoreSwipeClose.current = false;
       return;
     }
 
@@ -555,11 +560,9 @@ export function RecordMenu({
     releaseSwipeTouchLock();
 
     const wasDragging = swipeAxisRef.current === "horizontal";
+    const onControl = isSwipeSheetControl(event.target);
     const tappedClosed =
-      !didCancel &&
-      !wasDragging &&
-      swipeOffsetRef.current > 0 &&
-      !(event.target instanceof Element && event.target.closest("[data-swipe-action]"));
+      !didCancel && !wasDragging && swipeOffsetRef.current > 0 && !onControl;
 
     if (wasDragging || tappedClosed) {
       const snapped = tappedClosed
@@ -573,6 +576,12 @@ export function RecordMenu({
       if (snapped === 0) {
         setIsConfirmingRelease(false);
       }
+    } else if (!didCancel && !wasDragging && swipeOffsetRef.current > 0 && onControl) {
+      // Let Add / links / swipe actions keep their tap; quietly rest the rail.
+      applySwipeOffset(0);
+      setSwipeOffset(0);
+      setIsSwipeDragging(false);
+      setIsConfirmingRelease(false);
     }
 
     try {
@@ -588,6 +597,12 @@ export function RecordMenu({
 
   function onClickCapture(event: ReactMouseEvent<HTMLDivElement>) {
     if (!suppressClick.current) {
+      return;
+    }
+
+    // Let row controls and swipe-rail taps through after a swipe gesture.
+    if (isSwipeSheetControl(event.target)) {
+      suppressClick.current = false;
       return;
     }
 
@@ -728,12 +743,14 @@ export function RecordMenu({
 
   const isSwipeOpen = isSwipeDragging || swipeOffset > 0;
   const swipeGround = isSwipeOpen ? "bg-surface-pressed" : "bg-background";
+  const railHidden = !isSwipeDragging && swipeOffset === 0;
   const swipeFrame = showSwipe ? (
-    <div className={`relative overflow-hidden rounded-rs-md lg:overflow-visible ${swipeGround}`}>
+    <div className={`relative isolate overflow-hidden rounded-rs-md lg:overflow-visible ${swipeGround}`}>
       <div
-        className="absolute inset-y-0 right-0 flex lg:hidden"
+        className={`absolute inset-y-0 right-0 flex lg:hidden ${railHidden ? "invisible opacity-0" : ""}`}
         role="group"
         aria-label={t("menu.actionsFor", { title })}
+        aria-hidden={railHidden}
         inert={isSwipeDragging || swipeOffset === 0}
       >
         {isConfirmingRelease ? (
@@ -744,8 +761,13 @@ export function RecordMenu({
         {swipeActions.map((action, index) => {
           const Icon = ACTION_ICONS[action.id];
           const formAttr = FORM_ACTIONS[action.id];
-          const className = `flex h-full min-h-12 cursor-pointer flex-col items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-strong ${recordSwipeActionClass(action.id, index, swipeToneCount)}`;
+          const className = `flex h-full min-h-12 cursor-pointer flex-col items-center justify-center gap-1 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-border-strong ${recordSwipeActionClass(action.id, index, swipeToneCount)}`;
           const style = { width: SWIPE_ACTION_WIDTH };
+          const label = (
+            <span className="max-w-full truncate px-0.5 text-[10px] leading-none font-medium">
+              {action.label}
+            </span>
+          );
 
           if (action.id === "share") {
             return (
@@ -766,18 +788,26 @@ export function RecordMenu({
             );
           }
 
-          if (action.id === "release" || action.id === "keep-shelf") {
+          if (action.id === "release" || action.id === "keep-shelf" || action.id === "confirm-release") {
             return (
               <button
                 key={action.id}
                 type="button"
                 data-swipe-action=""
                 aria-label={action.label}
-                onClick={() => onAction(action.id)}
+                onClick={() => {
+                  if (action.id === "confirm-release") {
+                    submitNamedForm("data-release");
+                    return;
+                  }
+
+                  onAction(action.id);
+                }}
                 className={className}
                 style={style}
               >
                 <Icon className="size-4" aria-hidden />
+                {isConfirmingRelease ? label : null}
               </button>
             );
           }
@@ -818,7 +848,7 @@ export function RecordMenu({
       </div>
       <div
         ref={swipeSheetRef}
-        className={`relative ${swipeGround} ${isSwipeDragging ? "" : "transition-transform duration-200 ease-out"}`}
+        className={`relative overflow-hidden rounded-rs-md ${swipeGround} ${isSwipeDragging ? "" : "transition-transform duration-200 ease-out"}`}
         style={{ transform: `translate3d(${-swipeOffset}px, 0, 0)` }}
       >
         {children}

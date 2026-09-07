@@ -201,7 +201,6 @@ export function recordMenuElsewhereHref(
 }
 
 const RECORD_SWIPE_ACTION_IDS: ReadonlySet<RecordMenuActionId> = new Set([
-  "keep",
   "add",
   "hold",
   "shelf",
@@ -212,8 +211,22 @@ const RECORD_SWIPE_ACTION_IDS: ReadonlySet<RecordMenuActionId> = new Set([
   "confirm-release",
 ]);
 
-export function recordSwipeActions(actions: readonly RecordMenuAction[]): RecordMenuAction[] {
-  return actions.filter((action) => RECORD_SWIPE_ACTION_IDS.has(action.id));
+/** Swipe rail only — keep/elsewhere for owned pressings stay on the card or in ···. */
+export function recordSwipeActions(
+  actions: readonly RecordMenuAction[],
+  options: { isOwned?: boolean } = {},
+): RecordMenuAction[] {
+  return actions.filter((action) => {
+    if (!RECORD_SWIPE_ACTION_IDS.has(action.id)) {
+      return false;
+    }
+
+    if (options.isOwned && action.id === "elsewhere") {
+      return false;
+    }
+
+    return true;
+  });
 }
 
 const SWIPE_TONE_STEPS = [

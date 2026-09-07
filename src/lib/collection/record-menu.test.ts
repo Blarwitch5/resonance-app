@@ -264,7 +264,7 @@ describe("explorerMenuActions", () => {
 });
 
 describe("recordSwipeActions", () => {
-  it("keeps the shelf gestures and leaves copy and open in the menu", () => {
+  it("keeps shelf gestures without the heart (already on the card)", () => {
     expect(
       recordSwipeActions(
         recordMenuActions({
@@ -276,8 +276,9 @@ describe("recordSwipeActions", () => {
           barcode: "07464405791",
           canRelease: true,
         }),
+        { isOwned: true },
       ).map((action) => action.id),
-    ).toEqual(["keep", "share", "elsewhere", "release"]);
+    ).toEqual(["share", "release"]);
   });
 
   it("asks to keep the pressing before a swipe lets it go", () => {
@@ -316,25 +317,25 @@ describe("recordSwipeActions", () => {
 
 describe("recordSwipeActionClass", () => {
   it("walks violet toward copper along the rail, and stays red when a record leaves", () => {
-    expect(recordSwipeActionClass("keep", 0)).toBe("bg-swipe text-on-primary");
-    expect(recordSwipeActionClass("share", 1)).toContain("bg-swipe-dim");
-    expect(recordSwipeActionClass("elsewhere", 2)).toContain("bg-swipe-deep");
-    expect(recordSwipeActionClass("add", 3)).toContain("bg-swipe-dark");
-    expect(recordSwipeActionClass("add", 3)).toContain("text-on-secondary");
+    expect(recordSwipeActionClass("share", 0)).toBe("bg-swipe text-on-primary");
+    expect(recordSwipeActionClass("elsewhere", 1)).toContain("bg-swipe-dim");
+    expect(recordSwipeActionClass("add", 2)).toContain("bg-swipe-deep");
+    expect(recordSwipeActionClass("hold", 3)).toContain("bg-swipe-dark");
+    expect(recordSwipeActionClass("hold", 3)).toContain("text-on-secondary");
     expect(recordSwipeActionClass("release", 3)).toBe("bg-error text-on-error");
   });
 
   it("reaches copper on the last keep action when the rail is shorter", () => {
     const rail = [
-      { id: "keep" as const, label: "Keep" },
       { id: "share" as const, label: "Share" },
+      { id: "elsewhere" as const, label: "Elsewhere" },
       { id: "release" as const, label: "Let go" },
     ];
     const toneCount = recordSwipeToneCount(rail);
 
     expect(toneCount).toBe(2);
-    expect(recordSwipeActionClass("keep", 0, toneCount)).toBe("bg-swipe text-on-primary");
-    expect(recordSwipeActionClass("share", 1, toneCount)).toBe("bg-swipe-dark text-on-secondary");
+    expect(recordSwipeActionClass("share", 0, toneCount)).toBe("bg-swipe text-on-primary");
+    expect(recordSwipeActionClass("elsewhere", 1, toneCount)).toBe("bg-swipe-dark text-on-secondary");
     expect(recordSwipeActionClass("release", 2, toneCount)).toBe("bg-error text-on-error");
   });
 });

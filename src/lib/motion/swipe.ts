@@ -68,3 +68,14 @@ export function shouldLockPagePan(dx: number, dy: number, slop = SWIPE_LOCK_PAN_
 export function shouldRestSwipeOnScroll(fromY: number, toY: number, slop = SWIPE_SCROLL_SLOP_PX): boolean {
   return Math.abs(toY - fromY) >= slop;
 }
+
+/** Links and buttons on the row must keep their tap — do not steal them for swipe. */
+const SWIPE_SHEET_CONTROL = "a, button, input, select, textarea, label, [data-swipe-action]";
+
+export function isSwipeSheetControl(target: EventTarget | null): boolean {
+  if (target === null || typeof Element === "undefined") {
+    return false;
+  }
+
+  return target instanceof Element && target.closest(SWIPE_SHEET_CONTROL) !== null;
+}

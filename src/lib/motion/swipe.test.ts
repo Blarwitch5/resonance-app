@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   clampSwipeOffset,
+  isSwipeSheetControl,
   snapSwipeOffset,
   SWIPE_ACTION_WIDTH,
   SWIPE_LOCK_PAN_PX,
@@ -114,5 +115,11 @@ describe("shouldRestSwipeOnScroll", () => {
   it("closes after the shelf really moved", () => {
     expect(shouldRestSwipeOnScroll(80, 80 + SWIPE_SCROLL_SLOP_PX)).toBe(true);
     expect(shouldRestSwipeOnScroll(40, 20)).toBe(true);
+  });
+});
+
+describe("isSwipeSheetControl", () => {
+  it("ignores a bare target", () => {
+    expect(isSwipeSheetControl(null)).toBe(false);
   });
 });

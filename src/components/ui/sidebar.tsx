@@ -12,13 +12,12 @@ import { t } from "@/lib/i18n/translate";
 import type { Locale } from "@/lib/settings/types";
 
 interface SidebarProps {
-  formatNav?: ReactNode;
   profileNav?: ReactNode;
   signOut?: ReactNode;
   locale?: Locale;
 }
 
-export function Sidebar({ formatNav, profileNav, signOut, locale = "en" }: SidebarProps) {
+export function Sidebar({ profileNav, signOut, locale = "en" }: SidebarProps) {
   const pathname = usePathname();
   const hrefs = useMainNavHrefs();
 
@@ -31,8 +30,7 @@ export function Sidebar({ formatNav, profileNav, signOut, locale = "en" }: Sideb
         {MAIN_NAV.map((link) => {
           const isActive = isMainNavActive(pathname, link.href);
           const Icon = link.icon;
-          const kind = sidebarSubNavKind(link.href);
-          const subNav = kind === "collection" ? formatNav : kind === "profile" ? profileNav : null;
+          const subNav = sidebarSubNavKind(link.href) === "profile" ? profileNav : null;
 
           return (
             <div key={link.href} className="flex flex-col gap-1">

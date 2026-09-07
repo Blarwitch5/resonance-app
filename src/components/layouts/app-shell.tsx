@@ -13,7 +13,6 @@ import { QuietShelfNotice } from "@/components/quiet-shelf-notice";
 import { RememberReturn } from "@/components/remember-return";
 import { AddPressingFab } from "@/components/ui/add-pressing-fab";
 import { BottomBar } from "@/components/ui/bottom-bar";
-import { CollectionFormatNav } from "@/components/ui/collection-format-nav";
 import { ProfileNav } from "@/components/ui/profile-nav";
 import { Sidebar } from "@/components/ui/sidebar";
 import { SignOutButton } from "@/components/ui/sign-out-button";
@@ -57,13 +56,6 @@ export async function AppShell({ children }: AppShellProps) {
           <DocumentLocale locale={locale} />
           <Sidebar
             locale={locale}
-            formatNav={
-              formats.length > 1 ? (
-                <Suspense fallback={null}>
-                  <CollectionFormatNav formats={formats} />
-                </Suspense>
-              ) : null
-            }
             profileNav={
               <Suspense fallback={null}>
                 <ProfileNav />

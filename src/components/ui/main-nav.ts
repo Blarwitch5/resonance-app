@@ -10,11 +10,7 @@ export function isMainNavActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function sidebarSubNavKind(href: string): "collection" | "profile" | null {
-  if (href === "/collection") {
-    return "collection";
-  }
-
+export function sidebarSubNavKind(href: string): "profile" | null {
   if (href === "/profile") {
     return "profile";
   }

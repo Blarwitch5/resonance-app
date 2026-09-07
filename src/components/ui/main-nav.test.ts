@@ -17,15 +17,12 @@ describe("isMainNavActive", () => {
 });
 
 describe("sidebarSubNavKind", () => {
-  it("keeps formats under Collection from any room", () => {
-    expect(sidebarSubNavKind("/collection")).toBe("collection");
-  });
-
   it("keeps profile listens under Profile from any room", () => {
     expect(sidebarSubNavKind("/profile")).toBe("profile");
   });
 
-  it("does not nest Explorer", () => {
+  it("does not nest Collection or Explorer", () => {
+    expect(sidebarSubNavKind("/collection")).toBeNull();
     expect(sidebarSubNavKind("/explorer")).toBeNull();
   });
 });

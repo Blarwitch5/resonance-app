@@ -115,6 +115,17 @@ export function trackHasSample<T extends { previewUrl: string | null }>(
   return Boolean(track.previewUrl && isDeezerPreviewUrl(track.previewUrl));
 }
 
+export function sampleTrackPlayClass(isCurrent: boolean): string {
+  const base =
+    "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-border-strong";
+
+  if (isCurrent) {
+    return `${base} bg-primary text-on-primary hover:bg-primary-hover`;
+  }
+
+  return `${base} bg-primary-soft text-on-primary-soft hover:bg-primary hover:text-on-primary`;
+}
+
 export function sampleListenHref(url: string): string | null {
   if (!isDeezerPreviewUrl(url)) {
     return null;

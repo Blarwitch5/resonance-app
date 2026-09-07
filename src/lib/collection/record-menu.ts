@@ -125,8 +125,23 @@ export function recordMenuReleasePrompt(title: string, locale: Locale = "en"): s
 export function recordMenuReleaseConfirm(locale: Locale = "en"): RecordMenuAction[] {
   return [
     { id: "keep-shelf", label: t(locale, "menu.keepIt") },
-    { id: "confirm-release", label: t(locale, "menu.release") },
+    { id: "confirm-release", label: t(locale, "journal.releaseConfirm") },
   ];
+}
+
+export function recordMenuItemClass(id: RecordMenuActionId): string {
+  const base =
+    "flex min-h-11 w-full items-center gap-2 rounded-rs-sm px-3 text-left text-sm font-normal outline-none focus-visible:ring-2 focus-visible:ring-border-strong";
+
+  if (id === "confirm-release") {
+    return `${base} bg-error text-on-error hover:bg-error/90 focus-visible:ring-error`;
+  }
+
+  if (id === "release") {
+    return `${base} text-error hover:bg-error-soft focus-visible:ring-error`;
+  }
+
+  return `${base} text-text hover:bg-surface-pressed`;
 }
 
 function appendCopyActions(

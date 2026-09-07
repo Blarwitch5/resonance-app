@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, MapPin, Save } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useId, type ReactNode } from "react";
 
 import { updateItemAction, type UpdateItemState } from "@/app/collection/[id]/actions";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ interface ItemMemoryFormProps {
   condition: MediaCondition | null;
   purchaseLocation: string | null;
   purchaseDate: string | null;
+  actions?: ReactNode;
 }
 
 export function ItemMemoryForm({
@@ -27,61 +28,68 @@ export function ItemMemoryForm({
   condition,
   purchaseLocation,
   purchaseDate,
+  actions = null,
 }: ItemMemoryFormProps) {
   const t = useT();
+  const formId = useId();
   const [state, formAction, isPending] = useActionState(updateItemAction, initialState);
 
   return (
-    <form action={formAction} aria-busy={isPending} className="flex flex-col gap-5">
-      <input type="hidden" name="id" value={id} />
+    <div className="flex flex-col gap-5">
+      <form id={formId} action={formAction} aria-busy={isPending} className="flex flex-col gap-5">
+        <input type="hidden" name="id" value={id} />
 
-      <TextField
-        id="purchase-location"
-        name="purchaseLocation"
-        label={t("journal.whereFound")}
-        defaultValue={purchaseLocation ?? ""}
-        placeholder={t("journal.wherePlaceholder")}
-        maxLength={120}
-        icon={MapPin}
-      />
+        <TextField
+          id="purchase-location"
+          name="purchaseLocation"
+          label={t("journal.whereFound")}
+          defaultValue={purchaseLocation ?? ""}
+          placeholder={t("journal.wherePlaceholder")}
+          maxLength={120}
+          icon={MapPin}
+        />
 
-      <TextField
-        id="purchase-date"
-        name="purchaseDate"
-        type="date"
-        label={t("journal.whenFound")}
-        defaultValue={purchaseDate ?? ""}
-        icon={Calendar}
-      />
+        <TextField
+          id="purchase-date"
+          name="purchaseDate"
+          type="date"
+          label={t("journal.whenFound")}
+          defaultValue={purchaseDate ?? ""}
+          icon={Calendar}
+        />
 
-      <SelectField id="condition" name="condition" label={t("condition.legend")} defaultValue={condition ?? ""}>
-        <option value="">{t("condition.unknown")}</option>
-        {MEDIA_CONDITIONS.map((value) => (
-          <option key={value} value={value}>
-            {t(`condition.${value}`)}
-          </option>
-        ))}
-      </SelectField>
+        <SelectField id="condition" name="condition" label={t("condition.legend")} defaultValue={condition ?? ""}>
+          <option value="">{t("condition.unknown")}</option>
+          {MEDIA_CONDITIONS.map((value) => (
+            <option key={value} value={value}>
+              {t(`condition.${value}`)}
+            </option>
+          ))}
+        </SelectField>
 
-      <TextAreaField
-        id="notes"
-        name="notes"
-        label={t("journal.memory")}
-        rows={5}
-        defaultValue={notes ?? ""}
-        maxLength={4000}
-        placeholder={t("journal.memoryPlaceholder")}
-      />
+        <TextAreaField
+          id="notes"
+          name="notes"
+          label={t("journal.memory")}
+          rows={5}
+          defaultValue={notes ?? ""}
+          maxLength={4000}
+          placeholder={t("journal.memoryPlaceholder")}
+        />
 
-      {state.error ? <Notice tone="error">{state.error}</Notice> : null}
-      {state.saved ? <Notice tone="success">{t("journal.saved")}</Notice> : null}
+        {state.error ? <Notice tone="error">{state.error}</Notice> : null}
+        {state.saved ? <Notice tone="success">{t("journal.saved")}</Notice> : null}
+      </form>
 
-      <Button type="submit" disabled={isPending}>
-        <BusyGlyph isBusy={isPending}>
-          <Save className="size-4 shrink-0" aria-hidden />
-        </BusyGlyph>
-        {isPending ? t("common.saving") : t("common.save")}
-      </Button>
-    </form>
+      <div className="flex flex-wrap items-center gap-3 has-[[data-release-confirm]]:flex-col has-[[data-release-confirm]]:items-stretch has-[[data-release-confirm]]:[&>button[type=submit]]:hidden">
+        {actions}
+        <Button type="submit" form={formId} disabled={isPending} className="min-w-0 flex-1">
+          <BusyGlyph isBusy={isPending}>
+            <Save className="size-4 shrink-0" aria-hidden />
+          </BusyGlyph>
+          {isPending ? t("common.saving") : t("common.save")}
+        </Button>
+      </div>
+    </div>
   );
 }

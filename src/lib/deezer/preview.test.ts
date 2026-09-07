@@ -20,6 +20,7 @@ import {
   sampleSeekRatio,
   sampleSeekSeconds,
   samplePositionState,
+  sampleTrackPlayClass,
   shouldToggleSampleOnSpace,
   trackHasSample,
 } from "@/lib/deezer/preview";
@@ -115,6 +116,22 @@ describe("trackHasSample", () => {
     expect(trackHasSample({ previewUrl: preview })).toBe(true);
     expect(trackHasSample({ previewUrl: null })).toBe(false);
     expect(trackHasSample({ previewUrl: "https://evil.example/x.mp3" })).toBe(false);
+  });
+});
+
+describe("sampleTrackPlayClass", () => {
+  it("paints a quiet play in primary soft", () => {
+    const className = sampleTrackPlayClass(false);
+    expect(className).toContain("bg-primary-soft");
+    expect(className).toContain("cursor-pointer");
+    expect(className).not.toMatch(/(?:^|\s)bg-primary(?:\s|$)/);
+  });
+
+  it("fills the current cue in primary", () => {
+    const className = sampleTrackPlayClass(true);
+    expect(className).toMatch(/(?:^|\s)bg-primary(?:\s|$)/);
+    expect(className).toContain("text-on-primary");
+    expect(className).not.toContain("bg-primary-soft");
   });
 });
 

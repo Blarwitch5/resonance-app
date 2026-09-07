@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -14,7 +14,13 @@ const variants: Record<ButtonVariant, string> = {
   secondary:
     "bg-secondary text-on-secondary hover:bg-secondary-hover active:bg-secondary-active",
   ghost: "border border-border bg-transparent text-text hover:bg-surface-pressed",
+  danger:
+    "bg-error text-on-error hover:bg-error/90 active:bg-error focus-visible:ring-error",
 };
+
+export function buttonVariantClass(variant: ButtonVariant): string {
+  return variants[variant];
+}
 
 export const buttonClass =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors outline-none sm:min-h-12 sm:px-6 focus-visible:ring-2 focus-visible:ring-border-strong";
@@ -31,7 +37,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={`${buttonClass} disabled:bg-text-disabled disabled:text-on-primary ${variants[variant]} ${className}`}
+      className={`${buttonClass} disabled:bg-text-disabled disabled:text-on-primary ${buttonVariantClass(variant)} ${className}`}
       {...props}
     >
       {children}
@@ -64,7 +70,7 @@ export function ButtonLink({
       aria-label={ariaLabel}
       title={title}
       data-record-link={isRecordLink ? "" : undefined}
-      className={`${buttonClass} ${variants[variant]} ${className}`}
+      className={`${buttonClass} ${buttonVariantClass(variant)} ${className}`}
     >
       {children}
     </Link>

@@ -5,6 +5,7 @@ import {
   offerPressingShare,
   shareLinkPayload,
   sharePressingPayload,
+  sharePressingShowsQuietControl,
   sharePressingVoice,
 } from "@/lib/collection/share-pressing";
 
@@ -41,6 +42,18 @@ describe("sharePressingVoice", () => {
       label: "Link copied",
       error: "This pressing could not travel just now.",
     });
+  });
+});
+
+describe("sharePressingShowsQuietControl", () => {
+  it("hides quiet on the icon share control", () => {
+    expect(sharePressingShowsQuietControl("button", true)).toBe(false);
+    expect(sharePressingShowsQuietControl("button", false)).toBe(false);
+  });
+
+  it("offers quiet only on the link appearance once shared", () => {
+    expect(sharePressingShowsQuietControl("link", true)).toBe(true);
+    expect(sharePressingShowsQuietControl("link", false)).toBe(false);
   });
 });
 

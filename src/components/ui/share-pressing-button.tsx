@@ -7,7 +7,7 @@ import { ensureSharedPressingAction, quietSharedPressingAction } from "@/app/lis
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { useLocale } from "@/components/locale-provider";
-import { browserShareHost, offerPressingShare, sharePressingVoice } from "@/lib/collection/share-pressing";
+import { browserShareHost, offerPressingShare, sharePressingShowsQuietControl, sharePressingVoice } from "@/lib/collection/share-pressing";
 import { t } from "@/lib/i18n/translate";
 
 interface SharePressingButtonProps {
@@ -125,7 +125,7 @@ export function SharePressingButton({
   }
 
   const quietControl =
-    shared && itemId ? (
+    sharePressingShowsQuietControl(appearance, shared) && itemId ? (
       <button
         type="button"
         onClick={() => {
@@ -153,13 +153,8 @@ export function SharePressingButton({
         >
           <Share2 className="size-4 shrink-0" aria-hidden />
         </Button>
-        {quietControl ? (
-          <div className="absolute top-full left-0 z-20 mt-1 whitespace-nowrap rounded-rs-sm bg-surface-elevated px-2 py-1 ring-1 ring-border">
-            {quietControl}
-          </div>
-        ) : null}
         {error ? (
-          <div className="absolute top-full left-0 z-20 mt-1 w-44">
+          <div className="absolute top-full right-0 z-20 mt-1 w-44">
             <Notice tone="error">{error}</Notice>
           </div>
         ) : null}

@@ -55,6 +55,7 @@ interface PressingThreadsProps {
   showArtist?: boolean;
   showLinks?: boolean;
   locale?: Locale;
+  actions?: ReactNode;
 }
 
 export function PressingThreads({
@@ -64,28 +65,29 @@ export function PressingThreads({
   showArtist = false,
   showLinks = false,
   locale,
+  actions = null,
 }: PressingThreadsProps) {
   const t = useT();
   const factsLocale = useLocale();
   const facts = pressingFacts(threads, locale ?? factsLocale);
   const hasChips = threads.genres.length > 0 || threads.condition !== null;
-  const hasIdentity = Boolean(title || showArtist);
   const hasCopies = Boolean(threads.catalogNumber || threads.barcode);
 
   return (
     <div className="flex flex-col gap-5">
-      <div className={hasIdentity ? "flex flex-wrap items-start gap-4" : undefined}>
-        <FormatIcon format={threads.format} href={threads.formatHref} />
-        {hasIdentity ? (
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            {title ? (
-              <h1 className={titleClassName}>
-                <PressingText>{title}</PressingText>
-              </h1>
-            ) : null}
-            {showArtist ? <PressingArtist name={threads.artist} href={threads.artistHref} /> : null}
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {title ? (
+            <h1 className={titleClassName}>
+              <PressingText>{title}</PressingText>
+            </h1>
+          ) : null}
+          {showArtist ? <PressingArtist name={threads.artist} href={threads.artistHref} /> : null}
+          <div className="flex flex-wrap items-center gap-2">
+            <FormatIcon format={threads.format} href={threads.formatHref} />
           </div>
-        ) : null}
+        </div>
+        {actions ? <div className="shrink-0">{actions}</div> : null}
       </div>
       {facts.length > 0 ? (
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">

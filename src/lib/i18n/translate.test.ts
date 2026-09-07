@@ -41,6 +41,16 @@ describe("t", () => {
     expect(t("fr", "explorer.nothingHint")).toBe(
       "Un autre titre, un autre artiste, un code-barres à la lumière, ou ajoute ce pressage à la main.",
     );
+    expect(t("en", "journal.releaseConfirm")).toBe("Yes, let it go");
+    expect(t("fr", "journal.releaseConfirm")).toBe("Oui, le laisser partir");
+    expect(t("en", "journal.leaveShelf", { title: "In Utero" })).toBe(
+      "Remove In Utero from your shelf? The memory goes with it.",
+    );
+    expect(t("fr", "journal.leaveShelf", { title: "In Utero" })).toBe(
+      "Retirer In Utero de mon étagère ? Le souvenir part avec lui.",
+    );
+    expect(t("en", "journal.letGo")).toBe("Let this one go");
+    expect(t("fr", "journal.letGo")).toBe("Laisser partir");
   });
 
   it("keeps the same keys in both tongues", () => {

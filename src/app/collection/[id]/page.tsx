@@ -168,7 +168,20 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
         </div>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
-            <PressingThreads threads={threads} title={item.title} showArtist />
+            <PressingThreads
+              threads={threads}
+              title={item.title}
+              showArtist
+              actions={
+                <SharePressingButton
+                  itemId={item.id}
+                  title={item.title}
+                  artist={item.artist}
+                  appearance="button"
+                  isShared={shareToken !== null}
+                />
+              }
+            />
             {marketLine ? (
               <p className="text-sm leading-6 text-text-secondary">{marketLine}</p>
             ) : null}
@@ -179,16 +192,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
                 </StatusPill>
               </div>
             ) : null}
-            <div className="flex flex-wrap items-center gap-2">
-              <KeptCloseForm id={item.id} isFavorite={item.isFavorite} />
-              <SharePressingButton
-                itemId={item.id}
-                title={item.title}
-                artist={item.artist}
-                appearance="button"
-                isShared={shareToken !== null}
-              />
-            </div>
+            <KeptCloseForm id={item.id} isFavorite={item.isFavorite} />
             <PressingLinks
               href={threads.discogs?.href}
               releaseId={threads.discogs?.id}
@@ -235,8 +239,8 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
             condition={item.condition}
             purchaseLocation={item.purchaseLocation}
             purchaseDate={foundDateLabel(item.purchaseDate) ?? null}
+            actions={<ReleaseRecordForm id={item.id} title={item.title} />}
           />
-          <ReleaseRecordForm id={item.id} title={item.title} />
         </div>
       </div>
     </AppShell>

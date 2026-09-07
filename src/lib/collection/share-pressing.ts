@@ -45,6 +45,14 @@ export function sharePressingVoice(title: string, copied: boolean, locale: Local
   };
 }
 
+/** Icon share control stays quiet; the link appearance can offer to retire the listen link. */
+export function sharePressingShowsQuietControl(
+  appearance: "button" | "link",
+  isShared: boolean,
+): boolean {
+  return appearance === "link" && isShared;
+}
+
 export async function offerPressingShare(
   input: { href: string; title: string; artist: string },
   host: SharePressingHost,

@@ -27,6 +27,7 @@ import {
   clampMenuPosition,
   explorerMenuActions,
   recordMenuActions,
+  recordMenuItemClass,
   recordMenuMoreClass,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
@@ -807,7 +808,7 @@ export function RecordMenu({
                 style={style}
               >
                 <Icon className="size-4" aria-hidden />
-                {isConfirmingRelease ? label : null}
+                {label}
               </button>
             );
           }
@@ -906,19 +907,25 @@ export function RecordMenu({
               id={menuId}
               role="menu"
               aria-label={isConfirmingRelease ? t("menu.releaseFor", { title }) : t("menu.actionsFor", { title })}
-              className="fixed z-50 min-w-56 rounded-rs-md border border-border bg-surface-elevated p-1"
+              className={`fixed z-50 min-w-56 rounded-rs-md border p-1 ${
+                isConfirmingRelease
+                  ? "border-error/35 bg-surface-elevated"
+                  : "border-border bg-surface-elevated"
+              }`}
               style={{ left: position.left, top: position.top }}
             >
               {isConfirmingRelease ? (
-                <p role="status" className="px-3 py-2 text-sm leading-6 text-text-secondary">
-                  {recordMenuReleasePrompt(title, locale)}
-                </p>
+                <div className="mb-1 flex gap-2 rounded-rs-sm border border-error/30 bg-error-soft/70 px-3 py-2.5">
+                  <Trash2 className="mt-0.5 size-4 shrink-0 text-error" aria-hidden />
+                  <p role="status" className="text-sm leading-6 text-text">
+                    {recordMenuReleasePrompt(title, locale)}
+                  </p>
+                </div>
               ) : null}
               {visibleActions.map((action) => {
                 const Icon = ACTION_ICONS[action.id];
                 const formAttr = FORM_ACTIONS[action.id];
-                const itemClass =
-                  "flex min-h-11 w-full items-center gap-2 rounded-rs-sm px-3 text-left text-sm font-normal text-text outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong";
+                const itemClass = recordMenuItemClass(action.id);
 
                 if (action.id === "share") {
                   return (

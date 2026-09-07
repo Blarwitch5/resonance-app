@@ -5,6 +5,7 @@ import {
   explorerMenuActions,
   recordMenuActions,
   recordMenuElsewhereHref,
+  recordMenuItemClass,
   recordMenuMoreClass,
   recordMenuReleaseConfirm,
   recordMenuReleasePrompt,
@@ -167,12 +168,31 @@ describe("recordMenuActions", () => {
 describe("recordMenuReleaseConfirm", () => {
   it("asks to keep the pressing before it leaves", () => {
     expect(recordMenuReleasePrompt("In Utero")).toBe(
-      "In Utero will leave your shelf. The memory goes with it.",
+      "Remove In Utero from your shelf? The memory goes with it.",
     );
     expect(recordMenuReleaseConfirm()).toEqual([
       { id: "keep-shelf", label: "Keep it" },
-      { id: "confirm-release", label: "Release" },
+      { id: "confirm-release", label: "Yes, let it go" },
     ]);
+  });
+
+  it("speaks French when the shelf asks in French", () => {
+    expect(recordMenuReleasePrompt("In Utero", "fr")).toBe(
+      "Retirer In Utero de mon étagère ? Le souvenir part avec lui.",
+    );
+    expect(recordMenuReleaseConfirm("fr")).toEqual([
+      { id: "keep-shelf", label: "Le garder" },
+      { id: "confirm-release", label: "Oui, le laisser partir" },
+    ]);
+  });
+});
+
+describe("recordMenuItemClass", () => {
+  it("marks release actions as destructive", () => {
+    expect(recordMenuItemClass("release")).toContain("text-error");
+    expect(recordMenuItemClass("confirm-release")).toContain("bg-error");
+    expect(recordMenuItemClass("keep-shelf")).toContain("text-text");
+    expect(recordMenuItemClass("share")).not.toContain("text-error");
   });
 });
 

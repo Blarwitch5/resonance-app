@@ -22,6 +22,7 @@ import {
   samplePositionState,
   sampleSeekRatio,
   sampleSeekSeconds,
+  sampleTrackPlayClass,
   shouldToggleSampleOnSpace,
   trackHasSample,
   type SampleCue,
@@ -361,11 +362,7 @@ export function RecordSamplePlayer({
                     {trackHasSample(track) ? (
                       <button
                         type="button"
-                        className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full outline-none hover:bg-surface-pressed focus-visible:ring-2 focus-visible:ring-border-strong ${
-                          isCurrent
-                            ? "bg-primary-soft text-on-primary-soft"
-                            : "border border-border bg-surface text-text-secondary"
-                        }`}
+                        className={sampleTrackPlayClass(isCurrent)}
                         aria-label={
                           isCurrent && isPlaying
                             ? t("sample.pauseTitle", { title: track.title })
@@ -455,7 +452,7 @@ export function RecordSamplePlayer({
               </button>
               <button
                 type="button"
-                className="inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary outline-none hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-border-strong"
+                className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-primary text-on-primary outline-none hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-border-strong"
                 aria-label={isPlaying ? t("sample.pause") : t("sample.play", { title: sampleCueLabel(queued) })}
                 aria-pressed={isPlaying}
                 onClick={() => {

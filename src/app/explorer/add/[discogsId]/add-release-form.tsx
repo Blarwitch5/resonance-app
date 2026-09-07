@@ -6,6 +6,7 @@ import { useActionState, useState, type FormEvent } from "react";
 import { addReleaseAction, type AddReleaseState } from "@/app/explorer/actions";
 import { Button } from "@/components/ui/button";
 import { choiceChipClass } from "@/components/ui/chip";
+import { ConfirmSubmitBar } from "@/components/ui/confirm-submit-bar";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
 import { TextAreaField } from "@/components/ui/field";
 import { formatIcons } from "@/components/ui/format-icon";
@@ -145,12 +146,14 @@ export function AddReleaseForm({ discogsId, defaultFormat, formats }: AddRelease
 
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
-      <Button type="submit" disabled={isBusy}>
-        <BusyGlyph isBusy={isBusy}>
-          <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-        </BusyGlyph>
-        {isBusy ? t("explorer.adding") : t("explorer.addRecord")}
-      </Button>
+      <ConfirmSubmitBar>
+        <Button type="submit" disabled={isBusy} className="w-full">
+          <BusyGlyph isBusy={isBusy}>
+            <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
+          </BusyGlyph>
+          {isBusy ? t("explorer.adding") : t("explorer.addRecord")}
+        </Button>
+      </ConfirmSubmitBar>
     </form>
   );
 }

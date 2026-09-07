@@ -7,6 +7,7 @@ import { addManualReleaseAction, type AddReleaseState } from "@/app/explorer/act
 import { ManualCoverField } from "@/app/explorer/manual/manual-cover-field";
 import { Button } from "@/components/ui/button";
 import { choiceChipClass } from "@/components/ui/chip";
+import { ConfirmSubmitBar } from "@/components/ui/confirm-submit-bar";
 import { fieldsetClass, legendClass } from "@/components/ui/control";
 import { TextAreaField, TextField } from "@/components/ui/field";
 import { formatIcons } from "@/components/ui/format-icon";
@@ -133,12 +134,14 @@ export function ManualReleaseForm({ defaultFormat, formats }: ManualReleaseFormP
 
       {state.error ? <Notice tone="error">{state.error}</Notice> : null}
 
-      <Button type="submit" disabled={isBusy}>
-        <BusyGlyph isBusy={isBusy}>
-          <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
-        </BusyGlyph>
-        {isBusy ? t("explorer.writing") : t("explorer.writeIn")}
-      </Button>
+      <ConfirmSubmitBar>
+        <Button type="submit" disabled={isBusy} className="w-full">
+          <BusyGlyph isBusy={isBusy}>
+            <FaceSlightlySmilingPlus className="size-4 shrink-0" aria-hidden />
+          </BusyGlyph>
+          {isBusy ? t("explorer.writing") : t("explorer.writeIn")}
+        </Button>
+      </ConfirmSubmitBar>
     </form>
   );
 }

@@ -30,3 +30,15 @@ export const shelfListHitClass =
 export const journalCoverStickyClass = "lg:sticky lg:top-6";
 
 export const confirmCoverStickyClass = "sm:sticky sm:top-6";
+
+/** Confirm submit: fixed above the thumb bar until the form slot docks it. */
+export const confirmSubmitFixedClass =
+  "fixed inset-x-4 z-30 border-t border-border bg-background/95 px-1 pt-3 pb-2 backdrop-blur-md bottom-[calc(var(--rs-bottom-chrome)+max(0.5rem,env(safe-area-inset-bottom)))] sm:inset-x-6 lg:inset-x-auto lg:right-8 lg:left-[calc(15rem+1.5rem+2rem)] lg:bottom-4 lg:max-w-xl";
+
+export const confirmSubmitDockClass =
+  "relative z-20 -mx-1 border-t border-border bg-background/95 px-1 pt-3 pb-2 backdrop-blur-md";
+
+export const confirmSubmitSlotClass = "h-[4.25rem] shrink-0";
+
+/** Soft primary halo on the confirm CTA — tokenized, not an ad-hoc shadow. */
+export const confirmSubmitGlowClass = "shadow-glow-primary motion-reduce:shadow-none";

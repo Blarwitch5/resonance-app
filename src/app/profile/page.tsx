@@ -11,7 +11,6 @@ import { RestoreResonanceForm } from "@/app/profile/restore-resonance-form";
 import { ProfileSearch } from "@/app/profile/profile-search";
 import { ProfileSettingsForm } from "@/app/profile/profile-settings-form";
 import { SignOutButton } from "@/components/ui/sign-out-button";
-import { AppShell } from "@/components/layouts/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { PageHeader, SectionHeading } from "@/components/ui/page-header";
 import { ProfileAvatar } from "@/components/ui/profile-avatar";
@@ -120,7 +119,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const formats = enabledFormats(settings);
 
   return (
-    <AppShell>
+    <>
       <PageHeader
         title={t(settings.locale, "profile.title")}
         description={`${session.user.name} · ${session.user.email}`}
@@ -131,8 +130,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             ) : null}
             <div className="pt-1 lg:hidden">
               <SignOutButton layout="page" />
-            </div>
-          </>
+      </div>
+    </>
         }
         action={
           <div className="flex items-center gap-1">
@@ -235,7 +234,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           ) : null}
         </>
       )}
-    </AppShell>
+    </>
   );
 }
 

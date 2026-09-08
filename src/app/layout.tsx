@@ -1,3 +1,4 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Poppins } from "next/font/google";
 
@@ -80,6 +81,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       >
         <ServiceWorkerRegister enabled={process.env.NODE_ENV === "production"} />
         <LocaleProvider locale={locale}>{children}</LocaleProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import { CollectionFeed } from "@/app/collection/collection-feed";
 import { CollectionSearch } from "@/app/collection/collection-search";
-import { AppShell } from "@/components/layouts/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { CollectionListenSheet } from "@/components/ui/listen-sheet";
 import { FacetChips } from "@/components/ui/facet-chips";
@@ -168,7 +167,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
     Boolean(format) || hasFacet || keptClose || hasQuery || listenCount > 0;
 
   return (
-    <AppShell>
+    <>
       <PageHeader
         title={t(settings.locale, "collection.title")}
         description={sharedShelfHeadline(listen, settings.locale)}
@@ -329,7 +328,7 @@ export default async function CollectionPage({ searchParams }: CollectionPagePro
         </SearchListenPane>
         </CollectionSearch>
       </div>
-    </AppShell>
+    </>
   );
 }
 

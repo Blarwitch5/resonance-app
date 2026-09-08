@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { ManualReleaseForm } from "@/app/explorer/manual/manual-release-form";
-import { AppShell } from "@/components/layouts/app-shell";
 import { BackLink } from "@/components/ui/back-link";
 import { bodyClass, eyebrowClass, pageTitleClass } from "@/components/ui/type";
 import { explorerBackHref } from "@/lib/discogs/href";
@@ -27,7 +26,7 @@ export default async function ManualReleasePage({ searchParams }: ManualReleaseP
   const defaultFormat = preferredFormat(formats, settings.defaultFormat);
 
   return (
-    <AppShell>
+    <>
       <BackLink href={explorerBackHref(query.from)}>{t(locale, "back.explorer")}</BackLink>
       <header className="flex flex-col gap-2">
         <p className={eyebrowClass}>{t(locale, "common.confirm")}</p>
@@ -35,6 +34,6 @@ export default async function ManualReleasePage({ searchParams }: ManualReleaseP
         <p className={bodyClass}>{t(locale, "explorer.writeDescription")}</p>
       </header>
       <ManualReleaseForm defaultFormat={defaultFormat} formats={formats} />
-    </AppShell>
+    </>
   );
 }

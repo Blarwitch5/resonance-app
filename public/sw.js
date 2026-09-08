@@ -1,11 +1,15 @@
 "use strict";
 
 // Keep path rules aligned with src/lib/offline/shelf-cache.ts
-const SHELL_CACHE = "resonance-shell-v9";
-const SHELF_CACHE = "resonance-shelf-v3";
+const SHELL_CACHE = "resonance-shell-v10";
+const SHELF_CACHE = "resonance-shelf-v4";
 const STATIC_CACHE = "resonance-static-v2";
 const COVER_CACHE = "resonance-covers-v1";
 const KNOWN_CACHES = new Set([SHELL_CACHE, SHELF_CACHE, STATIC_CACHE, COVER_CACHE]);
+
+/** Prefer network, but do not leave the splash white during a Vercel cold start. */
+const SHELF_CACHE_WAIT_MS = 450;
+const SHELF_BOOT_WAIT_MS = 1600;
 
 const PRECACHE_URLS = [
   "/offline.html",
@@ -60,8 +64,8 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (kind === "shelf") {
-    // Network first — never serve a stale Next document ahead of RSC (breaks prod navigations).
-    event.respondWith(networkFirstShelf(event.request));
+    // Network first with a short patience window — cache/boot beat a long white splash.
+    event.respondWith(networkFirstShelf(event, event.request));
     return;
   }
 
@@ -149,30 +153,57 @@ async function activateCaches() {
   await self.clients.claim();
 }
 
-async function networkFirstShelf(request) {
+async function networkFirstShelf(event, request) {
   const cache = await caches.open(SHELF_CACHE);
+  const cached = await cache.match(request);
 
-  try {
-    const response = await fetch(request);
+  const networkPromise = fetch(request)
+    .then(async (response) => {
+      if (canRememberShelf(request, response)) {
+        await cache.put(request, response.clone());
+      }
 
-    if (canRememberShelf(request, response)) {
-      await cache.put(request, response.clone());
+      return response;
+    })
+    .catch((error) => {
+      if (isAbortError(error)) {
+        return canceledResponse();
+      }
+
+      return null;
+    });
+
+  event.waitUntil(networkPromise.then(() => undefined));
+
+  if (cached) {
+    const raced = await Promise.race([
+      networkPromise.then((response) => (response && response.ok ? response : null)),
+      delay(SHELF_CACHE_WAIT_MS).then(() => "cache"),
+    ]);
+
+    if (raced && raced !== "cache") {
+      return raced;
     }
 
-    return response;
-  } catch (error) {
-    if (isAbortError(error)) {
-      return canceledResponse();
-    }
-
-    const cached = await cache.match(request);
-
-    if (cached) {
-      return cached;
-    }
-
-    return documentFallback();
+    return cached;
   }
+
+  const raced = await Promise.race([
+    networkPromise.then((response) => (response && response.ok ? response : null)),
+    delay(SHELF_BOOT_WAIT_MS).then(() => null),
+  ]);
+
+  if (raced) {
+    return raced;
+  }
+
+  return documentFallback();
+}
+
+function delay(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 async function cacheFirst(cacheName, request) {

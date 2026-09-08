@@ -9,7 +9,6 @@ import { KeptCloseForm } from "@/app/collection/[id]/kept-close-form";
 import { ReleaseRecordForm } from "@/app/collection/[id]/release-record-form";
 import { moveWishlistToShelfAction } from "@/app/explorer/actions";
 import { ArrivalWave } from "@/components/arrival-wave";
-import { AppShell } from "@/components/layouts/app-shell";
 import { listBackHref, listBackLabel } from "@/components/return-path";
 import { BackLink } from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
@@ -151,7 +150,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
   const backHref = listBackHref(query.from, "/collection");
 
   return (
-    <AppShell>
+    <>
       {isArrivalWave ? <ArrivalWave format={item.format} title={item.title} /> : null}
       <BackLink href={backHref}>{listBackLabel(backHref, settings.locale)}</BackLink>
       <ShelfNeighbors before={neighbors.before} after={neighbors.after} from={query.from} />
@@ -243,7 +242,7 @@ export default async function CollectionItemPage({ params, searchParams }: Colle
           />
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }
 

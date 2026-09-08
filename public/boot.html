@@ -68,7 +68,23 @@
       <img src="/logo-resonance.svg" alt="" width="72" height="72" />
       <p>The shelf is settling…</p>
       <p lang="fr">L’étagère se pose…</p>
-      <p><a href="/collection">Open Collection</a> · <a href="/collection" lang="fr">Ouvrir la Collection</a></p>
+      <p><a id="open" href="/collection">Open Collection</a> · <a href="/collection" lang="fr">Ouvrir la Collection</a></p>
     </main>
+    <script>
+      (function () {
+        try {
+          var key = "resonance-boot-handoff";
+          var n = Number(sessionStorage.getItem(key) || "0");
+          if (n >= 2) {
+            return;
+          }
+          sessionStorage.setItem(key, String(n + 1));
+          var wait = n === 0 ? 500 : 2200;
+          window.setTimeout(function () {
+            window.location.replace("/collection");
+          }, wait);
+        } catch (e) {}
+      })();
+    </script>
   </body>
 </html>

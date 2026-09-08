@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { ExplorerFeed } from "@/app/explorer/explorer-feed";
 import { ExplorerReleaseCard } from "@/app/explorer/explorer-release-card";
 import { ExplorerSearch } from "@/app/explorer/explorer-search";
-import { AppShell } from "@/components/layouts/app-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { ExplorerFacetChips } from "@/components/ui/explorer-facet-chips";
 import { ExplorerThreadForm } from "@/components/ui/explorer-thread-form";
@@ -178,7 +177,7 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
       : new Map<number, Exclude<ShelfPresence, { status: "absent" }>>();
 
   return (
-    <AppShell>
+    <>
       <PageHeader
         title={t(locale, "explorer.title")}
         description={t(locale, "explorer.description")}
@@ -328,7 +327,7 @@ export default async function ExplorerPage({ searchParams }: ExplorerPageProps) 
         </SearchListenPane>
         </ExplorerSearch>
       </div>
-    </AppShell>
+    </>
   );
 }
 

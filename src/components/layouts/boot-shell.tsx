@@ -9,7 +9,7 @@ interface BootShellProps {
   children: ReactNode;
 }
 
-/** Instant chrome for route `loading.tsx` — no session, no Neon, no AppShell. */
+/** Instant chrome for rare standalone loaders — prefer route skeletons inside AppShell. */
 export function BootShell({ children }: BootShellProps) {
   return (
     <div

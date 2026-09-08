@@ -8,6 +8,12 @@ interface ServiceWorkerRegisterProps {
 
 export function ServiceWorkerRegister({ enabled }: ServiceWorkerRegisterProps) {
   useEffect(() => {
+    try {
+      sessionStorage.removeItem("resonance-boot-handoff");
+    } catch {
+      // Private mode can block sessionStorage.
+    }
+
     if (!("serviceWorker" in navigator)) {
       return;
     }
@@ -19,6 +25,9 @@ export function ServiceWorkerRegister({ enabled }: ServiceWorkerRegisterProps) {
 
     void navigator.serviceWorker
       .register("/sw.js", { updateViaCache: "none" })
+      .then((registration) => {
+        void registration.update();
+      })
       .catch(() => undefined);
   }, [enabled]);
 

@@ -1,5 +1,5 @@
-import { BootLoader } from "@/components/layouts/boot-shell";
+import { JournalLoadingSkeleton } from "@/components/layouts/route-loading";
 
 export default function Loading() {
-  return <BootLoader labelKey="loading.journal" />;
+  return <JournalLoadingSkeleton />;
 }

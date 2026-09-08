@@ -5,7 +5,6 @@ import { cache } from "react";
 
 import { AddReleaseForm } from "@/app/explorer/add/[discogsId]/add-release-form";
 import { moveWishlistToShelfAction } from "@/app/explorer/actions";
-import { AppShell } from "@/components/layouts/app-shell";
 import { BackLink } from "@/components/ui/back-link";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/chip";
@@ -122,12 +121,10 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
   if (!loaded.ok) {
     const locale = await getLocale();
     return (
-      <AppShell>
-        <div className="flex flex-col gap-3">
-          <h1 className={pageTitleClass}>{t(locale, "explorer.couldNotOpen")}</h1>
-          <Notice tone="error">{loaded.message}</Notice>
-        </div>
-      </AppShell>
+      <div className="flex flex-col gap-3">
+        <h1 className={pageTitleClass}>{t(locale, "explorer.couldNotOpen")}</h1>
+        <Notice tone="error">{loaded.message}</Notice>
+      </div>
     );
   }
 
@@ -171,7 +168,7 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
   });
 
   return (
-    <AppShell>
+    <>
       <BackLink href={explorerBackHref(query.from)}>{t(locale, "back.explorer")}</BackLink>
       <header className="flex flex-col gap-2">
         <p className={eyebrowClass}>{t(locale, "common.confirm")}</p>
@@ -218,7 +215,7 @@ export default async function AddReleasePage({ params, searchParams }: AddReleas
           ) : null}
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }
 
